@@ -1,4 +1,4 @@
-module github.com/kndrad/reckon
+module github.com/kndrad/itcrack
 
 go 1.23.1
 
