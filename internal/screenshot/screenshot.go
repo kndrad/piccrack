@@ -76,12 +76,11 @@ func RecognizeText(content []byte) ([]byte, error) {
 		lingua.English,
 		lingua.Polish,
 	}
+
 	// Build the detector with valid languages
 	d := lingua.NewLanguageDetectorBuilder().
 		FromLanguages(languages...).
 		Build()
-
-	// Use DetectLanguageOfSingleText instead of DetectLanguageOf
 	lang, exists := d.DetectLanguageOf(text)
 	if !exists {
 		return nil, ErrUnknownLanguage
