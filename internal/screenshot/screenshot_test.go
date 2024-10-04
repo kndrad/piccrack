@@ -1,6 +1,7 @@
 package screenshot_test
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
@@ -26,9 +27,7 @@ func TestRecognizeText(t *testing.T) {
 		err error
 	}
 
-	path := filepath.Join(TestDataDir, TestPNGFile)
-	content, err := os.ReadFile(path)
-	require.NoError(t, err)
+	content := testScreenshotFile(t)
 
 	testcases := map[string]struct {
 		input    *input
@@ -119,10 +118,10 @@ func TestScreenshotFormat_String(t *testing.T) {
 		},
 		"invalid_negative": {
 			input:    &input{format: screenshot.Format(-1)},
-			expected: &expected{s: "ScreenshotFormat(-1)"},
+			expected: &expected{s: "Format(-1)"},
 		},
 		"invalid_out_of_range": {
-			input: &input{format: screenshot.Format(100)}, expected: &expected{s: "ScreenshotFormat(100)"},
+			input: &input{format: screenshot.Format(100)}, expected: &expected{s: "Format(100)"},
 		},
 	}
 	for name, testcase := range testcases {
@@ -145,23 +144,14 @@ func TestIsPNG(t *testing.T) {
 		ok bool
 	}
 
-	wd, err := os.Getwd()
-	require.NoError(t, err)
-
-	path := filepath.Join(wd, TestDataDir, TestPNGFile)
-	if !isSubPath(wd, path) {
-		t.Fatalf("Test file is not in the expected directory")
-	}
-
-	png, err := os.ReadFile(filepath.Clean(path))
-	require.NoError(t, err)
+	content := testScreenshotFile(t)
 
 	testcases := map[string]struct {
 		input    *input
 		expected *expected
 	}{
 		"png": {
-			input:    &input{content: png},
+			input:    &input{content: content},
 			expected: &expected{ok: true},
 		},
 		"unknown": {
@@ -178,6 +168,32 @@ func TestIsPNG(t *testing.T) {
 			assert.Equal(t, tc.expected.ok, ok)
 		})
 	}
+}
+
+func testScreenshotFile(t *testing.T) []byte {
+	content, err := readScreenshotFile()
+	if err != nil {
+		t.Errorf("testIsPNG: %v", err)
+	}
+	return content
+}
+
+func readScreenshotFile() ([]byte, error) {
+	wd, err := os.Getwd()
+	if err != nil {
+		return nil, fmt.Errorf("readFile: %w", err)
+	}
+
+	path := filepath.Join(wd, TestDataDir, TestPNGFile)
+	if !isSubPath(wd, path) {
+		return nil, fmt.Errorf("Test file is not in the expected directory")
+	}
+
+	png, err := os.ReadFile(filepath.Clean(path))
+	if err != nil {
+		return nil, fmt.Errorf("testFile: %w", err)
+	}
+	return png, nil
 }
 
 // isSubPath checks if the filePath is a subpath of the base path.
