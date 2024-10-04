@@ -1,4 +1,4 @@
 #!/bin/bash
 
 
-gofumpt -w .
+gofumpt -w ./..
