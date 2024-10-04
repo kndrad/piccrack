@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	"github.com/kndrad/itcrack/internal/screenshot"
+	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -171,28 +172,32 @@ func TestIsPNG(t *testing.T) {
 }
 
 func testScreenshotFile(t *testing.T) []byte {
+	t.Helper()
+
 	content, err := readScreenshotFile()
 	if err != nil {
 		t.Errorf("testIsPNG: %v", err)
 	}
+
 	return content
 }
 
 func readScreenshotFile() ([]byte, error) {
-	wd, err := os.Getwd()
+	workingDir, err := os.Getwd()
 	if err != nil {
 		return nil, fmt.Errorf("readFile: %w", err)
 	}
 
-	path := filepath.Join(wd, TestDataDir, TestPNGFile)
-	if !isSubPath(wd, path) {
-		return nil, fmt.Errorf("Test file is not in the expected directory")
+	path := filepath.Join(workingDir, TestDataDir, TestPNGFile)
+	if !isSubPath(workingDir, path) {
+		return nil, errors.New("Test file is not in the expected directory")
 	}
 
 	png, err := os.ReadFile(filepath.Clean(path))
 	if err != nil {
 		return nil, fmt.Errorf("testFile: %w", err)
 	}
+
 	return png, nil
 }
 
@@ -240,7 +245,7 @@ func isSubPath(basePath, filePath string) bool {
 // 		results = append(results, result)
 // 	}
 
-// 	buf := bytes.Buffer{}
+// 	textBuf := new(bytes.Buffer)
 // 	for _, result := range results {
 // 		text, err := result.Text()
 // 		require.Nil(t, err)
@@ -283,7 +288,7 @@ func isSubPath(basePath, filePath string) bool {
 // 	require.Nil(t, err)
 
 // 	Load text from many files to buf
-// 	buf := bytes.Buffer{}
+// 	textBuf := new(bytes.Buffer)
 
 // 	fsys := os.DirFS(dir)
 // 	t.Log("using walk dir:")
