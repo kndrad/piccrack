@@ -11,7 +11,12 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestDecodeScreenshot(t *testing.T) {
+const (
+	TestDataDir = "testdata"
+	TestPNGFile = "golang_0.png"
+)
+
+func TestRecognizeText(t *testing.T) {
 	t.Parallel()
 
 	type input struct {
@@ -21,14 +26,15 @@ func TestDecodeScreenshot(t *testing.T) {
 		err error
 	}
 
-	content, err := os.ReadFile("./testdata/golang_0.png")
+	path := filepath.Join(TestDataDir, TestPNGFile)
+	content, err := os.ReadFile(path)
 	require.NoError(t, err)
 
 	testcases := map[string]struct {
 		input    *input
 		expected *expected
 	}{
-		"ok_scenario": {
+		"normal_input": {
 			input:    &input{content: content},
 			expected: &expected{err: nil},
 		},
@@ -37,7 +43,7 @@ func TestDecodeScreenshot(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 
-			result, err := screenshot.DecodeText(testcase.input.content)
+			result, err := screenshot.RecognizeText(testcase.input.content)
 			require.ErrorIsf(t, err, testcase.expected.err, "expected %q but got '%q'", testcase.expected.err, err)
 			require.NotNil(t, result, "expected not nil result")
 		})
@@ -64,7 +70,7 @@ func TestValidateBufferSize(t *testing.T) {
 		},
 		"empty_err": {
 			input:    &input{content: []byte{}},
-			expected: &expected{err: screenshot.ErrEmpty},
+			expected: &expected{err: screenshot.ErrEmptyContent},
 		},
 		"too_small_err": {
 			input:    &input{content: []byte(strings.Repeat("1", screenshot.MinSize-1))},
@@ -72,7 +78,7 @@ func TestValidateBufferSize(t *testing.T) {
 		},
 		"nil_empty_err": {
 			input:    &input{content: nil},
-			expected: &expected{err: screenshot.ErrEmpty},
+			expected: &expected{err: screenshot.ErrEmptyContent},
 		},
 		"too_large_err": {
 			input:    &input{content: []byte(strings.Repeat("DATA", screenshot.MaxSize+1))},
@@ -94,7 +100,7 @@ func TestScreenshotFormat_String(t *testing.T) {
 	t.Parallel()
 
 	type input struct {
-		format screenshot.ScreenshotFormat
+		format screenshot.Format
 	}
 	type expected struct {
 		s string
@@ -112,11 +118,11 @@ func TestScreenshotFormat_String(t *testing.T) {
 			expected: &expected{s: "UNKNOWN"},
 		},
 		"invalid_negative": {
-			input:    &input{format: screenshot.ScreenshotFormat(-1)},
+			input:    &input{format: screenshot.Format(-1)},
 			expected: &expected{s: "ScreenshotFormat(-1)"},
 		},
 		"invalid_out_of_range": {
-			input: &input{format: screenshot.ScreenshotFormat(100)}, expected: &expected{s: "ScreenshotFormat(100)"},
+			input: &input{format: screenshot.Format(100)}, expected: &expected{s: "ScreenshotFormat(100)"},
 		},
 	}
 	for name, testcase := range testcases {
@@ -129,12 +135,7 @@ func TestScreenshotFormat_String(t *testing.T) {
 	}
 }
 
-const (
-	TestDataDir = "testdata"
-	TestPNGFile = "golang_0.png"
-)
-
-func TestIsPNGScreenshotFormat(t *testing.T) {
+func TestIsPNG(t *testing.T) {
 	t.Parallel()
 
 	type input struct {

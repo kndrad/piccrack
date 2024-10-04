@@ -17,17 +17,11 @@ const (
 
 	// English (English) is the default language for OCR and text language detection.
 	English = "eng"
-
-	// MaxSize is the maximum allowed size for an image, set to 3 MB.
-	MaxSize int = 3 * 1024 * 1024
-
-	// MinSize is the minimum allowed size for an image, set to 1 KB.
-	MinSize = 1 * 16
 )
 
 var (
-	// ErrEmpty is returned when the buffer is empty.
-	ErrEmpty = errors.New("buffer is empty")
+	// ErrEmptyContent is returned when the buffer is empty.
+	ErrEmptyContent = errors.New("buffer is empty")
 
 	// ErrTooSmall is returned when the buffer is too small.
 	ErrTooSmall = errors.New("buffer is too small")
@@ -42,7 +36,7 @@ var (
 	ErrUnknownLanguage = errors.New("unknown language")
 )
 
-// DecodeText runs OCR on the provided content using Tesseract and returns cleaned from stop words
+// RecognizeText runs OCR on the provided content using Tesseract and returns cleaned from stop words
 // text as a slice of bytes.
 //
 // Accepts options to configure the Tesseract client.
@@ -50,7 +44,7 @@ var (
 //
 // Content is must be a PNG image. Any other format will result in an error.
 // Content size must be within allowed range. See MaxSize and MinSize.
-func DecodeText(content []byte) ([]byte, error) {
+func RecognizeText(content []byte) ([]byte, error) {
 	if err := CheckSize(content); err != nil {
 		return nil, fmt.Errorf("decode: %w", err)
 	}
@@ -75,12 +69,11 @@ func DecodeText(content []byte) ([]byte, error) {
 	}
 
 	if text == "" {
-		return nil, errors.Wrap(ErrEmpty, "decode: text is empty")
+		return nil, ErrEmptyContent
 	}
 
 	languages := []lingua.Language{
 		lingua.English,
-		lingua.German,
 		lingua.Polish,
 	}
 	// Build the detector with valid languages
@@ -106,10 +99,18 @@ func IsPNG(content []byte) bool {
 	return bytes.Contains(content[:4], PNG.Bytes())
 }
 
+const (
+	// MaxSize is the maximum allowed size for an image, set to 3 MB.
+	MaxSize int = 3 * 1024 * 1024
+
+	// MinSize is the minimum allowed size for an image, set to 1 KB.
+	MinSize = 1 * 16
+)
+
 // CheckSize checks if the content buffer size is within the allowed size range.
 func CheckSize(content []byte) error {
 	if len(content) == 0 {
-		return errors.Wrap(ErrEmpty, "content is empty")
+		return errors.Wrap(ErrEmptyContent, "content is empty")
 	}
 	if len(content) < MinSize {
 		return errors.Wrapf(ErrTooSmall, "less than %d", MinSize)
