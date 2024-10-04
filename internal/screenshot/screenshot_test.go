@@ -7,7 +7,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/kndrad/reckon/internal/screenshot"
+	"github.com/kndrad/itcrack/internal/screenshot"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
