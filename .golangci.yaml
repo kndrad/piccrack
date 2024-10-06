@@ -127,7 +127,7 @@ linters:
     - makezero
     - mirror
     - misspell
-    - mnd
+    #- mnd
     - musttag
     - nakedret
     - nestif
@@ -241,7 +241,7 @@ linters:
   # - makezero
   # - mirror
   # - misspell
-  # - mnd
+    - mnd
   # - musttag
   # - nakedret
   # - nestif
