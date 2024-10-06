@@ -18,7 +18,7 @@ const (
 	TestPNGFile = "golang_0.png"
 )
 
-func TestRecognizeText(t *testing.T) {
+func TestRecognizeWords(t *testing.T) {
 	t.Parallel()
 
 	type input struct {
@@ -43,7 +43,7 @@ func TestRecognizeText(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 
-			result, err := screenshot.RecognizeText(testcase.input.content)
+			result, err := screenshot.RecognizeWords(testcase.input.content)
 			require.ErrorIsf(t, err, testcase.expected.err, "expected %q but got '%q'", testcase.expected.err, err)
 			require.NotNil(t, result, "expected not nil result")
 		})

@@ -36,15 +36,15 @@ var (
 	ErrUnknownLanguage = errors.New("unknown language")
 )
 
-// RecognizeText runs OCR on the provided content using Tesseract and returns cleaned from stop words
+// RecognizeWords runs OCR on the provided content using Tesseract and returns cleaned from stop words
 // text as a slice of bytes.
 //
 // Accepts options to configure the Tesseract client.
 // English recognition is always applied.
 //
-// Content is must be a PNG image. Any other format will result in an error.
+// Content must be a PNG image. Any other format will result in an error.
 // Content size must be within allowed range. See MaxSize and MinSize.
-func RecognizeText(content []byte) ([]byte, error) {
+func RecognizeWords(content []byte) ([]byte, error) {
 	if err := CheckSize(content); err != nil {
 		return nil, fmt.Errorf("decode: %w", err)
 	}
