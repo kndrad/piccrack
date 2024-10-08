@@ -24,12 +24,15 @@ package cmd
 import (
 	"bufio"
 	"fmt"
+	"log/slog"
 	"os"
 	"path/filepath"
 
 	"github.com/kndrad/itcrack/internal/screenshot"
 	"github.com/spf13/cobra"
 )
+
+var logger *slog.Logger
 
 var (
 	screenshotFile string
@@ -45,6 +48,9 @@ var wordsCmd = &cobra.Command{
 	Long:  ``,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		fmt.Println("Running 'words' command.")
+
+		exit := Exit()
+		defer exit()
 
 		content, err := os.ReadFile(filepath.Clean(screenshotFile))
 		if err != nil {
@@ -63,69 +69,69 @@ var wordsCmd = &cobra.Command{
 			fmt.Println(string(words))
 		}
 
-		if save {
-			// file, err := os.Create(filepath.Clean(outPath))
-			// if err != nil {
-			// 	fmt.Println(err)
+		// If the words output must not be saved somewhere, return.
+		// Otherwise - save it to the given "output" location.
+		if !save {
+			return nil
+		}
+		file, err := os.OpenFile(filepath.Clean(outPath), os.O_APPEND|os.O_CREATE|os.O_RDWR, 0o600)
+		if err != nil {
+			fmt.Println(err)
 
-			// 	return fmt.Errorf("cmd: %w", err)
-			// }
-			// defer file.Close()
-			file, err := os.OpenFile(filepath.Clean(outPath), os.O_APPEND|os.O_CREATE|os.O_RDWR, 0o600)
-			if err != nil {
-				fmt.Println(err)
+			return fmt.Errorf("cmd: %w", err)
+		}
+		defer file.Close()
 
-				return fmt.Errorf("cmd: %w", err)
-			}
-			defer file.Close()
+		// Check if words from a given screenshot were already written.
+		scanner := bufio.NewScanner(file)
+		scanner.Split(bufio.ScanLines)
 
-			// Check if words from a given screenshot were already written
-			scanner := bufio.NewScanner(file)
-			scanner.Split(bufio.ScanLines)
+		headerExists := false
+		header := "#" + filepath.Base(screenshotFile)
 
-			headerExists := false
-			header := "#" + filepath.Base(screenshotFile)
-
-			for scanner.Scan() {
-				if scanner.Text() == header {
-					headerExists = true
-				}
-			}
-			if err := scanner.Err(); err != nil {
-				fmt.Println(err)
-
-				return fmt.Errorf("cmd: %w", err)
-			}
-
-			if !headerExists {
-				// Write a 'header' at the top to avoid past screenshot's file recognized words from the past
-				if _, err := file.WriteString("#" + filepath.Base(screenshotFile) + "\n"); err != nil {
-					fmt.Println(err)
-
-					return fmt.Errorf("cmd: %w", err)
-				}
-				if _, err := file.WriteString(string(words) + "\n\n"); err != nil {
-					fmt.Println(err)
-
-					return fmt.Errorf("cmd: %w", err)
-				}
-				fmt.Println("Added new content for", filepath.Base(screenshotFile))
-			} else {
-				fmt.Println(filepath.Base(screenshotFile), "words already written.")
+		for scanner.Scan() {
+			if scanner.Text() == header {
+				headerExists = true
 			}
 		}
+		if err := scanner.Err(); err != nil {
+			fmt.Println(err)
 
-		fmt.Println("Program is done.")
+			return fmt.Errorf("cmd: %w", err)
+		}
+
+		// Write a 'header' if it does not exist at the top to avoid past screenshot's file
+		// recognized words from the past.
+		if headerExists {
+			fmt.Println(filepath.Base(screenshotFile), "words already written.")
+
+			return nil
+		}
+		if _, err := file.WriteString("#" + filepath.Base(screenshotFile) + "\n"); err != nil {
+			fmt.Println(err)
+
+			return fmt.Errorf("cmd: %w", err)
+		}
+		if _, err := file.WriteString(string(words) + "\n\n"); err != nil {
+			fmt.Println(err)
+
+			return fmt.Errorf("cmd: %w", err)
+		}
+		fmt.Println("Added new content for", filepath.Base(screenshotFile))
 
 		return nil
 	},
 }
 
 func init() {
+	logger = slog.New(slog.NewJSONHandler(os.Stdout, nil))
+
 	rootCmd.AddCommand(wordsCmd)
 
 	wordsCmd.PersistentFlags().StringVarP(&screenshotFile, "file", "f", "", "File to read words from")
-	wordsCmd.MarkPersistentFlagRequired("file")
+	if err := wordsCmd.MarkPersistentFlagRequired("file"); err != nil {
+		logger.Error("wordsCmd", "err", err.Error())
+	}
 
 	// Cobra supports local flags which will only run when this command
 	// is called directly, e.g.:
@@ -136,4 +142,19 @@ func init() {
 	wordsCmd.MarkFlagsRequiredTogether("save", "out")
 
 	wordsCmd.Flags().BoolVarP(&verbose, "verbose", "v", false, "Verbose")
+}
+
+func Exit(funcs ...func() error) func() error {
+	return func() error {
+		for _, f := range funcs {
+			if err := f(); err != nil {
+				return fmt.Errorf("onExit: %w", err)
+			}
+		}
+
+		fmt.Println("Program is done.")
+		os.Exit(1)
+
+		return nil
+	}
 }

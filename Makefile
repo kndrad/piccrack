@@ -1,5 +1,7 @@
-review:
+fmt:
 	./scripts/format.sh
+
+review: fmt
 	./scripts/check.sh
 
 run: review
