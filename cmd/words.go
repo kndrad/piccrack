@@ -22,11 +22,11 @@ THE SOFTWARE.
 package cmd
 
 import (
-	"bufio"
 	"fmt"
 	"log/slog"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/kndrad/itcrack/internal/screenshot"
 	"github.com/spf13/cobra"
@@ -35,10 +35,10 @@ import (
 var logger *slog.Logger
 
 var (
-	screenshotFile string
-	save           bool
-	outPath        string
-	verbose        bool
+	filename string
+	save     bool
+	outPath  string
+	verbose  bool
 )
 
 // wordsCmd represents the words command.
@@ -48,76 +48,68 @@ var wordsCmd = &cobra.Command{
 	Long:  ``,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		fmt.Println("Running 'words' command.")
+		filename = filepath.Clean(filename)
 
 		exit := Exit()
 		defer exit()
 
-		content, err := os.ReadFile(filepath.Clean(screenshotFile))
+		var files []string
+
+		// Check if filename is a directory
+		stat, err := os.Stat(filename)
+		if err != nil {
+			logger.Error("wordsCmd", "err", err)
+
+			return fmt.Errorf("cmd: %w", err)
+		}
+		if stat.IsDir() {
+			// File represents a directory so append each screenshot file to files (with non image removal).
+			logger.Info("wordsCmd: processing directory", "filename", filename)
+
+			entries, err := os.ReadDir(filename)
+			if err != nil {
+				logger.Error("wordsCmd", "err", err)
+
+				return fmt.Errorf("cmd: %w", err)
+			}
+			// Append image files only
+			for _, e := range entries {
+				if !e.IsDir() && isImageFile(e.Name()) {
+					files = append(files, filepath.Join(filename+string(filepath.Separator)+e.Name()))
+				}
+			}
+			logger.Info("wordsCmd: number of image files in a directory", "len(filename)", len(files))
+		} else {
+			files = append(files, filename)
+		}
+		outFile, err := os.OpenFile(filepath.Clean(outPath), os.O_APPEND|os.O_CREATE|os.O_RDWR, 0o600)
 		if err != nil {
 			fmt.Println(err)
 
 			return fmt.Errorf("cmd: %w", err)
 		}
+		defer outFile.Close()
 
-		words, err := screenshot.RecognizeWords(content)
-		if err != nil {
-			fmt.Println(err)
-
-			return fmt.Errorf("cmd: %w", err)
-		}
-		if verbose {
-			fmt.Println(string(words))
-		}
-
-		// If the words output must not be saved somewhere, return.
-		// Otherwise - save it to the given "output" location.
-		if !save {
-			return nil
-		}
-		file, err := os.OpenFile(filepath.Clean(outPath), os.O_APPEND|os.O_CREATE|os.O_RDWR, 0o600)
-		if err != nil {
-			fmt.Println(err)
+		// Clear outFile and reset to beginning
+		if err := outFile.Truncate(0); err != nil {
+			logger.Error("wordsCmd", "err", err)
 
 			return fmt.Errorf("cmd: %w", err)
 		}
-		defer file.Close()
+		if _, err := outFile.Seek(0, 0); err != nil {
+			logger.Error("wordsCmd", "err", err)
 
-		// Check if words from a given screenshot were already written.
-		scanner := bufio.NewScanner(file)
-		scanner.Split(bufio.ScanLines)
+			return fmt.Errorf("cmd: %w", err)
+		}
 
-		headerExists := false
-		header := "#" + filepath.Base(screenshotFile)
+		// Process each screenshot file (header write + words recognition)
+		for _, file := range files {
+			if err := processScreenshot(file, outFile); err != nil {
+				logger.Error("wordsCmd", "err", err)
 
-		for scanner.Scan() {
-			if scanner.Text() == header {
-				headerExists = true
+				return fmt.Errorf("cmd: %w", err)
 			}
 		}
-		if err := scanner.Err(); err != nil {
-			fmt.Println(err)
-
-			return fmt.Errorf("cmd: %w", err)
-		}
-
-		// Write a 'header' if it does not exist at the top to avoid past screenshot's file
-		// recognized words from the past.
-		if headerExists {
-			fmt.Println(filepath.Base(screenshotFile), "words already written.")
-
-			return nil
-		}
-		if _, err := file.WriteString("#" + filepath.Base(screenshotFile) + "\n"); err != nil {
-			fmt.Println(err)
-
-			return fmt.Errorf("cmd: %w", err)
-		}
-		if _, err := file.WriteString(string(words) + "\n\n"); err != nil {
-			fmt.Println(err)
-
-			return fmt.Errorf("cmd: %w", err)
-		}
-		fmt.Println("Added new content for", filepath.Base(screenshotFile))
 
 		return nil
 	},
@@ -128,7 +120,7 @@ func init() {
 
 	rootCmd.AddCommand(wordsCmd)
 
-	wordsCmd.PersistentFlags().StringVarP(&screenshotFile, "file", "f", "", "File to read words from")
+	wordsCmd.PersistentFlags().StringVarP(&filename, "file", "f", "", "File to read words from")
 	if err := wordsCmd.MarkPersistentFlagRequired("file"); err != nil {
 		logger.Error("wordsCmd", "err", err.Error())
 	}
@@ -142,6 +134,46 @@ func init() {
 	wordsCmd.MarkFlagsRequiredTogether("save", "out")
 
 	wordsCmd.Flags().BoolVarP(&verbose, "verbose", "v", false, "Verbose")
+}
+
+func processScreenshot(filePath string, outFile *os.File) error {
+	filePath = filepath.Clean(filePath)
+	content, err := os.ReadFile(filePath)
+	if err != nil {
+		return fmt.Errorf("failed to read file: %w", err)
+	}
+
+	words, err := screenshot.RecognizeWords(content)
+	if err != nil {
+		return fmt.Errorf("failed to recognize words: %w", err)
+	}
+
+	if verbose {
+		logger.Info("wordsCmd: recognized words", "file", filePath, "words", string(words))
+	}
+
+	if save {
+		// Write '#filename + words'.
+		// Header is a combination of # +'filename'.
+		header := "#" + filepath.Base(filePath) + "\n"
+		if _, err := outFile.WriteString(header); err != nil {
+			return fmt.Errorf("failed to write header: %w", err)
+		}
+		if _, err := outFile.Write(words); err != nil {
+			return fmt.Errorf("failed to write words: %w", err)
+		}
+		if _, err := outFile.WriteString("\n\n"); err != nil {
+			return fmt.Errorf("failed to write newlines: %w", err)
+		}
+	}
+
+	return nil
+}
+
+func isImageFile(name string) bool {
+	ext := strings.ToLower(filepath.Ext(name))
+
+	return ext == ".png" || ext == ".jpg" || ext == ".jpeg"
 }
 
 func Exit(funcs ...func() error) func() error {

@@ -12,7 +12,7 @@ const (
 	UNKNOWN
 )
 
-// Bytes returns the byte slice representation of the format.
-func (f Format) Bytes() []byte {
-	return []byte(f.String())
+// Bytes returns the byte slice representation of the Format.
+func (i Format) Bytes() []byte {
+	return []byte(i.String())
 }

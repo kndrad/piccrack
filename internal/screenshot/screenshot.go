@@ -3,6 +3,8 @@ package screenshot
 import (
 	"bytes"
 	"fmt"
+	"log/slog"
+	"os"
 
 	"github.com/pkg/errors"
 
@@ -29,12 +31,14 @@ var (
 	// ErrTooLarge is returned when the buffer exceeds the maximum allowed size.
 	ErrTooLarge = errors.New("buffer is too large")
 
-	// ErrUnknownScreenshotFormat is returned when the image format is unknown.
-	ErrUnknownScreenshotFormat = errors.New("unknown image format")
+	// ErrUnknownFormat is returned when the image format is unknown.
+	ErrUnknownFormat = errors.New("unknown image format")
 
 	// ErrUnknownLanguage is returned when language could not be detected.
 	ErrUnknownLanguage = errors.New("unknown language")
 )
+
+var logger *slog.Logger
 
 // RecognizeWords runs OCR on the provided content using Tesseract and returns cleaned from stop words
 // text as a slice of bytes.
@@ -48,12 +52,14 @@ func RecognizeWords(content []byte) ([]byte, error) {
 	if err := CheckSize(content); err != nil {
 		return nil, fmt.Errorf("decode: %w", err)
 	}
-	if !IsPNG(content) {
-		return nil, errors.Wrap(ErrUnknownScreenshotFormat, "decode: unknown image format")
-	}
+	// if !IsPNG(content) {
+	// return nil, errors.Wrap(ErrUnknownFormat, "decode: unknown image format")
+	// }
 
+	logger.Info("screenshot: launching tesseract.")
 	client := tesseract.NewClient()
 	defer client.Close()
+	logger.Info("screenshot: tesseract client initialized.")
 
 	client.Trim = true
 
@@ -63,14 +69,15 @@ func RecognizeWords(content []byte) ([]byte, error) {
 	if err := client.SetImageFromBytes(content); err != nil {
 		return nil, fmt.Errorf("decode: %w", err)
 	}
+	logger.Info("screenshot: starting recoginition with tesseract client.")
 	text, err := client.Text()
 	if err != nil {
 		return nil, fmt.Errorf("decode: %w", err)
 	}
-
 	if text == "" {
 		return nil, ErrEmptyContent
 	}
+	logger.Info("screenshot: finisihed text recognition tesseract client.", "len(text)", len(text))
 
 	languages := []lingua.Language{
 		lingua.English,
@@ -78,6 +85,7 @@ func RecognizeWords(content []byte) ([]byte, error) {
 	}
 
 	// Build the detector with valid languages
+	logger.Info("screenshot: building language detector - detecting.")
 	d := lingua.NewLanguageDetectorBuilder().
 		FromLanguages(languages...).
 		Build()
@@ -85,15 +93,24 @@ func RecognizeWords(content []byte) ([]byte, error) {
 	if !exists {
 		return nil, ErrUnknownLanguage
 	}
-	code := lingua.GetIsoCode639_1FromValue(lang.String())
+	logger.Info("screenshot: detected language of text", "lang", lang.String())
 
-	return bytes.Trim(
-		stopwords.Clean([]byte(text), code.String(), true),
+	// Get language code to pass into stopwords.Clean
+	code := lang.IsoCode639_1().String()
+	logger.Info("screenshot: language detector finished.", "detected_language", code)
+
+	logger.Info("screenshot: cleaning text from stop-words.")
+	words := bytes.Trim(
+		stopwords.Clean([]byte(text), code, true),
 		" ",
-	), nil
+	)
+	logger.Info("screenshot: finished cleaning text.", "len(words)", len(words))
+
+	return words, nil
 }
 
 // IsPNG checks if the given content contains PNG metadata.
+// Might be removed in the future.
 func IsPNG(content []byte) bool {
 	return bytes.Contains(content[:4], PNG.Bytes())
 }
@@ -119,4 +136,8 @@ func CheckSize(content []byte) error {
 	}
 
 	return nil
+}
+
+func init() {
+	logger = slog.New(slog.NewJSONHandler(os.Stdout, nil))
 }
