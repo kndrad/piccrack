@@ -55,7 +55,7 @@ var wordsCmd = &cobra.Command{
 
 		var files []string
 
-		// Check if filename is a directory
+		// Check if filename is a directory, if it is - process many screenshots within it.
 		stat, err := os.Stat(filename)
 		if err != nil {
 			logger.Error("wordsCmd", "err", err)
@@ -66,7 +66,7 @@ var wordsCmd = &cobra.Command{
 			// File represents a directory so append each screenshot file to files (with non image removal).
 			logger.Info("wordsCmd: processing directory", "filename", filename)
 
-			entries, err := os.ReadDir(filename)
+			entries, err := os.ReadDir(filepath.Clean(filename))
 			if err != nil {
 				logger.Error("wordsCmd", "err", err)
 
@@ -75,7 +75,7 @@ var wordsCmd = &cobra.Command{
 			// Append image files only
 			for _, e := range entries {
 				if !e.IsDir() && isImageFile(e.Name()) {
-					files = append(files, filepath.Join(filename+string(filepath.Separator)+e.Name()))
+					files = append(files, filepath.Join(filename, "/", e.Name()))
 				}
 			}
 			logger.Info("wordsCmd: number of image files in a directory", "len(filename)", len(files))
