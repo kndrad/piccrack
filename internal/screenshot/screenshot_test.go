@@ -230,6 +230,8 @@ func ReadTestFile(name string) ([]byte, error) {
 }
 
 func FullTestFilePath(t *testing.T, name string) string {
+	t.Helper()
+
 	wd, err := os.Getwd()
 	require.NoError(t, err)
 
@@ -238,8 +240,10 @@ func FullTestFilePath(t *testing.T, name string) string {
 
 	if !IsSubPath(wd, path) {
 		t.Error("Test file is not in the expected directory")
+
 		return ""
 	}
+
 	return path
 }
 
