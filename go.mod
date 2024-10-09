@@ -1,6 +1,6 @@
 module github.com/kndrad/itcrack
 
-go 1.23.1
+go 1.23.2
 
 require github.com/bbalet/stopwords v1.0.0
 
