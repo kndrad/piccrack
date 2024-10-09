@@ -104,7 +104,7 @@ var wordsCmd = &cobra.Command{
 
 		// Process each screenshot file (header write + words recognition)
 		for _, file := range files {
-			if err := processScreenshot(file, outFile); err != nil {
+			if err := screenshot.RecognizeFileContent(file, outFile); err != nil {
 				logger.Error("wordsCmd", "err", err)
 
 				return fmt.Errorf("cmd: %w", err)
@@ -136,39 +136,40 @@ func init() {
 	wordsCmd.Flags().BoolVarP(&verbose, "verbose", "v", false, "Verbose")
 }
 
-func processScreenshot(filePath string, outFile *os.File) error {
-	filePath = filepath.Clean(filePath)
-	content, err := os.ReadFile(filePath)
-	if err != nil {
-		return fmt.Errorf("failed to read file: %w", err)
-	}
+// USE screenshot.RecognizeFileContent INSTEAD!
+// func processScreenshotFile(path string, w io.Writer) error {
+// 	path = filepath.Clean(path)
+// 	content, err := os.ReadFile(path)
+// 	if err != nil {
+// 		return fmt.Errorf("failed to read file: %w", err)
+// 	}
 
-	words, err := screenshot.RecognizeWords(content)
-	if err != nil {
-		return fmt.Errorf("failed to recognize words: %w", err)
-	}
+// 	words, err := screenshot.RecognizeContent(content)
+// 	if err != nil {
+// 		return fmt.Errorf("failed to recognize words: %w", err)
+// 	}
 
-	if verbose {
-		logger.Info("wordsCmd: recognized words", "file", filePath, "words", string(words))
-	}
+// 	if verbose {
+// 		logger.Info("wordsCmd: recognized words", "file", path, "words", string(words))
+// 	}
 
-	if save {
-		// Write '#filename + words'.
-		// Header is a combination of # +'filename'.
-		header := "#" + filepath.Base(filePath) + "\n"
-		if _, err := outFile.WriteString(header); err != nil {
-			return fmt.Errorf("failed to write header: %w", err)
-		}
-		if _, err := outFile.Write(words); err != nil {
-			return fmt.Errorf("failed to write words: %w", err)
-		}
-		if _, err := outFile.WriteString("\n\n"); err != nil {
-			return fmt.Errorf("failed to write newlines: %w", err)
-		}
-	}
+// 	if save {
+// 		// Write '#filename + words'.
+// 		// Header is a combination of # +'filename'.
+// 		header := "#" + filepath.Base(path) + "\n"
+// 		if _, err := w.Write([]byte(header)); err != nil {
+// 			return fmt.Errorf("failed to write header: %w", err)
+// 		}
+// 		if _, err := w.Write(words); err != nil {
+// 			return fmt.Errorf("failed to write words: %w", err)
+// 		}
+// 		if _, err := w.Write([]byte("\n\n")); err != nil {
+// 			return fmt.Errorf("failed to write newlines: %w", err)
+// 		}
+// 	}
 
-	return nil
-}
+// 	return nil
+// }
 
 func isImageFile(name string) bool {
 	ext := strings.ToLower(filepath.Ext(name))

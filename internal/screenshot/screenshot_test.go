@@ -16,9 +16,36 @@ import (
 const (
 	TestDataDir = "testdata"
 	TestPNGFile = "golang_0.png"
+	TestTmpDir  = "testtmp"
 )
 
-func TestRecognizeWords(t *testing.T) {
+func Test_RecognizeFileContent(t *testing.T) {
+	t.Parallel()
+
+	wd, err := os.Getwd()
+	require.NoError(t, err)
+	tempDirPath := filepath.Join(wd, TestDataDir)
+	if !IsValidTestSubPath(t, tempDirPath) {
+		t.Error("not a valid test subpath", tempDirPath)
+	}
+
+	// Create a temporary directiory for output files
+	tmpDir, err := os.MkdirTemp(tempDirPath, TestTmpDir)
+	require.NoError(t, err)
+	defer os.RemoveAll(tmpDir)
+
+	// Create a temporary tmpFile for recognition output
+	tmpFile, err := os.CreateTemp(tmpDir, "out*.txt")
+	require.NoError(t, err)
+	defer os.Remove(tmpFile.Name())
+
+	filePath := FullTestFilePath(t, TestPNGFile)
+	if err := screenshot.RecognizeFileContent(filePath, tmpFile); err != nil {
+		require.NoError(t, err)
+	}
+}
+
+func Test_RecognizeContent(t *testing.T) {
 	t.Parallel()
 
 	type input struct {
@@ -28,7 +55,7 @@ func TestRecognizeWords(t *testing.T) {
 		err error
 	}
 
-	content := testScreenshotFile(t)
+	content := ReadTestPNGFile(t)
 
 	testcases := map[string]struct {
 		input    *input
@@ -43,14 +70,14 @@ func TestRecognizeWords(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 
-			result, err := screenshot.RecognizeWords(testcase.input.content)
+			result, err := screenshot.RecognizeContent(testcase.input.content)
 			require.ErrorIsf(t, err, testcase.expected.err, "expected %q but got '%q'", testcase.expected.err, err)
 			require.NotNil(t, result, "expected not nil result")
 		})
 	}
 }
 
-func TestValidateBufferSize(t *testing.T) {
+func Test_ValidateSize(t *testing.T) {
 	t.Parallel()
 
 	type input struct {
@@ -90,13 +117,13 @@ func TestValidateBufferSize(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 
-			err := screenshot.CheckSize(testcase.input.content)
+			err := screenshot.ValidateSize(testcase.input.content)
 			assert.ErrorIsf(t, err, testcase.expected.err, "expected %q but got '%q'", testcase.expected.err, err)
 		})
 	}
 }
 
-func TestScreenshotFormat_String(t *testing.T) {
+func Test_ScreenshotFormat_String(t *testing.T) {
 	t.Parallel()
 
 	type input struct {
@@ -135,7 +162,7 @@ func TestScreenshotFormat_String(t *testing.T) {
 	}
 }
 
-func TestIsPNG(t *testing.T) {
+func Test_IsPNG(t *testing.T) {
 	t.Parallel()
 
 	type input struct {
@@ -145,7 +172,7 @@ func TestIsPNG(t *testing.T) {
 		ok bool
 	}
 
-	content := testScreenshotFile(t)
+	content := ReadTestPNGFile(t)
 
 	testcases := map[string]struct {
 		input    *input
@@ -171,10 +198,10 @@ func TestIsPNG(t *testing.T) {
 	}
 }
 
-func testScreenshotFile(t *testing.T) []byte {
+func ReadTestPNGFile(t *testing.T) []byte {
 	t.Helper()
 
-	content, err := readScreenshotFile()
+	content, err := ReadTestFile(TestPNGFile)
 	if err != nil {
 		t.Errorf("testIsPNG: %v", err)
 	}
@@ -182,14 +209,15 @@ func testScreenshotFile(t *testing.T) []byte {
 	return content
 }
 
-func readScreenshotFile() ([]byte, error) {
-	workingDir, err := os.Getwd()
+func ReadTestFile(name string) ([]byte, error) {
+	wd, err := os.Getwd()
 	if err != nil {
 		return nil, fmt.Errorf("readFile: %w", err)
 	}
 
-	path := filepath.Join(workingDir, TestDataDir, TestPNGFile)
-	if !isSubPath(workingDir, path) {
+	name = filepath.Base(filepath.Clean(name))
+	path := filepath.Join(wd, TestDataDir, name)
+	if !IsSubPath(wd, path) {
 		return nil, errors.New("Test file is not in the expected directory")
 	}
 
@@ -201,8 +229,31 @@ func readScreenshotFile() ([]byte, error) {
 	return png, nil
 }
 
-// isSubPath checks if the filePath is a subpath of the base path.
-func isSubPath(basePath, filePath string) bool {
+func FullTestFilePath(t *testing.T, name string) string {
+	wd, err := os.Getwd()
+	require.NoError(t, err)
+
+	name = filepath.Base(filepath.Clean(name))
+	path := filepath.Join(wd, TestDataDir, name)
+
+	if !IsSubPath(wd, path) {
+		t.Error("Test file is not in the expected directory")
+		return ""
+	}
+	return path
+}
+
+func IsValidTestSubPath(t *testing.T, path string) bool {
+	t.Helper()
+
+	wd, err := os.Getwd()
+	require.NoError(t, err)
+
+	return IsSubPath(wd, path)
+}
+
+// IsSubPath checks if the filePath is a subpath of the base path.
+func IsSubPath(basePath, filePath string) bool {
 	rel, err := filepath.Rel(basePath, filePath)
 	if err != nil {
 		return false

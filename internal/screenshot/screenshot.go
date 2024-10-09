@@ -3,8 +3,10 @@ package screenshot
 import (
 	"bytes"
 	"fmt"
+	"io"
 	"log/slog"
 	"os"
+	"path/filepath"
 
 	"github.com/pkg/errors"
 
@@ -40,7 +42,7 @@ var (
 
 var logger *slog.Logger
 
-// RecognizeWords runs OCR on the provided content using Tesseract and returns cleaned from stop words
+// RecognizeContent runs OCR on the provided content using Tesseract and returns cleaned from stop words
 // text as a slice of bytes.
 //
 // Accepts options to configure the Tesseract client.
@@ -48,8 +50,8 @@ var logger *slog.Logger
 //
 // Content must be a PNG image. Any other format will result in an error.
 // Content size must be within allowed range. See MaxSize and MinSize.
-func RecognizeWords(content []byte) ([]byte, error) {
-	if err := CheckSize(content); err != nil {
+func RecognizeContent(content []byte) ([]byte, error) {
+	if err := ValidateSize(content); err != nil {
 		return nil, fmt.Errorf("decode: %w", err)
 	}
 	// if !IsPNG(content) {
@@ -77,7 +79,7 @@ func RecognizeWords(content []byte) ([]byte, error) {
 	if text == "" {
 		return nil, ErrEmptyContent
 	}
-	logger.Info("screenshot: finisihed text recognition tesseract client.", "len(text)", len(text))
+	logger.Info("screenshot: finisihed text recognition tesseract client.", "text_total", len(text))
 
 	languages := []lingua.Language{
 		lingua.English,
@@ -104,7 +106,7 @@ func RecognizeWords(content []byte) ([]byte, error) {
 		stopwords.Clean([]byte(text), code, true),
 		" ",
 	)
-	logger.Info("screenshot: finished cleaning text.", "len(words)", len(words))
+	logger.Info("screenshot: finished cleaning text.", "words_total", len(words))
 
 	return words, nil
 }
@@ -123,8 +125,8 @@ const (
 	MinSize = 1 * 16
 )
 
-// CheckSize checks if the content buffer size is within the allowed size range.
-func CheckSize(content []byte) error {
+// ValidateSize checks if the content buffer size is within the allowed size range.
+func ValidateSize(content []byte) error {
 	if len(content) == 0 {
 		return errors.Wrap(ErrEmptyContent, "content is empty")
 	}
@@ -133,6 +135,34 @@ func CheckSize(content []byte) error {
 	}
 	if len(content) > MaxSize {
 		return errors.Wrapf(ErrTooLarge, "exceeds %d", MaxSize)
+	}
+
+	return nil
+}
+
+func RecognizeFileContent(path string, out io.Writer) error {
+	path = filepath.Clean(path)
+	content, err := os.ReadFile(path)
+	if err != nil {
+		return fmt.Errorf("failed to read file: %w", err)
+	}
+
+	words, err := RecognizeContent(content)
+	if err != nil {
+		return fmt.Errorf("failed to recognize words: %w", err)
+	}
+
+	// Write '#filename + words'.
+	// Header is a combination of # +'filename'.
+	header := "#" + filepath.Base(path) + "\n"
+	if _, err := out.Write([]byte(header)); err != nil {
+		return fmt.Errorf("failed to write header: %w", err)
+	}
+	if _, err := out.Write(words); err != nil {
+		return fmt.Errorf("failed to write words: %w", err)
+	}
+	if _, err := out.Write([]byte("\n\n")); err != nil {
+		return fmt.Errorf("failed to write newlines: %w", err)
 	}
 
 	return nil
