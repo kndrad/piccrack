@@ -35,10 +35,10 @@ import (
 var logger *slog.Logger
 
 var (
-	screenshotFile string
-	save           bool
-	outPath        string
-	verbose        bool
+	filename string
+	save     bool
+	outPath  string
+	verbose  bool
 )
 
 // wordsCmd represents the words command.
@@ -52,16 +52,28 @@ var wordsCmd = &cobra.Command{
 		exit := Exit()
 		defer exit()
 
-		content, err := os.ReadFile(filepath.Clean(screenshotFile))
+		// Check if filename is a directory
+		stat, err := os.Stat(filepath.Clean(filename))
 		if err != nil {
-			fmt.Println(err)
+			logger.Error("wordsCmd", "err", err.Error())
+
+			return fmt.Errorf("cmd: %w", err)
+		}
+		isDir := stat.IsDir()
+		if isDir {
+			logger.Info("wordsCmd", "isDir", isDir)
+		}
+
+		content, err := os.ReadFile(filepath.Clean(filename))
+		if err != nil {
+			logger.Error("wordsCmd", "err", err.Error())
 
 			return fmt.Errorf("cmd: %w", err)
 		}
 
 		words, err := screenshot.RecognizeWords(content)
 		if err != nil {
-			fmt.Println(err)
+			logger.Error("wordsCmd", "err", err.Error())
 
 			return fmt.Errorf("cmd: %w", err)
 		}
@@ -76,7 +88,7 @@ var wordsCmd = &cobra.Command{
 		}
 		file, err := os.OpenFile(filepath.Clean(outPath), os.O_APPEND|os.O_CREATE|os.O_RDWR, 0o600)
 		if err != nil {
-			fmt.Println(err)
+			logger.Error("wordsCmd", "err", err.Error())
 
 			return fmt.Errorf("cmd: %w", err)
 		}
@@ -87,7 +99,7 @@ var wordsCmd = &cobra.Command{
 		scanner.Split(bufio.ScanLines)
 
 		headerExists := false
-		header := "#" + filepath.Base(screenshotFile)
+		header := "#" + filepath.Base(filename)
 
 		for scanner.Scan() {
 			if scanner.Text() == header {
@@ -95,7 +107,7 @@ var wordsCmd = &cobra.Command{
 			}
 		}
 		if err := scanner.Err(); err != nil {
-			fmt.Println(err)
+			logger.Error("wordsCmd", "err", err.Error())
 
 			return fmt.Errorf("cmd: %w", err)
 		}
@@ -103,21 +115,21 @@ var wordsCmd = &cobra.Command{
 		// Write a 'header' if it does not exist at the top to avoid past screenshot's file
 		// recognized words from the past.
 		if headerExists {
-			fmt.Println(filepath.Base(screenshotFile), "words already written.")
+			logger.Error("wordsCmd", "err", err.Error())
 
-			return nil
+			return fmt.Errorf("cmd: %w", err)
 		}
-		if _, err := file.WriteString("#" + filepath.Base(screenshotFile) + "\n"); err != nil {
-			fmt.Println(err)
+		if _, err := file.WriteString("#" + filepath.Base(filename) + "\n"); err != nil {
+			logger.Error("wordsCmd", "err", err.Error())
 
 			return fmt.Errorf("cmd: %w", err)
 		}
 		if _, err := file.WriteString(string(words) + "\n\n"); err != nil {
-			fmt.Println(err)
+			logger.Error("wordsCmd", "err", err.Error())
 
 			return fmt.Errorf("cmd: %w", err)
 		}
-		fmt.Println("Added new content for", filepath.Base(screenshotFile))
+		fmt.Println("Added new content for", filepath.Base(filename))
 
 		return nil
 	},
@@ -128,7 +140,7 @@ func init() {
 
 	rootCmd.AddCommand(wordsCmd)
 
-	wordsCmd.PersistentFlags().StringVarP(&screenshotFile, "file", "f", "", "File to read words from")
+	wordsCmd.PersistentFlags().StringVarP(&filename, "file", "f", "", "File to read words from")
 	if err := wordsCmd.MarkPersistentFlagRequired("file"); err != nil {
 		logger.Error("wordsCmd", "err", err.Error())
 	}
