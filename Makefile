@@ -22,3 +22,9 @@ cover:
 
 tests:
 	go test ./... -count=1 -failfast
+
+staging:
+	./scripts/format.sh
+	./scripts/check.sh
+	go test ./... -count=1 -failfast -coverprofile=coverage.out
+
