@@ -42,15 +42,15 @@ var (
 
 var logger *slog.Logger
 
-// RecognizeContent runs OCR on the provided content using Tesseract and returns cleaned from stop words
+// RecognizeWords runs OCR on the provided image content using Tesseract and returns cleaned from stop words
 // text as a slice of bytes.
 //
 // Accepts options to configure the Tesseract client.
 // English recognition is always applied.
 //
-// Content must be a PNG image. Any other format will result in an error.
+// Content must be an image. Any other format will result in an error.
 // Content size must be within allowed range. See MaxSize and MinSize.
-func RecognizeContent(content []byte) ([]byte, error) {
+func RecognizeWords(content []byte) ([]byte, error) {
 	if err := ValidateSize(content); err != nil {
 		return nil, fmt.Errorf("decode: %w", err)
 	}
@@ -147,7 +147,7 @@ func RecognizeFileContent(path string, out io.Writer) error {
 		return fmt.Errorf("failed to read file: %w", err)
 	}
 
-	words, err := RecognizeContent(content)
+	words, err := RecognizeWords(content)
 	if err != nil {
 		return fmt.Errorf("failed to recognize words: %w", err)
 	}
