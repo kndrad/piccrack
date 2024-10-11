@@ -19,6 +19,39 @@ const (
 	TestTmpDir  = "testtmp"
 )
 
+func Test_textFileWriter(t *testing.T) {
+	t.Parallel()
+
+	wd, err := os.Getwd()
+	require.NoError(t, err)
+	tempDirPath := filepath.Join(wd, TestDataDir)
+	if !IsValidTestSubPath(t, tempDirPath) {
+		t.Error("not a valid test subpath", tempDirPath)
+	}
+
+	// Create a temporary directiory for output files
+	tmpDir, err := os.MkdirTemp(tempDirPath, TestTmpDir)
+	require.NoError(t, err)
+	defer os.RemoveAll(tmpDir)
+
+	// Create a temporary tmpFile for recognition output
+	tmpFile, err := os.CreateTemp(tmpDir, "out*.txt")
+	require.NoError(t, err)
+	defer os.Remove(tmpFile.Name())
+
+	words := []byte(
+		"role senior golang developer crossfunctional development team engineering experiences tomorrow work",
+	)
+	if err := screenshot.WriteWords(words, screenshot.NewTextFileWriter(tmpFile)); err != nil {
+		require.NoError(t, err)
+	}
+
+	// Assert words appeared in a tmp file
+	contentInTmpFile, err := os.ReadFile(tmpFile.Name())
+	require.NoError(t, err)
+	assert.Equal(t, string(contentInTmpFile), string(words)+"\n")
+}
+
 func Test_WriteWords(t *testing.T) {
 	t.Parallel()
 
@@ -42,10 +75,14 @@ func Test_WriteWords(t *testing.T) {
 	words := []byte(
 		"role senior golang developer crossfunctional development team engineering experiences tomorrow work",
 	)
-
 	if err := screenshot.WriteWords(words, tmpFile); err != nil {
 		require.NoError(t, err)
 	}
+
+	// Assert words appeared in a tmp file
+	contentInTmpFile, err := os.ReadFile(tmpFile.Name())
+	require.NoError(t, err)
+	assert.Equal(t, contentInTmpFile, words)
 }
 
 func Test_RecognizeContent(t *testing.T) {
