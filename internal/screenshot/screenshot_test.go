@@ -30,14 +30,9 @@ func Test_textFileWriter(t *testing.T) {
 	}
 
 	// Create a temporary directiory for output files
-	tmpDir, err := os.MkdirTemp(tempDirPath, TestTmpDir)
-	require.NoError(t, err)
-	defer os.RemoveAll(tmpDir)
-
-	// Create a temporary tmpFile for recognition output
-	tmpFile, err := os.CreateTemp(tmpDir, "out*.txt")
-	require.NoError(t, err)
-	defer os.Remove(tmpFile.Name())
+	tmpDir := MkTestdirTemp(t)
+	tmpFile := CreateTempOutTxtFile(t, tmpDir)
+	defer RemoveTestFiles(tmpDir, tmpFile)
 
 	words := []byte(
 		"role senior golang developer crossfunctional development team engineering experiences tomorrow work",
@@ -52,6 +47,51 @@ func Test_textFileWriter(t *testing.T) {
 	assert.Equal(t, string(contentInTmpFile), string(words)+"\n")
 }
 
+func RemoveTestFiles(dir string, f *os.File) error {
+	if err := os.RemoveAll(dir); err != nil {
+		return fmt.Errorf("screenshot_test: %w", err)
+	}
+	if err := os.Remove(f.Name()); err != nil {
+		return fmt.Errorf("screenshot_test: %w", err)
+	}
+
+	return nil
+}
+
+// CreateTempOutTxtFile creates a temporary file for writing the outputs.
+func CreateTempOutTxtFile(t *testing.T, dir string) *os.File {
+	t.Helper()
+
+	wd, err := os.Getwd()
+	require.NoError(t, err)
+	tempDirPath := filepath.Join(wd, TestDataDir)
+	if !IsValidTestSubPath(t, tempDirPath) {
+		t.Error("not a valid test subpath", tempDirPath)
+	}
+
+	tmpFile, err := os.CreateTemp(dir, "out*.txt")
+	require.NoError(t, err)
+
+	return tmpFile
+}
+
+// MkTestdirTemp creates a temporary directiory for output files.
+func MkTestdirTemp(t *testing.T) string {
+	t.Helper()
+
+	wd, err := os.Getwd()
+	require.NoError(t, err)
+	tempDirPath := filepath.Join(wd, TestDataDir)
+	if !IsValidTestSubPath(t, tempDirPath) {
+		t.Error("not a valid test subpath", tempDirPath)
+	}
+
+	tmpDir, err := os.MkdirTemp(tempDirPath, TestTmpDir)
+	require.NoError(t, err)
+
+	return tmpDir
+}
+
 func Test_WriteWords(t *testing.T) {
 	t.Parallel()
 
@@ -62,15 +102,9 @@ func Test_WriteWords(t *testing.T) {
 		t.Error("not a valid test subpath", tempDirPath)
 	}
 
-	// Create a temporary directiory for output files
-	tmpDir, err := os.MkdirTemp(tempDirPath, TestTmpDir)
-	require.NoError(t, err)
-	defer os.RemoveAll(tmpDir)
-
-	// Create a temporary tmpFile for recognition output
-	tmpFile, err := os.CreateTemp(tmpDir, "out*.txt")
-	require.NoError(t, err)
-	defer os.Remove(tmpFile.Name())
+	tmpDir := MkTestdirTemp(t)
+	tmpFile := CreateTempOutTxtFile(t, tmpDir)
+	defer RemoveTestFiles(tmpDir, tmpFile)
 
 	words := []byte(
 		"role senior golang developer crossfunctional development team engineering experiences tomorrow work",
