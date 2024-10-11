@@ -19,7 +19,7 @@ const (
 	TestTmpDir  = "testtmp"
 )
 
-func Test_RecognizeFileContent(t *testing.T) {
+func Test_WriteWords(t *testing.T) {
 	t.Parallel()
 
 	wd, err := os.Getwd()
@@ -39,8 +39,11 @@ func Test_RecognizeFileContent(t *testing.T) {
 	require.NoError(t, err)
 	defer os.Remove(tmpFile.Name())
 
-	filePath := FullTestFilePath(t, TestPNGFile)
-	if err := screenshot.RecognizeFileContent(filePath, tmpFile); err != nil {
+	words := []byte(
+		"role senior golang developer crossfunctional development team engineering experiences tomorrow work",
+	)
+
+	if err := screenshot.WriteWords(words, tmpFile); err != nil {
 		require.NoError(t, err)
 	}
 }

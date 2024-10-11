@@ -3,10 +3,8 @@ package screenshot
 import (
 	"bytes"
 	"fmt"
-	"io"
 	"log/slog"
 	"os"
-	"path/filepath"
 
 	"github.com/pkg/errors"
 
@@ -111,12 +109,6 @@ func RecognizeWords(content []byte) ([]byte, error) {
 	return words, nil
 }
 
-// IsPNG checks if the given content contains PNG metadata.
-// Might be removed in the future.
-func IsPNG(content []byte) bool {
-	return bytes.Contains(content[:4], PNG.Bytes())
-}
-
 const (
 	// MaxSize is the maximum allowed size for an image, set to 3 MB.
 	MaxSize int = 3 * 1024 * 1024
@@ -140,32 +132,10 @@ func ValidateSize(content []byte) error {
 	return nil
 }
 
-func RecognizeFileContent(path string, out io.Writer) error {
-	path = filepath.Clean(path)
-	content, err := os.ReadFile(path)
-	if err != nil {
-		return fmt.Errorf("failed to read file: %w", err)
-	}
-
-	words, err := RecognizeWords(content)
-	if err != nil {
-		return fmt.Errorf("failed to recognize words: %w", err)
-	}
-
-	// Write '#filename + words'.
-	// Header is a combination of # +'filename'.
-	header := "#" + filepath.Base(path) + "\n"
-	if _, err := out.Write([]byte(header)); err != nil {
-		return fmt.Errorf("failed to write header: %w", err)
-	}
-	if _, err := out.Write(words); err != nil {
-		return fmt.Errorf("failed to write words: %w", err)
-	}
-	if _, err := out.Write([]byte("\n\n")); err != nil {
-		return fmt.Errorf("failed to write newlines: %w", err)
-	}
-
-	return nil
+// IsPNG checks if the given content contains PNG metadata.
+// Might be removed in the future.
+func IsPNG(content []byte) bool {
+	return bytes.Contains(content[:4], PNG.Bytes())
 }
 
 func init() {

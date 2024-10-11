@@ -53,6 +53,7 @@ var wordsCmd = &cobra.Command{
 		exit := Exit()
 		defer exit()
 
+		// Get all screenshot files
 		var files []string
 
 		// Check if filename is a directory, if it is - process many screenshots within it.
@@ -60,7 +61,7 @@ var wordsCmd = &cobra.Command{
 		if err != nil {
 			logger.Error("wordsCmd", "err", err)
 
-			return fmt.Errorf("cmd: %w", err)
+			return fmt.Errorf("wordsCmd: %w", err)
 		}
 		if stat.IsDir() {
 			// File represents a directory so append each screenshot file to files (with non image removal).
@@ -70,7 +71,7 @@ var wordsCmd = &cobra.Command{
 			if err != nil {
 				logger.Error("wordsCmd", "err", err)
 
-				return fmt.Errorf("cmd: %w", err)
+				return fmt.Errorf("wordsCmd: %w", err)
 			}
 			// Append image files only
 			for _, e := range entries {
@@ -82,11 +83,12 @@ var wordsCmd = &cobra.Command{
 		} else {
 			files = append(files, filename)
 		}
+
 		outFile, err := os.OpenFile(filepath.Clean(outPath), os.O_APPEND|os.O_CREATE|os.O_RDWR, 0o600)
 		if err != nil {
 			fmt.Println(err)
 
-			return fmt.Errorf("cmd: %w", err)
+			return fmt.Errorf("wordsCmd: %w", err)
 		}
 		defer outFile.Close()
 
@@ -94,20 +96,33 @@ var wordsCmd = &cobra.Command{
 		if err := outFile.Truncate(0); err != nil {
 			logger.Error("wordsCmd", "err", err)
 
-			return fmt.Errorf("cmd: %w", err)
+			return fmt.Errorf("wordsCmd: %w", err)
 		}
 		if _, err := outFile.Seek(0, 0); err != nil {
 			logger.Error("wordsCmd", "err", err)
 
-			return fmt.Errorf("cmd: %w", err)
+			return fmt.Errorf("wordsCmd: %w", err)
 		}
 
-		// Process each screenshot file (header write + words recognition)
-		for _, file := range files {
-			if err := screenshot.RecognizeFileContent(file, outFile); err != nil {
+		// Process each screenshot and write an out file
+		for _, name := range files {
+			fmt.Println("filename:", name)
+			content, err := os.ReadFile(filepath.Clean(name))
+			if err != nil {
 				logger.Error("wordsCmd", "err", err)
 
-				return fmt.Errorf("cmd: %w", err)
+				return fmt.Errorf("wordsCmd: %w", err)
+			}
+			words, err := screenshot.RecognizeWords(content)
+			if err != nil {
+				logger.Error("wordsCmd", "err", err)
+
+				return fmt.Errorf("wordsCmd: %w", err)
+			}
+			if err := screenshot.WriteWords(words, screenshot.NewTextFileWriter(outFile)); err != nil {
+				logger.Error("wordsCmd", "err", err)
+
+				return fmt.Errorf("wordsCmd: %w", err)
 			}
 		}
 

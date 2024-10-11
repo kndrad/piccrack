@@ -8,10 +8,10 @@ main:
 	go run ./cmd/main.go
 
 words-1:
-	go run main.go words --file=./internal/screenshot/testdata/golang_0.png --save=true -o=./internal/screenshot/testdata/out-file.txt
+	go run main.go words --file=./internal/screenshot/testdata/golang_0.png --save=true -o=./internal/screenshot/testdata/out.txt
 
 words-2:
-	go run main.go words --file=./internal/screenshot/testdata/ --save=true -o=./internal/screenshot/testdata/out-dir.txt
+	go run main.go words --file=./internal/screenshot/testdata/ --save=true -o=./internal/screenshot/testdata/out_dir.txt
 
 cover-html:
 	go test ./... -count=1 -failfast -coverprofile=coverage.out
