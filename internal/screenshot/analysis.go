@@ -4,8 +4,6 @@ import (
 	"crypto/rand"
 	"fmt"
 	"math/big"
-	"strconv"
-	"strings"
 	"sync"
 )
 
@@ -20,7 +18,7 @@ type TextAnalysis struct {
 
 // Creates a new TextAnalysis.
 func NewTextAnalysis(name string) (*TextAnalysis, error) {
-	rv, err := RandomInt(10000)
+	rv, err := randomInt(10000)
 	if err != nil {
 		return nil, fmt.Errorf("NewTextAnalysis: %w", err)
 	}
@@ -46,16 +44,6 @@ func (ta *TextAnalysis) Add(word string) {
 	ta.WordFrequency[word]++
 }
 
-func (ta *TextAnalysis) String() string {
-	builder := new(strings.Builder)
-	builder.WriteString(ta.name + "\n")
-
-	for word, freq := range ta.WordFrequency {
-		builder.WriteString(word + ":" + strconv.Itoa(freq) + "\n")
-	}
-
-	return builder.String()
-}
 
 func (ta *TextAnalysis) Name() string {
 	return ta.name
@@ -63,7 +51,7 @@ func (ta *TextAnalysis) Name() string {
 
 var defaultX int64 = 10000
 
-func RandomInt(x int64) (*big.Int, error) {
+func randomInt(x int64) (*big.Int, error) {
 	if x == 0 {
 		x = defaultX
 	}
