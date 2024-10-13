@@ -26,3 +26,6 @@ go.work.sum
 
 # .txt
 llm_input.txt
+
+# jsons
+frequency_analysis_*.json
