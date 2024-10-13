@@ -3,17 +3,16 @@ package screenshot
 import (
 	"fmt"
 	"io"
-	"log/slog"
 	"os"
 	"strings"
 	"sync"
 )
 
-type WordsFileWriter interface {
+type WordsWriter interface {
 	Write(words []byte) (int, error)
 }
 
-func WriteWords(words []byte, w WordsFileWriter) error {
+func WriteWords(words []byte, w WordsWriter) error {
 	// Write words
 	if _, err := w.Write(words); err != nil {
 		return fmt.Errorf("failed to write words: %w", err)
@@ -48,8 +47,4 @@ func (w *wordsTextFileWriter) Write(words []byte) (int, error) {
 	}
 
 	return n, nil
-}
-
-func init() {
-	logger = slog.New(slog.NewJSONHandler(os.Stdout, nil))
 }

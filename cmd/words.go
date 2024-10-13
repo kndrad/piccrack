@@ -24,16 +24,12 @@ package cmd
 import (
 	"bufio"
 	"bytes"
-	"crypto/rand"
 	"encoding/json"
 	"fmt"
 	"io/fs"
-	"math/big"
 	"os"
 	"path/filepath"
-	"strconv"
 	"strings"
-	"sync"
 
 	"github.com/kndrad/itcrack/internal/screenshot"
 	"github.com/spf13/cobra"
@@ -176,7 +172,7 @@ var frequencyCmd = &cobra.Command{
 			return fmt.Errorf("frequencyCmd: %w", err)
 		}
 
-		textAnalysis, err := NewTextAnalysis("1")
+		textAnalysis, err := screenshot.NewTextAnalysis("1")
 		if err != nil {
 			logger.Error("frequencyCmd", "err", err)
 
@@ -189,7 +185,7 @@ var frequencyCmd = &cobra.Command{
 		jsonPath := filepath.Join(
 			filepath.Clean(outPath),
 			string(filepath.Separator),
-			textAnalysis.name+".json",
+			textAnalysis.Name()+".json",
 		)
 		logger.Info("frequencyCmd opening file", "jsonFilePath", jsonPath)
 		jsonFile, err := OpenCleanFile(jsonPath, os.O_CREATE|os.O_RDWR, 0o600)
@@ -215,69 +211,6 @@ var frequencyCmd = &cobra.Command{
 
 		return nil
 	},
-}
-
-// TextAnalysis represents a struct which contains WordFrequency field and a Name field
-// of this analysis.
-type TextAnalysis struct {
-	name          string
-	WordFrequency map[string]int `json:"wordFrequency"`
-
-	mu sync.Mutex
-}
-
-// Creates a new TextAnalysis.
-func NewTextAnalysis(name string) (*TextAnalysis, error) {
-	rv, err := RandomInt(10000)
-	if err != nil {
-		return nil, fmt.Errorf("NewTextAnalysis: %w", err)
-	}
-
-	if name == "" {
-		name = "frequency_analysis" + "_" + rv.String()
-	} else {
-		name = "frequency_analysis" + "_" + name + "_" + rv.String()
-	}
-
-	return &TextAnalysis{
-		name:          name,
-		WordFrequency: make(map[string]int),
-	}, nil
-}
-
-var defaultInt64 int64 = 10000
-
-func RandomInt(x int64) (*big.Int, error) {
-	if x == 0 {
-		x = defaultInt64
-	}
-	i := big.NewInt(x)
-	v, err := rand.Int(rand.Reader, i)
-	if err != nil {
-		return nil, fmt.Errorf("NewTextAnalysis: %w", err)
-	}
-
-	return v, nil
-}
-
-// Adds new occurrence of a word.
-// Goroutine safe.
-func (ta *TextAnalysis) Add(word string) {
-	ta.mu.Lock()
-	defer ta.mu.Unlock()
-
-	ta.WordFrequency[word]++
-}
-
-func (ta *TextAnalysis) String() string {
-	builder := new(strings.Builder)
-	builder.WriteString(ta.name + "\n")
-
-	for word, freq := range ta.WordFrequency {
-		builder.WriteString(word + ":" + strconv.Itoa(freq) + "\n")
-	}
-
-	return builder.String()
 }
 
 func OpenCleanFile(path string, flag int, perm fs.FileMode) (*os.File, error) {
