@@ -44,7 +44,6 @@ func (ta *TextAnalysis) Add(word string) {
 	ta.WordFrequency[word]++
 }
 
-
 func (ta *TextAnalysis) Name() string {
 	return ta.name
 }
