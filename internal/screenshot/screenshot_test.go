@@ -19,7 +19,7 @@ const (
 	TestTmpDir  = "testtmp"
 )
 
-func Test_textFileWriter(t *testing.T) {
+func Test_wordsTextFileWriter(t *testing.T) {
 	t.Parallel()
 
 	wd, err := os.Getwd()
@@ -37,7 +37,7 @@ func Test_textFileWriter(t *testing.T) {
 	words := []byte(
 		"role senior golang developer crossfunctional development team engineering experiences tomorrow work",
 	)
-	if err := screenshot.WriteWords(words, screenshot.NewTextFileWriter(tmpFile)); err != nil {
+	if err := screenshot.WriteWords(words, screenshot.NewWordsTextFileWriter(tmpFile)); err != nil {
 		require.NoError(t, err)
 	}
 
