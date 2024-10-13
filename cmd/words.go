@@ -22,17 +22,22 @@ THE SOFTWARE.
 package cmd
 
 import (
+	"bufio"
+	"bytes"
+	"crypto/rand"
+	"encoding/json"
 	"fmt"
-	"log/slog"
+	"io/fs"
+	"math/big"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
+	"sync"
 
 	"github.com/kndrad/itcrack/internal/screenshot"
 	"github.com/spf13/cobra"
 )
-
-var logger *slog.Logger
 
 var (
 	filename string
@@ -47,7 +52,7 @@ var wordsCmd = &cobra.Command{
 	Short: "",
 	Long:  ``,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		fmt.Println("Running 'words' command.")
+		fmt.Println("words called.")
 		filename = filepath.Clean(filename)
 
 		exit := Exit()
@@ -119,7 +124,7 @@ var wordsCmd = &cobra.Command{
 
 				return fmt.Errorf("wordsCmd: %w", err)
 			}
-			if err := screenshot.WriteWords(words, screenshot.NewTextFileWriter(outFile)); err != nil {
+			if err := screenshot.WriteWords(words, screenshot.NewWordsTextFileWriter(outFile)); err != nil {
 				logger.Error("wordsCmd", "err", err)
 
 				return fmt.Errorf("wordsCmd: %w", err)
@@ -130,25 +135,188 @@ var wordsCmd = &cobra.Command{
 	},
 }
 
-func init() {
-	logger = slog.New(slog.NewJSONHandler(os.Stdout, nil))
+// frequencyCmd represents the frequency command.
+var frequencyCmd = &cobra.Command{
+	Use:   "frequency",
+	Short: "",
+	Long:  ``,
+	RunE: func(cmd *cobra.Command, args []string) error {
+		fmt.Println("frequency called")
+		filename = filepath.Clean(filename)
+		if verbose {
+			logger.Info("frequencyCmd", "filename", filename)
+		}
 
-	rootCmd.AddCommand(wordsCmd)
+		exit := Exit()
+		defer exit()
 
-	wordsCmd.PersistentFlags().StringVarP(&filename, "file", "f", "", "File to read words from")
-	if err := wordsCmd.MarkPersistentFlagRequired("file"); err != nil {
-		logger.Error("wordsCmd", "err", err.Error())
+		content, err := os.ReadFile(filename)
+		if err != nil {
+			logger.Error("frequencyCmd", "err", err)
+
+			return fmt.Errorf("frequencyCmd err: %w", err)
+		}
+
+		// Scan each word
+		scanner := bufio.NewScanner(bytes.NewReader(content))
+		scanner.Split(bufio.ScanWords)
+
+		// Filter out non existing words?
+		// Or try to adjust the word to the nearest possible?
+		words := make([]string, 0)
+		words = append(words, "test")
+
+		for scanner.Scan() {
+			word := scanner.Text()
+			words = append(words, word)
+		}
+		if err := scanner.Err(); err != nil {
+			logger.Error("frequencyCmd", "err", err)
+
+			return fmt.Errorf("frequencyCmd: %w", err)
+		}
+
+		textAnalysis, err := NewTextAnalysis("1")
+		if err != nil {
+			logger.Error("frequencyCmd", "err", err)
+
+			return fmt.Errorf("frequencyCmd: %w", err)
+		}
+		for _, word := range words {
+			textAnalysis.Add(word)
+		}
+
+		jsonPath := filepath.Join(
+			filepath.Clean(outPath),
+			string(filepath.Separator),
+			textAnalysis.name+".json",
+		)
+		logger.Info("frequencyCmd opening file", "jsonFilePath", jsonPath)
+		jsonFile, err := OpenCleanFile(jsonPath, os.O_CREATE|os.O_RDWR, 0o600)
+		if err != nil {
+			logger.Error("frequencyCmd", "err", err)
+
+			return fmt.Errorf("frequencyCmd: %w", err)
+		}
+		defer jsonFile.Close()
+
+		analysisJSON, err := json.MarshalIndent(textAnalysis, "", " ")
+		if err != nil {
+			logger.Error("frequencyCmd", "err", err)
+
+			return fmt.Errorf("frequencyCmd: %w", err)
+		}
+		logger.Info("frequencyCmd writing analysisJSON")
+		if _, err := jsonFile.Write(analysisJSON); err != nil {
+			logger.Error("frequencyCmd", "err", err)
+
+			return fmt.Errorf("frequencyCmd: %w", err)
+		}
+
+		return nil
+	},
+}
+
+// TextAnalysis represents a struct which contains WordFrequency field and a Name field
+// of this analysis.
+type TextAnalysis struct {
+	name          string
+	WordFrequency map[string]int `json:"wordFrequency"`
+
+	mu sync.Mutex
+}
+
+// Creates a new TextAnalysis.
+func NewTextAnalysis(name string) (*TextAnalysis, error) {
+	rv, err := RandomInt(10000)
+	if err != nil {
+		return nil, fmt.Errorf("NewTextAnalysis: %w", err)
 	}
 
-	// Cobra supports local flags which will only run when this command
-	// is called directly, e.g.:
-	// wordsCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+	if name == "" {
+		name = "frequency_analysis" + "_" + rv.String()
+	} else {
+		name = "frequency_analysis" + "_" + name + "_" + rv.String()
+	}
 
+	return &TextAnalysis{
+		name:          name,
+		WordFrequency: make(map[string]int),
+	}, nil
+}
+
+var defaultInt64 int64 = 10000
+
+func RandomInt(x int64) (*big.Int, error) {
+	if x == 0 {
+		x = defaultInt64
+	}
+	i := big.NewInt(x)
+	v, err := rand.Int(rand.Reader, i)
+	if err != nil {
+		return nil, fmt.Errorf("NewTextAnalysis: %w", err)
+	}
+
+	return v, nil
+}
+
+// Adds new occurrence of a word.
+// Goroutine safe.
+func (ta *TextAnalysis) Add(word string) {
+	ta.mu.Lock()
+	defer ta.mu.Unlock()
+
+	ta.WordFrequency[word]++
+}
+
+func (ta *TextAnalysis) String() string {
+	builder := new(strings.Builder)
+	builder.WriteString(ta.name + "\n")
+
+	for word, freq := range ta.WordFrequency {
+		builder.WriteString(word + ":" + strconv.Itoa(freq) + "\n")
+	}
+
+	return builder.String()
+}
+
+func OpenCleanFile(path string, flag int, perm fs.FileMode) (*os.File, error) {
+	path = filepath.Clean(path)
+
+	f, err := os.OpenFile(path, flag, perm)
+	if err != nil {
+		return nil, fmt.Errorf("OpenCleanFile: %w", err)
+	}
+	if err := f.Truncate(0); err != nil {
+		return nil, fmt.Errorf("OpenCleanFile: %w", err)
+	}
+	if _, err := f.Seek(0, 0); err != nil {
+		return nil, fmt.Errorf("OpenCleanFile: %w", err)
+	}
+
+	return f, nil
+}
+
+func init() {
+	rootCmd.AddCommand(wordsCmd)
+
+	wordsCmd.PersistentFlags().StringVarP(&filename, "file", "f", "", "Screenshot file to recognize words from")
+	if err := wordsCmd.MarkPersistentFlagRequired("file"); err != nil {
+		logger.Error("rootcmd", "err", err.Error())
+	}
 	wordsCmd.Flags().BoolVarP(&save, "save", "s", false, "Save the output")
 	wordsCmd.Flags().StringVarP(&outPath, "out", "o", "", "Output path")
 	wordsCmd.MarkFlagsRequiredTogether("save", "out")
+	wordsCmd.Flags().BoolVarP(&verbose, "verbose", "v", true, "Verbose")
 
-	wordsCmd.Flags().BoolVarP(&verbose, "verbose", "v", false, "Verbose")
+	rootCmd.AddCommand(frequencyCmd)
+	frequencyCmd.PersistentFlags().StringVarP(&filename, "file", "f", "", "File to analyze words output frequency from")
+	if err := frequencyCmd.MarkPersistentFlagRequired("file"); err != nil {
+		logger.Error("frequencyCmd", "err", err.Error())
+	}
+
+	frequencyCmd.Flags().StringVarP(&outPath, "out", "o", ".", "Output path")
+	frequencyCmd.Flags().BoolVarP(&verbose, "verbose", "v", true, "Verbose")
 }
 
 func isImageFile(name string) bool {
