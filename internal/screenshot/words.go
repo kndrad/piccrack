@@ -22,18 +22,18 @@ func WriteWords(words []byte, w WordsFileWriter) error {
 	return nil
 }
 
-type textFileWriter struct {
+type wordsTextFileWriter struct {
 	mu sync.Mutex
 	f  *os.File
 }
 
-func NewTextFileWriter(f *os.File) *textFileWriter {
-	return &textFileWriter{
+func NewWordsTextFileWriter(f *os.File) *wordsTextFileWriter {
+	return &wordsTextFileWriter{
 		f: f,
 	}
 }
 
-func (w *textFileWriter) Write(words []byte) (int, error) {
+func (w *wordsTextFileWriter) Write(words []byte) (int, error) {
 	builder := new(strings.Builder)
 
 	builder.Write(words)
