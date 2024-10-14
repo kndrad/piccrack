@@ -13,11 +13,11 @@ func TestTextAnalysis_Name(t *testing.T) {
 	// With TextAnalysis initialization,
 	// name field should be initialized and Name method should return result.
 
-	textAnalysis1 := NewTestTextAnalysis(t, "test")
+	textAnalysis1 := NewTestTextAnalysis(t)
 	assert.NotEmpty(t, textAnalysis1.Name())
 	t.Logf("TestTextAnalysis_Name: .Name():%s", textAnalysis1.Name())
 	// On empty name, the name should be still returned.
-	textAnalysis2 := NewTestTextAnalysis(t, "")
+	textAnalysis2 := NewTestTextAnalysis(t)
 	assert.NotEmpty(t, textAnalysis2.Name())
 }
 
@@ -25,7 +25,7 @@ func TestTextAnalysis_Add(t *testing.T) {
 	// Test normal adding of word to the TextAnalysis WordFrequency field.
 	t.Parallel()
 
-	textAnalysis := NewTestTextAnalysis(t, "test")
+	textAnalysis := NewTestTextAnalysis(t)
 
 	// Field should be initialized before
 	assert.NotNil(t, textAnalysis.WordFrequency)
@@ -41,10 +41,10 @@ func TestTextAnalysis_Add(t *testing.T) {
 	assert.Equal(t, 2, textAnalysis.WordFrequency[word])
 }
 
-func NewTestTextAnalysis(t *testing.T, name string) *screenshot.TextAnalysis {
+func NewTestTextAnalysis(t *testing.T) *screenshot.TextAnalysis {
 	t.Helper()
 
-	ta, err := screenshot.NewTextAnalysis(name)
+	ta, err := screenshot.NewTextAnalysis()
 	require.NoError(t, err)
 
 	return ta

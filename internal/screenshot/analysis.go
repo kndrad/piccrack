@@ -4,7 +4,9 @@ import (
 	"crypto/rand"
 	"fmt"
 	"math/big"
+	"strings"
 	"sync"
+	"time"
 )
 
 // TextAnalysis represents a struct which contains WordFrequency field and a Name field
@@ -17,16 +19,10 @@ type TextAnalysis struct {
 }
 
 // Creates a new TextAnalysis.
-func NewTextAnalysis(name string) (*TextAnalysis, error) {
-	rv, err := randomInt(10000)
+func NewTextAnalysis() (*TextAnalysis, error) {
+	name, err := NewTextAnalysisName()
 	if err != nil {
 		return nil, fmt.Errorf("NewTextAnalysis: %w", err)
-	}
-
-	if name == "" {
-		name = "frequency_analysis" + "_" + rv.String()
-	} else {
-		name = "frequency_analysis" + "_" + name + "_" + rv.String()
 	}
 
 	return &TextAnalysis{
@@ -61,4 +57,26 @@ func randomInt(x int64) (*big.Int, error) {
 	}
 
 	return v, nil
+}
+
+// Returns a string of format:
+// text_analysis_randomnumber_currentdate.
+func NewTextAnalysisName() (string, error) {
+	// YYYY-MM-DD: 2022-03-23
+	YYYYMMDD := "2006-01-02"
+
+	date := time.Now().Format(YYYYMMDD)
+
+	rv, err := randomInt(10000)
+	if err != nil {
+		return "", fmt.Errorf("NewTextAnalysisName: %w", err)
+	}
+	b := new(strings.Builder)
+	b.WriteString("text_analysis")
+	b.WriteString("_")
+	b.WriteString(rv.String())
+	b.WriteString("_")
+	b.WriteString(date)
+
+	return b.String(), nil
 }

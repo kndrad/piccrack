@@ -172,7 +172,7 @@ var frequencyCmd = &cobra.Command{
 			return fmt.Errorf("frequencyCmd: %w", err)
 		}
 
-		textAnalysis, err := screenshot.NewTextAnalysis("1")
+		textAnalysis, err := screenshot.NewTextAnalysis()
 		if err != nil {
 			logger.Error("frequencyCmd", "err", err)
 
