@@ -44,11 +44,11 @@ func (ta *TextAnalysis) Name() string {
 	return ta.name
 }
 
-var defaultX int64 = 10000
+var defaultMaxInt int64 = 10000
 
 func randomInt(x int64) (*big.Int, error) {
 	if x == 0 {
-		x = defaultX
+		x = defaultMaxInt
 	}
 	i := big.NewInt(x)
 	v, err := rand.Int(rand.Reader, i)
