@@ -26,6 +26,7 @@ go.work.sum
 
 # .txt
 llm_input.txt
+internal/screenshot/testdata/words_out.txt
 
 # jsons
 analysis_*.json
