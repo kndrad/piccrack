@@ -36,10 +36,10 @@ import (
 )
 
 var (
-	filename string
-	save     bool
-	outPath  string
-	verbose  bool
+	ScreenshotFile string
+	OutPath        string
+	Save           bool
+	verbose        bool
 )
 
 // wordsCmd represents the words command.
@@ -49,16 +49,20 @@ var wordsCmd = &cobra.Command{
 	Long:  ``,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		fmt.Println("words called.")
-		filename = filepath.Clean(filename)
 
-		exit := Exit()
+		var (
+			screenshotFile = filepath.Clean(ScreenshotFile)
+			outPath        = filepath.Clean(OutPath)
+		)
+
+		exit := OnExit()
 		defer exit()
 
 		// Get all screenshot files
 		var files []string
 
 		// Check if filename is a directory, if it is - process many screenshots within it.
-		stat, err := os.Stat(filename)
+		stat, err := os.Stat(screenshotFile)
 		if err != nil {
 			logger.Error("wordsCmd", "err", err)
 
@@ -66,9 +70,9 @@ var wordsCmd = &cobra.Command{
 		}
 		if stat.IsDir() {
 			// File represents a directory so append each screenshot file to files (with non image removal).
-			logger.Info("wordsCmd: processing directory", "filename", filename)
+			logger.Info("wordsCmd: processing directory", "file", screenshotFile)
 
-			entries, err := os.ReadDir(filepath.Clean(filename))
+			entries, err := os.ReadDir(filepath.Clean(screenshotFile))
 			if err != nil {
 				logger.Error("wordsCmd", "err", err)
 
@@ -77,29 +81,37 @@ var wordsCmd = &cobra.Command{
 			// Append image files only
 			for _, e := range entries {
 				if !e.IsDir() && isImageFile(e.Name()) {
-					files = append(files, filepath.Join(filename, "/", e.Name()))
+					files = append(files, filepath.Join(screenshotFile, "/", e.Name()))
 				}
 			}
-			logger.Info("wordsCmd: number of image files in a directory", "len(filename)", len(files))
+			logger.Info("wordsCmd: number of image files in a directory", "len(files)", len(files))
 		} else {
-			files = append(files, filename)
+			files = append(files, screenshotFile)
 		}
 
-		outFile, err := os.OpenFile(filepath.Clean(outPath), os.O_APPEND|os.O_CREATE|os.O_RDWR, 0o600)
+		// outFile, err := os.OpenFile(outPath, os.O_APPEND|os.O_CREATE|os.O_RDWR, 0o600)
+		// if err != nil {
+		// 	fmt.Println(err)
+
+		// 	return fmt.Errorf("wordsCmd: %w", err)
+		// }
+		// defer outFile.Close()
+
+		// // Clear outFile and reset to beginning
+		// if err := outFile.Truncate(0); err != nil {
+		// 	logger.Error("wordsCmd", "err", err)
+
+		// 	return fmt.Errorf("wordsCmd: %w", err)
+		// }
+		// if _, err := outFile.Seek(0, 0); err != nil {
+		// 	logger.Error("wordsCmd", "err", err)
+
+		// 	return fmt.Errorf("wordsCmd: %w", err)
+		// }
+
+		// Open clean file to write words to it
+		outFile, err := OpenFileCleaned(outPath, os.O_APPEND|DefaultFlag, DefaultPerm)
 		if err != nil {
-			fmt.Println(err)
-
-			return fmt.Errorf("wordsCmd: %w", err)
-		}
-		defer outFile.Close()
-
-		// Clear outFile and reset to beginning
-		if err := outFile.Truncate(0); err != nil {
-			logger.Error("wordsCmd", "err", err)
-
-			return fmt.Errorf("wordsCmd: %w", err)
-		}
-		if _, err := outFile.Seek(0, 0); err != nil {
 			logger.Error("wordsCmd", "err", err)
 
 			return fmt.Errorf("wordsCmd: %w", err)
@@ -138,15 +150,15 @@ var frequencyCmd = &cobra.Command{
 	Long:  ``,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		fmt.Println("frequency called")
-		filename = filepath.Clean(filename)
+		ScreenshotFile = filepath.Clean(ScreenshotFile)
 		if verbose {
-			logger.Info("frequencyCmd", "filename", filename)
+			logger.Info("frequencyCmd", "filename", ScreenshotFile)
 		}
 
-		exit := Exit()
+		exit := OnExit()
 		defer exit()
 
-		content, err := os.ReadFile(filename)
+		content, err := os.ReadFile(ScreenshotFile)
 		if err != nil {
 			logger.Error("frequencyCmd", "err", err)
 
@@ -172,34 +184,31 @@ var frequencyCmd = &cobra.Command{
 			return fmt.Errorf("frequencyCmd: %w", err)
 		}
 
-		analysis, err := screenshot.NewTextAnalysis()
+		analysis, err := screenshot.AnalyzeWordFrequency(words)
 		if err != nil {
 			logger.Error("frequencyCmd", "err", err)
 
 			return fmt.Errorf("frequencyCmd: %w", err)
-		}
-		for _, word := range words {
-			analysis.Add(word)
 		}
 
 		// Open text_analysis JSON file and write analysis
-		filename, err := analysis.Name()
+		name, err := analysis.Name()
 		if err != nil {
 			logger.Error("frequencyCmd", "err", err)
 
 			return fmt.Errorf("frequencyCmd: %w", err)
 		}
-		jsonPath := join(outPath, filename, "json")
-
-		logger.Info("frequencyCmd opening file", "jsonPath", jsonPath)
-		jsonFile, err := OpenCleanFile(jsonPath, os.O_CREATE|os.O_RDWR, 0o600)
+		outPath := join(OutPath, name, "json")
+		logger.Info("frequencyCmd opening file", "jsonPath", outPath)
+		outFile, err := OpenFileCleaned(outPath, os.O_CREATE|os.O_RDWR, 0o600)
 		if err != nil {
 			logger.Error("frequencyCmd", "err", err)
 
 			return fmt.Errorf("frequencyCmd: %w", err)
 		}
-		defer jsonFile.Close()
+		defer outFile.Close()
 
+		// Write JSON analysis
 		jsonAnalysis, err := json.MarshalIndent(analysis, "", " ")
 		if err != nil {
 			logger.Error("frequencyCmd", "err", err)
@@ -207,7 +216,7 @@ var frequencyCmd = &cobra.Command{
 			return fmt.Errorf("frequencyCmd: %w", err)
 		}
 		logger.Info("frequencyCmd writing analysisJson")
-		if _, err := jsonFile.Write(jsonAnalysis); err != nil {
+		if _, err := outFile.Write(jsonAnalysis); err != nil {
 			logger.Error("frequencyCmd", "err", err)
 
 			return fmt.Errorf("frequencyCmd: %w", err)
@@ -225,7 +234,18 @@ func join(dir, filename, ext string) string {
 	)
 }
 
-func OpenCleanFile(path string, flag int, perm fs.FileMode) (*os.File, error) {
+const (
+	DefaultPerm = 0o600
+	DefaultFlag = os.O_CREATE | os.O_RDWR
+)
+
+func OpenFileCleaned(path string, flag int, perm fs.FileMode) (*os.File, error) {
+	if flag == 0 {
+		flag = DefaultFlag
+	}
+	if perm == 0 {
+		perm = DefaultPerm
+	}
 	f, err := os.OpenFile(filepath.Clean(path), flag, perm)
 	if err != nil {
 		return nil, fmt.Errorf("OpenCleanFile: %w", err)
@@ -243,22 +263,24 @@ func OpenCleanFile(path string, flag int, perm fs.FileMode) (*os.File, error) {
 func init() {
 	rootCmd.AddCommand(wordsCmd)
 
-	wordsCmd.PersistentFlags().StringVarP(&filename, "file", "f", "", "Screenshot file to recognize words from")
+	wordsCmd.PersistentFlags().StringVarP(&ScreenshotFile, "file", "f", "", "Screenshot file to recognize words from")
 	if err := wordsCmd.MarkPersistentFlagRequired("file"); err != nil {
 		logger.Error("rootcmd", "err", err.Error())
 	}
-	wordsCmd.Flags().BoolVarP(&save, "save", "s", false, "Save the output")
-	wordsCmd.Flags().StringVarP(&outPath, "out", "o", "", "Output path")
+	wordsCmd.Flags().BoolVarP(&Save, "save", "s", false, "Save the output")
+	wordsCmd.Flags().StringVarP(&OutPath, "out", "o", "", "Output path")
 	wordsCmd.MarkFlagsRequiredTogether("save", "out")
 	wordsCmd.Flags().BoolVarP(&verbose, "verbose", "v", true, "Verbose")
 
 	rootCmd.AddCommand(frequencyCmd)
-	frequencyCmd.PersistentFlags().StringVarP(&filename, "file", "f", "", "File to analyze words output frequency from")
+	frequencyCmd.PersistentFlags().StringVarP(
+		&ScreenshotFile, "file", "f", "", "File to analyze words output frequency from",
+	)
 	if err := frequencyCmd.MarkPersistentFlagRequired("file"); err != nil {
 		logger.Error("frequencyCmd", "err", err.Error())
 	}
 
-	frequencyCmd.Flags().StringVarP(&outPath, "out", "o", ".", "Output path")
+	frequencyCmd.Flags().StringVarP(&OutPath, "out", "o", ".", "Output path")
 	frequencyCmd.Flags().BoolVarP(&verbose, "verbose", "v", true, "Verbose")
 }
 
@@ -268,7 +290,7 @@ func isImageFile(name string) bool {
 	return ext == ".png" || ext == ".jpg" || ext == ".jpeg"
 }
 
-func Exit(funcs ...func() error) func() error {
+func OnExit(funcs ...func() error) func() error {
 	return func() error {
 		for _, f := range funcs {
 			if err := f(); err != nil {
@@ -277,7 +299,7 @@ func Exit(funcs ...func() error) func() error {
 		}
 
 		fmt.Println("Program is done.")
-		os.Exit(1)
+		os.Exit(0)
 
 		return nil
 	}
