@@ -291,7 +291,7 @@ func ReadTestFile(name string) ([]byte, error) {
 
 	name = filepath.Base(filepath.Clean(name))
 	path := filepath.Join(wd, TestDataDir, name)
-	if !IsSubPath(wd, path) {
+	if !IsSub(wd, path) {
 		return nil, errors.New("Test file is not in the expected directory")
 	}
 
@@ -312,7 +312,7 @@ func FullTestFilePath(t *testing.T, name string) string {
 	name = filepath.Base(filepath.Clean(name))
 	path := filepath.Join(wd, TestDataDir, name)
 
-	if !IsSubPath(wd, path) {
+	if !IsSub(wd, path) {
 		t.Error("Test file is not in the expected directory")
 
 		return ""
@@ -327,12 +327,12 @@ func IsValidTestSubPath(t *testing.T, path string) bool {
 	wd, err := os.Getwd()
 	require.NoError(t, err)
 
-	return IsSubPath(wd, path)
+	return IsSub(wd, path)
 }
 
-// IsSubPath checks if the filePath is a subpath of the base path.
-func IsSubPath(basePath, filePath string) bool {
-	rel, err := filepath.Rel(basePath, filePath)
+// IsSub checks if the path is a subpath of the base path.
+func IsSub(base, path string) bool {
+	rel, err := filepath.Rel(base, path)
 	if err != nil {
 		return false
 	}
