@@ -89,26 +89,6 @@ var wordsCmd = &cobra.Command{
 			files = append(files, screenshotFile)
 		}
 
-		// outFile, err := os.OpenFile(outPath, os.O_APPEND|os.O_CREATE|os.O_RDWR, 0o600)
-		// if err != nil {
-		// 	fmt.Println(err)
-
-		// 	return fmt.Errorf("wordsCmd: %w", err)
-		// }
-		// defer outFile.Close()
-
-		// // Clear outFile and reset to beginning
-		// if err := outFile.Truncate(0); err != nil {
-		// 	logger.Error("wordsCmd", "err", err)
-
-		// 	return fmt.Errorf("wordsCmd: %w", err)
-		// }
-		// if _, err := outFile.Seek(0, 0); err != nil {
-		// 	logger.Error("wordsCmd", "err", err)
-
-		// 	return fmt.Errorf("wordsCmd: %w", err)
-		// }
-
 		// Open clean file to write words to it
 		outFile, err := OpenFileCleaned(outPath, os.O_APPEND|DefaultFlag, DefaultPerm)
 		if err != nil {
