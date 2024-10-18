@@ -28,6 +28,6 @@ go.work.sum
 llm_input.txt
 
 # jsons
-text_analysis_*.json
+analysis_*.json
 words_dictionary.json
 
