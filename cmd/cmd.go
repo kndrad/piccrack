@@ -20,14 +20,14 @@ const (
 	DefaultFlag = os.O_CREATE | os.O_RDWR
 )
 
-func OpenCleaned(path string, flag int, perm fs.FileMode) (*os.File, error) {
+func OpenCleanFile(name string, flag int, perm fs.FileMode) (*os.File, error) {
 	if flag == 0 {
 		flag = DefaultFlag
 	}
 	if perm == 0 {
 		perm = DefaultPerm
 	}
-	f, err := os.OpenFile(filepath.Clean(path), flag, perm)
+	f, err := os.OpenFile(filepath.Clean(name), flag, perm)
 	if err != nil {
 		return nil, fmt.Errorf("OpenCleanFile: %w", err)
 	}
