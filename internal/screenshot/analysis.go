@@ -7,7 +7,26 @@ import (
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/pkg/errors"
 )
+
+var ErrEmptyWords = errors.New("words is empty")
+
+func AnalyzeWordFrequency(words []string) (*TextAnalysis, error) {
+	if words == nil {
+		return nil, ErrEmptyWords
+	}
+	analysis, err := NewTextAnalysis()
+	if err != nil {
+		return nil, fmt.Errorf("AnalyzeWordFrequency: %w", err)
+	}
+	for _, word := range words {
+		analysis.Add(word)
+	}
+
+	return analysis, nil
+}
 
 // TextAnalysis represents a struct which contains WordFrequency field and a Name field
 // of this analysis.
