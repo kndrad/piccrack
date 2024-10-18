@@ -20,7 +20,7 @@ type TextAnalysis struct {
 
 // Creates a new TextAnalysis.
 func NewTextAnalysis() (*TextAnalysis, error) {
-	name, err := NewTextAnalysisName()
+	name, err := GenerateAnalysisName()
 	if err != nil {
 		return nil, fmt.Errorf("NewTextAnalysis: %w", err)
 	}
@@ -40,8 +40,13 @@ func (ta *TextAnalysis) Add(word string) {
 	ta.WordFrequency[word]++
 }
 
-func (ta *TextAnalysis) Name() string {
-	return ta.name
+func (ta *TextAnalysis) Name() (string, error) {
+	name := ta.name
+	if name != "" {
+		return name, nil
+	} else {
+		return GenerateAnalysisName()
+	}
 }
 
 var defaultMaxInt int64 = 10000
@@ -61,7 +66,7 @@ func randomInt(x int64) (*big.Int, error) {
 
 // Returns a string of format:
 // text_analysis_randomnumber_currentdate.
-func NewTextAnalysisName() (string, error) {
+func GenerateAnalysisName() (string, error) {
 	// YYYY-MM-DD: 2022-03-23
 	YYYYMMDD := "2006-01-02"
 
@@ -72,7 +77,7 @@ func NewTextAnalysisName() (string, error) {
 		return "", fmt.Errorf("NewTextAnalysisName: %w", err)
 	}
 	b := new(strings.Builder)
-	b.WriteString("text_analysis")
+	b.WriteString("analysis")
 	b.WriteString("_")
 	b.WriteString(rv.String())
 	b.WriteString("_")

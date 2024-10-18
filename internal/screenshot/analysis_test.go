@@ -8,37 +8,42 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestTextAnalysis_Name(t *testing.T) {
+func TestGenerateAnalysisName(t *testing.T) {
 	t.Parallel()
-	// With TextAnalysis initialization,
-	// name field should be initialized and Name method should return result.
 
-	textAnalysis1 := NewTestTextAnalysis(t)
-	assert.NotEmpty(t, textAnalysis1.Name())
-	t.Logf("TestTextAnalysis_Name: .Name():%s", textAnalysis1.Name())
-	// On empty name, the name should be still returned.
-	textAnalysis2 := NewTestTextAnalysis(t)
-	assert.NotEmpty(t, textAnalysis2.Name())
+	// Should return generated result.
+	name, err := screenshot.GenerateAnalysisName()
+	require.NoError(t, err)
+	assert.NotEmpty(t, name)
+}
+
+func TestTextAnalysisName(t *testing.T) {
+	t.Parallel()
+
+	analysis := NewTestTextAnalysis(t)
+	name, err := analysis.Name()
+	require.NoError(t, err)
+	assert.NotEmpty(t, name, "analysis name should not be empty")
 }
 
 func TestTextAnalysis_Add(t *testing.T) {
 	// Test normal adding of word to the TextAnalysis WordFrequency field.
 	t.Parallel()
 
-	textAnalysis := NewTestTextAnalysis(t)
+	analysis := NewTestTextAnalysis(t)
 
 	// Field should be initialized before
-	assert.NotNil(t, textAnalysis.WordFrequency)
+	assert.NotNil(t, analysis.WordFrequency)
 
 	// Should add "test1" to the WordFrequency field and at first the frequency should be 1
 	word := "test1"
-	textAnalysis.Add(word)
-	assert.Len(t, textAnalysis.WordFrequency, 1)
-	assert.Equal(t, 1, textAnalysis.WordFrequency[word])
+	analysis.Add(word)
+	assert.Len(t, analysis.WordFrequency, 1)
+	assert.Equal(t, 1, analysis.WordFrequency[word])
 	// After another "Add" it should be two
-	textAnalysis.Add(word)
-	assert.Len(t, textAnalysis.WordFrequency, 1)
-	assert.Equal(t, 2, textAnalysis.WordFrequency[word])
+	analysis.Add(word)
+	assert.Len(t, analysis.WordFrequency, 1)
+	assert.Equal(t, 2, analysis.WordFrequency[word])
 }
 
 func NewTestTextAnalysis(t *testing.T) *screenshot.TextAnalysis {
