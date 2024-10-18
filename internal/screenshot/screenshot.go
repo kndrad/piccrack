@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"log/slog"
 	"os"
+	"path/filepath"
+	"strings"
 
 	"github.com/pkg/errors"
 
@@ -39,6 +41,10 @@ var (
 )
 
 var logger *slog.Logger
+
+func init() {
+	logger = slog.New(slog.NewJSONHandler(os.Stdout, nil))
+}
 
 // RecognizeWords runs OCR on the provided image content using Tesseract and returns cleaned from stop words
 // text as a slice of bytes.
@@ -138,6 +144,8 @@ func IsPNG(content []byte) bool {
 	return bytes.Contains(content[:4], PNG.Bytes())
 }
 
-func init() {
-	logger = slog.New(slog.NewJSONHandler(os.Stdout, nil))
+func IsImageFile(name string) bool {
+	ext := strings.ToLower(filepath.Ext(name))
+
+	return ext == ".png" || ext == ".jpg" || ext == ".jpeg"
 }

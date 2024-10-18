@@ -29,7 +29,6 @@ import (
 	"io/fs"
 	"os"
 	"path/filepath"
-	"strings"
 
 	"github.com/kndrad/itcrack/internal/screenshot"
 	"github.com/spf13/cobra"
@@ -80,7 +79,7 @@ var wordsCmd = &cobra.Command{
 			}
 			// Append image files only
 			for _, e := range entries {
-				if !e.IsDir() && isImageFile(e.Name()) {
+				if !e.IsDir() && screenshot.IsImageFile(e.Name()) {
 					files = append(files, filepath.Join(screenshotFile, "/", e.Name()))
 				}
 			}
@@ -98,15 +97,14 @@ var wordsCmd = &cobra.Command{
 		}
 
 		// Process each screenshot and write an out file
-		for _, name := range files {
-			fmt.Println("filename:", name)
-			f, err := os.ReadFile(filepath.Clean(name))
+		for _, path := range files {
+			content, err := os.ReadFile(filepath.Clean(path))
 			if err != nil {
 				logger.Error("wordsCmd", "err", err)
 
 				return fmt.Errorf("wordsCmd: %w", err)
 			}
-			words, err := screenshot.RecognizeWords(f)
+			words, err := screenshot.RecognizeWords(content)
 			if err != nil {
 				logger.Error("wordsCmd", "err", err)
 
@@ -171,7 +169,7 @@ var frequencyCmd = &cobra.Command{
 			return fmt.Errorf("frequencyCmd: %w", err)
 		}
 
-		// Open text_analysis JSON file and write analysis
+		// Join to create new out file path with an extension.
 		name, err := analysis.Name()
 		if err != nil {
 			logger.Error("frequencyCmd", "err", err)
@@ -180,6 +178,8 @@ var frequencyCmd = &cobra.Command{
 		}
 		outPath := join(OutPath, name, "json")
 		logger.Info("frequencyCmd opening file", "jsonPath", outPath)
+
+		// Open text_analysis JSON file and write analysis
 		outFile, err := OpenFileCleaned(outPath, os.O_CREATE|os.O_RDWR, 0o600)
 		if err != nil {
 			logger.Error("frequencyCmd", "err", err)
@@ -262,12 +262,6 @@ func init() {
 
 	frequencyCmd.Flags().StringVarP(&OutPath, "out", "o", ".", "Output path")
 	frequencyCmd.Flags().BoolVarP(&verbose, "verbose", "v", true, "Verbose")
-}
-
-func isImageFile(name string) bool {
-	ext := strings.ToLower(filepath.Ext(name))
-
-	return ext == ".png" || ext == ".jpg" || ext == ".jpeg"
 }
 
 func OnExit(funcs ...func() error) func() error {
