@@ -7,7 +7,7 @@ import (
 	"path/filepath"
 )
 
-func join(dir, filename, ext string) string {
+func Join(dir, filename, ext string) string {
 	return filepath.Join(
 		filepath.Clean(dir),
 		string(filepath.Separator),
@@ -20,7 +20,7 @@ const (
 	DefaultFlag = os.O_CREATE | os.O_RDWR
 )
 
-func cleanOpen(path string, flag int, perm fs.FileMode) (*os.File, error) {
+func OpenCleaned(path string, flag int, perm fs.FileMode) (*os.File, error) {
 	if flag == 0 {
 		flag = DefaultFlag
 	}
@@ -41,7 +41,7 @@ func cleanOpen(path string, flag int, perm fs.FileMode) (*os.File, error) {
 	return f, nil
 }
 
-func onExit(funcs ...func() error) func() error {
+func OnExit(funcs ...func() error) func() error {
 	return func() error {
 		for _, f := range funcs {
 			if err := f(); err != nil {

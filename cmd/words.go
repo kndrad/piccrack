@@ -53,7 +53,7 @@ var wordsCmd = &cobra.Command{
 			outPath        = filepath.Clean(OutPath)
 		)
 
-		exit := onExit()
+		exit := OnExit()
 		defer exit()
 
 		// Get all screenshot files
@@ -88,7 +88,7 @@ var wordsCmd = &cobra.Command{
 		}
 
 		// Open clean file to write words to it
-		outFile, err := cleanOpen(outPath, os.O_APPEND|DefaultFlag, DefaultPerm)
+		outFile, err := OpenCleaned(outPath, os.O_APPEND|DefaultFlag, DefaultPerm)
 		if err != nil {
 			logger.Error("wordsCmd", "err", err)
 
@@ -132,7 +132,7 @@ var frequencyCmd = &cobra.Command{
 			logger.Info("frequencyCmd", "filename", ScreenshotFile)
 		}
 
-		exit := onExit()
+		exit := OnExit()
 		defer exit()
 
 		content, err := os.ReadFile(ScreenshotFile)
@@ -175,11 +175,11 @@ var frequencyCmd = &cobra.Command{
 
 			return fmt.Errorf("frequencyCmd: %w", err)
 		}
-		outPath := join(OutPath, name, "json")
+		outPath := Join(OutPath, name, "json")
 		logger.Info("frequencyCmd opening file", "jsonPath", outPath)
 
 		// Open text_analysis JSON file and write analysis
-		outFile, err := cleanOpen(outPath, os.O_CREATE|os.O_RDWR, 0o600)
+		outFile, err := OpenCleaned(outPath, os.O_CREATE|os.O_RDWR, 0o600)
 		if err != nil {
 			logger.Error("frequencyCmd", "err", err)
 
