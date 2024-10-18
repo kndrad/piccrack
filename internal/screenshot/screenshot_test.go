@@ -272,6 +272,15 @@ func Test_IsPNG(t *testing.T) {
 	}
 }
 
+func TestIsImageFile(t *testing.T) {
+	t.Parallel()
+
+	assert.True(t, screenshot.IsImageFile("image.png"))
+	assert.True(t, screenshot.IsImageFile("photo.jpg"))
+	assert.True(t, screenshot.IsImageFile("picture.jpeg"))
+	assert.False(t, screenshot.IsImageFile("document.txt"))
+}
+
 func ReadTestPNGFile(t *testing.T) []byte {
 	t.Helper()
 
