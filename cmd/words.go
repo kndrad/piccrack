@@ -53,8 +53,8 @@ var wordsCmd = &cobra.Command{
 			outPath        = filepath.Clean(OutPath)
 		)
 
-		exit := OnExit()
-		defer exit()
+		shutdown := Shutdown()
+		defer shutdown()
 
 		// Get all screenshot files
 		var files []string
@@ -132,8 +132,8 @@ var frequencyCmd = &cobra.Command{
 			logger.Info("frequencyCmd", "filename", ScreenshotFile)
 		}
 
-		exit := OnExit()
-		defer exit()
+		shutdown := Shutdown()
+		defer shutdown()
 
 		content, err := os.ReadFile(ScreenshotFile)
 		if err != nil {

@@ -41,15 +41,15 @@ func OpenCleaned(path string, flag int, perm fs.FileMode) (*os.File, error) {
 	return f, nil
 }
 
-func OnExit(funcs ...func() error) func() error {
+func Shutdown(funcs ...func() error) func() error {
 	return func() error {
 		for _, f := range funcs {
 			if err := f(); err != nil {
-				return fmt.Errorf("onExit: %w", err)
+				return fmt.Errorf("executing func: %w", err)
 			}
 		}
 
-		fmt.Println("Program is done.")
+		fmt.Println("Program completed successfully. Exiting...")
 		os.Exit(0)
 
 		return nil
