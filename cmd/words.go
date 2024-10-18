@@ -108,13 +108,13 @@ var wordsCmd = &cobra.Command{
 		// Process each screenshot and write an out file
 		for _, name := range files {
 			fmt.Println("filename:", name)
-			content, err := os.ReadFile(filepath.Clean(name))
+			f, err := os.ReadFile(filepath.Clean(name))
 			if err != nil {
 				logger.Error("wordsCmd", "err", err)
 
 				return fmt.Errorf("wordsCmd: %w", err)
 			}
-			words, err := screenshot.RecognizeWords(content)
+			words, err := screenshot.RecognizeWords(f)
 			if err != nil {
 				logger.Error("wordsCmd", "err", err)
 
@@ -172,22 +172,26 @@ var frequencyCmd = &cobra.Command{
 			return fmt.Errorf("frequencyCmd: %w", err)
 		}
 
-		textAnalysis, err := screenshot.NewTextAnalysis()
+		analysis, err := screenshot.NewTextAnalysis()
 		if err != nil {
 			logger.Error("frequencyCmd", "err", err)
 
 			return fmt.Errorf("frequencyCmd: %w", err)
 		}
 		for _, word := range words {
-			textAnalysis.Add(word)
+			analysis.Add(word)
 		}
 
-		jsonPath := filepath.Join(
-			filepath.Clean(outPath),
-			string(filepath.Separator),
-			textAnalysis.Name()+".json",
-		)
-		logger.Info("frequencyCmd opening file", "jsonFilePath", jsonPath)
+		// Open text_analysis JSON file and write analysis
+		filename, err := analysis.Name()
+		if err != nil {
+			logger.Error("frequencyCmd", "err", err)
+
+			return fmt.Errorf("frequencyCmd: %w", err)
+		}
+		jsonPath := join(outPath, filename, "json")
+
+		logger.Info("frequencyCmd opening file", "jsonPath", jsonPath)
 		jsonFile, err := OpenCleanFile(jsonPath, os.O_CREATE|os.O_RDWR, 0o600)
 		if err != nil {
 			logger.Error("frequencyCmd", "err", err)
@@ -196,14 +200,14 @@ var frequencyCmd = &cobra.Command{
 		}
 		defer jsonFile.Close()
 
-		analysisJSON, err := json.MarshalIndent(textAnalysis, "", " ")
+		jsonAnalysis, err := json.MarshalIndent(analysis, "", " ")
 		if err != nil {
 			logger.Error("frequencyCmd", "err", err)
 
 			return fmt.Errorf("frequencyCmd: %w", err)
 		}
-		logger.Info("frequencyCmd writing analysisJSON")
-		if _, err := jsonFile.Write(analysisJSON); err != nil {
+		logger.Info("frequencyCmd writing analysisJson")
+		if _, err := jsonFile.Write(jsonAnalysis); err != nil {
 			logger.Error("frequencyCmd", "err", err)
 
 			return fmt.Errorf("frequencyCmd: %w", err)
@@ -213,10 +217,16 @@ var frequencyCmd = &cobra.Command{
 	},
 }
 
-func OpenCleanFile(path string, flag int, perm fs.FileMode) (*os.File, error) {
-	path = filepath.Clean(path)
+func join(dir, filename, ext string) string {
+	return filepath.Join(
+		filepath.Clean(dir),
+		string(filepath.Separator),
+		filename+"."+ext,
+	)
+}
 
-	f, err := os.OpenFile(path, flag, perm)
+func OpenCleanFile(path string, flag int, perm fs.FileMode) (*os.File, error) {
+	f, err := os.OpenFile(filepath.Clean(path), flag, perm)
 	if err != nil {
 		return nil, fmt.Errorf("OpenCleanFile: %w", err)
 	}
