@@ -35,7 +35,8 @@ import (
 
 var (
 	ScreenshotPath string
-	OutFilePath    string
+	TextFilePath   string
+	OutPath        string
 	Save           bool
 	verbose        bool
 )
@@ -46,11 +47,9 @@ var wordsCmd = &cobra.Command{
 	Short: "",
 	Long:  ``,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		fmt.Println("words called.")
-
 		var (
 			screenshotPath = filepath.Clean(ScreenshotPath)
-			outFilePath    = filepath.Clean(OutFilePath)
+			textFilePath   = filepath.Clean(TextFilePath)
 		)
 
 		shutdown := Shutdown()
@@ -84,7 +83,7 @@ var wordsCmd = &cobra.Command{
 			screenshotFiles = append(screenshotFiles, screenshotPath)
 		}
 
-		out, err := OpenCleanFile(outFilePath, os.O_APPEND|DefaultFlag, DefaultPerm)
+		textFile, err := OpenCleanFile(textFilePath, os.O_APPEND|DefaultFlag, DefaultPerm)
 		if err != nil {
 			logger.Error("wordsCmd", "err", err)
 
@@ -92,8 +91,8 @@ var wordsCmd = &cobra.Command{
 		}
 
 		// Process each screenshot and write an out file
-		for _, name := range screenshotFiles {
-			content, err := os.ReadFile(name)
+		for _, filename := range screenshotFiles {
+			content, err := os.ReadFile(filename)
 			if err != nil {
 				logger.Error("wordsCmd", "err", err)
 
@@ -105,7 +104,7 @@ var wordsCmd = &cobra.Command{
 
 				return fmt.Errorf("wordsCmd: %w", err)
 			}
-			if err := screenshot.WriteWords(words, screenshot.NewWordsTextFileWriter(out)); err != nil {
+			if err := screenshot.WriteWords(words, screenshot.NewWordsTextFileWriter(textFile)); err != nil {
 				logger.Error("wordsCmd", "err", err)
 
 				return fmt.Errorf("wordsCmd: %w", err)
@@ -122,28 +121,26 @@ var frequencyCmd = &cobra.Command{
 	Short: "",
 	Long:  ``,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		fmt.Println("frequency called")
-		ScreenshotPath = filepath.Clean(ScreenshotPath)
+		var (
+			textFilePath = filepath.Clean(TextFilePath)
+			outPath      = filepath.Clean(OutPath)
+		)
 		if verbose {
-			logger.Info("frequencyCmd", "filename", ScreenshotPath)
+			logger.Info("frequencyCmd", "filename", textFilePath)
 		}
 
 		shutdown := Shutdown()
 		defer shutdown()
 
-		content, err := os.ReadFile(ScreenshotPath)
+		content, err := os.ReadFile(textFilePath)
 		if err != nil {
 			logger.Error("frequencyCmd", "err", err)
 
 			return fmt.Errorf("frequencyCmd err: %w", err)
 		}
-
-		// Scan each word
 		scanner := bufio.NewScanner(bytes.NewReader(content))
 		scanner.Split(bufio.ScanWords)
 
-		// Filter out non existing words?
-		// Or try to adjust the word to the nearest possible?
 		words := make([]string, 0)
 		words = append(words, "test")
 
@@ -171,19 +168,16 @@ var frequencyCmd = &cobra.Command{
 
 			return fmt.Errorf("frequencyCmd: %w", err)
 		}
-		outPath := Join(OutFilePath, name, "json")
-		logger.Info("frequencyCmd opening file", "jsonPath", outPath)
-
-		// Open text_analysis JSON file and write analysis
-		outFile, err := OpenCleanFile(outPath, os.O_CREATE|os.O_RDWR, 0o600)
+		jsonPath := Join(outPath, name, "json")
+		logger.Info("frequencyCmd opening file", "jsonPath", jsonPath)
+		jsonFile, err := OpenCleanFile(jsonPath, os.O_CREATE|os.O_RDWR, 0o600)
 		if err != nil {
 			logger.Error("frequencyCmd", "err", err)
 
 			return fmt.Errorf("frequencyCmd: %w", err)
 		}
-		defer outFile.Close()
+		defer jsonFile.Close()
 
-		// Write JSON analysis
 		jsonAnalysis, err := json.MarshalIndent(analysis, "", " ")
 		if err != nil {
 			logger.Error("frequencyCmd", "err", err)
@@ -191,7 +185,7 @@ var frequencyCmd = &cobra.Command{
 			return fmt.Errorf("frequencyCmd: %w", err)
 		}
 		logger.Info("frequencyCmd writing analysisJson")
-		if _, err := outFile.Write(jsonAnalysis); err != nil {
+		if _, err := jsonFile.Write(jsonAnalysis); err != nil {
 			logger.Error("frequencyCmd", "err", err)
 
 			return fmt.Errorf("frequencyCmd: %w", err)
@@ -209,18 +203,18 @@ func init() {
 		logger.Error("rootcmd", "err", err.Error())
 	}
 	wordsCmd.Flags().BoolVarP(&Save, "save", "s", false, "Save the output")
-	wordsCmd.Flags().StringVarP(&OutFilePath, "out", "o", "", "Output path")
+	wordsCmd.Flags().StringVarP(&TextFilePath, "out", "o", "", "Output path")
 	wordsCmd.MarkFlagsRequiredTogether("save", "out")
 	wordsCmd.Flags().BoolVarP(&verbose, "verbose", "v", true, "Verbose")
 
 	rootCmd.AddCommand(frequencyCmd)
 	frequencyCmd.PersistentFlags().StringVarP(
-		&ScreenshotPath, "file", "f", "", "File to analyze words output frequency from",
+		&TextFilePath, "file", "f", "", "File to analyze words output frequency from",
 	)
 	if err := frequencyCmd.MarkPersistentFlagRequired("file"); err != nil {
 		logger.Error("frequencyCmd", "err", err.Error())
 	}
 
-	frequencyCmd.Flags().StringVarP(&OutFilePath, "out", "o", ".", "Output path")
+	frequencyCmd.Flags().StringVarP(&OutPath, "out", "o", ".", "Output path")
 	frequencyCmd.Flags().BoolVarP(&verbose, "verbose", "v", true, "Verbose")
 }
