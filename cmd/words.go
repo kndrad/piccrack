@@ -26,7 +26,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"io/fs"
 	"os"
 	"path/filepath"
 
@@ -54,7 +53,7 @@ var wordsCmd = &cobra.Command{
 			outPath        = filepath.Clean(OutPath)
 		)
 
-		exit := OnExit()
+		exit := onExit()
 		defer exit()
 
 		// Get all screenshot files
@@ -89,7 +88,7 @@ var wordsCmd = &cobra.Command{
 		}
 
 		// Open clean file to write words to it
-		outFile, err := OpenFileCleaned(outPath, os.O_APPEND|DefaultFlag, DefaultPerm)
+		outFile, err := cleanOpen(outPath, os.O_APPEND|DefaultFlag, DefaultPerm)
 		if err != nil {
 			logger.Error("wordsCmd", "err", err)
 
@@ -133,7 +132,7 @@ var frequencyCmd = &cobra.Command{
 			logger.Info("frequencyCmd", "filename", ScreenshotFile)
 		}
 
-		exit := OnExit()
+		exit := onExit()
 		defer exit()
 
 		content, err := os.ReadFile(ScreenshotFile)
@@ -180,7 +179,7 @@ var frequencyCmd = &cobra.Command{
 		logger.Info("frequencyCmd opening file", "jsonPath", outPath)
 
 		// Open text_analysis JSON file and write analysis
-		outFile, err := OpenFileCleaned(outPath, os.O_CREATE|os.O_RDWR, 0o600)
+		outFile, err := cleanOpen(outPath, os.O_CREATE|os.O_RDWR, 0o600)
 		if err != nil {
 			logger.Error("frequencyCmd", "err", err)
 
@@ -206,40 +205,6 @@ var frequencyCmd = &cobra.Command{
 	},
 }
 
-func join(dir, filename, ext string) string {
-	return filepath.Join(
-		filepath.Clean(dir),
-		string(filepath.Separator),
-		filename+"."+ext,
-	)
-}
-
-const (
-	DefaultPerm = 0o600
-	DefaultFlag = os.O_CREATE | os.O_RDWR
-)
-
-func OpenFileCleaned(path string, flag int, perm fs.FileMode) (*os.File, error) {
-	if flag == 0 {
-		flag = DefaultFlag
-	}
-	if perm == 0 {
-		perm = DefaultPerm
-	}
-	f, err := os.OpenFile(filepath.Clean(path), flag, perm)
-	if err != nil {
-		return nil, fmt.Errorf("OpenCleanFile: %w", err)
-	}
-	if err := f.Truncate(0); err != nil {
-		return nil, fmt.Errorf("OpenCleanFile: %w", err)
-	}
-	if _, err := f.Seek(0, 0); err != nil {
-		return nil, fmt.Errorf("OpenCleanFile: %w", err)
-	}
-
-	return f, nil
-}
-
 func init() {
 	rootCmd.AddCommand(wordsCmd)
 
@@ -262,19 +227,4 @@ func init() {
 
 	frequencyCmd.Flags().StringVarP(&OutPath, "out", "o", ".", "Output path")
 	frequencyCmd.Flags().BoolVarP(&verbose, "verbose", "v", true, "Verbose")
-}
-
-func OnExit(funcs ...func() error) func() error {
-	return func() error {
-		for _, f := range funcs {
-			if err := f(); err != nil {
-				return fmt.Errorf("onExit: %w", err)
-			}
-		}
-
-		fmt.Println("Program is done.")
-		os.Exit(0)
-
-		return nil
-	}
 }
