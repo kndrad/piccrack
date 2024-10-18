@@ -30,3 +30,6 @@ llm_input.txt
 # jsons
 text_analysis_*.json
 words_dictionary.json
+
+# ignore extension for now
+extension/
