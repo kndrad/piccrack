@@ -87,7 +87,7 @@ func randomInt(x int64) (*big.Int, error) {
 // text_analysis_randomnumber_currentdate.
 func GenerateAnalysisName() (string, error) {
 	// YYYY-MM-DD: 2022-03-23
-	YYYYMMDD := "2006-01-02"
+	YYYYMMDD := "2006_01_02"
 
 	date := time.Now().Format(YYYYMMDD)
 
