@@ -52,7 +52,7 @@ var wordsCmd = &cobra.Command{
 			textFilePath   = filepath.Clean(TextFilePath)
 		)
 
-		shutdown := Shutdown()
+		shutdown := OnShutdown()
 		defer shutdown()
 
 		var screenshotFiles []string
@@ -129,7 +129,7 @@ var frequencyCmd = &cobra.Command{
 			logger.Info("frequencyCmd", "filename", textFilePath)
 		}
 
-		shutdown := Shutdown()
+		shutdown := OnShutdown()
 		defer shutdown()
 
 		content, err := os.ReadFile(textFilePath)

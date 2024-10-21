@@ -41,7 +41,7 @@ func OpenCleanFile(name string, flag int, perm fs.FileMode) (*os.File, error) {
 	return f, nil
 }
 
-func Shutdown(funcs ...func() error) func() error {
+func OnShutdown(funcs ...func() error) func() error {
 	return func() error {
 		for _, f := range funcs {
 			if err := f(); err != nil {
@@ -49,8 +49,7 @@ func Shutdown(funcs ...func() error) func() error {
 			}
 		}
 
-		fmt.Println("Program completed successfully. Exiting...")
-		os.Exit(0)
+		fmt.Println("Function terminated on shutdown completed successfully.")
 
 		return nil
 	}
