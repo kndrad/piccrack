@@ -49,8 +49,6 @@ func OnShutdown(funcs ...func() error) func() error {
 			}
 		}
 
-		fmt.Println("Function terminated on shutdown completed successfully.")
-
 		return nil
 	}
 }
