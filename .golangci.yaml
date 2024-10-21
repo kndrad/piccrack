@@ -138,7 +138,7 @@ linters:
     - nolintlint
     - nonamedreturns
     - nosprintfhostport
-    - paralleltest
+    #- paralleltest
     - perfsprint
     - prealloc
     - predeclared
@@ -252,7 +252,7 @@ linters:
   # - nolintlint
   # - nonamedreturns
   # - nosprintfhostport
-  # - paralleltest
+    - paralleltest
   # - perfsprint
   # - prealloc
   # - predeclared
