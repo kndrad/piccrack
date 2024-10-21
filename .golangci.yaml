@@ -159,7 +159,7 @@ linters:
     - testifylint
     - testpackage
     - thelper
-    - tparallel
+    #- tparallel
     - typecheck
     - unconvert
     - unparam
@@ -273,7 +273,7 @@ linters:
   # - testifylint
   # - testpackage
   # - thelper
-  # - tparallel
+    - tparallel
   # - typecheck
   # - unconvert
   # - unparam
