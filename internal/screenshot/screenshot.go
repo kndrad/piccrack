@@ -11,7 +11,7 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/bbalet/stopwords"
-	tesseract "github.com/otiai10/gosseract/v2"
+	"github.com/otiai10/gosseract/v2"
 	"github.com/pemistahl/lingua-go"
 )
 
@@ -63,7 +63,7 @@ func RecognizeWords(content []byte) ([]byte, error) {
 	// }
 
 	logger.Info("screenshot: launching tesseract.")
-	client := tesseract.NewClient()
+	client := gosseract.NewClient()
 	defer client.Close()
 	logger.Info("screenshot: tesseract client initialized.")
 
