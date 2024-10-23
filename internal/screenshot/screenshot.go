@@ -43,7 +43,7 @@ var (
 var logger *slog.Logger
 
 func init() {
-	logger = slog.New(slog.NewJSONHandler(os.Stdout, nil))
+	logger = slog.New(slog.NewTextHandler(os.Stdout, nil))
 }
 
 // RecognizeWords runs OCR on the provided image content using Tesseract and returns cleaned from stop words
@@ -58,9 +58,6 @@ func RecognizeWords(content []byte) ([]byte, error) {
 	if err := ValidateSize(content); err != nil {
 		return nil, fmt.Errorf("decode: %w", err)
 	}
-	// if !IsPNG(content) {
-	// return nil, errors.Wrap(ErrUnknownFormat, "decode: unknown image format")
-	// }
 
 	logger.Info("screenshot: launching tesseract.")
 	client := gosseract.NewClient()
