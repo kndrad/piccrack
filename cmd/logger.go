@@ -8,5 +8,11 @@ import (
 var logger *slog.Logger
 
 func init() {
-	logger = slog.New(slog.NewJSONHandler(os.Stdout, nil))
+	logger = slog.New(slog.NewTextHandler(os.Stdout, nil))
+
+	if verbose {
+		slog.SetLogLoggerLevel(slog.LevelInfo)
+	} else {
+		slog.SetLogLoggerLevel(slog.LevelError)
+	}
 }
