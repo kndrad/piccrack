@@ -40,6 +40,7 @@ var rootCmd = &cobra.Command{
 	// has an action associated with it:
 	RunE: func(cmd *cobra.Command, args []string) error {
 		cmd.Help()
+
 		return nil
 	},
 }
