@@ -22,21 +22,25 @@ staging:
 main:
 	go run ./cmd/main.go
 
-words-file:
-	go run main.go words --file=./internal/screenshot/testdata/golang_0.png --save=true -o=./internal/screenshot/testdata/words_out.txt
+words_filepath = ./internal/screenshot/testdata/words.txt
+screenshot_filepath = ./internal/screenshot/testdata/golang_0.png
+screenshot_testdata_filepath = ./internal/screenshot/testdata/
 
-words-dir:
-	go run main.go words --file=./internal/screenshot/testdata/ --save=true -o=./internal/screenshot/testdata/words_out.txt
+words-1:
+	go run main.go words --file=$(screenshot_filepath) --save=true -o=$(words_filepath)
+
+words-2:
+	go run main.go words --file=./internal/screenshot/testdata/ --save=true -o=$(words_filepath)
 
 frequency:
-	go run main.go frequency --file=./internal/screenshot/testdata/words_out.txt
+	go run main.go frequency --file=$(words_filepath)
 
 all:
 	./scripts/format.sh
 	./scripts/check.sh
 	go test ./... -count=1 -failfast -coverprofile=coverage.out
-	go run main.go words --file=./internal/screenshot/testdata/golang_0.png --save=true -o=./internal/screenshot/testdata/words_out.txt
-	go run main.go frequency --file=./internal/screenshot/testdata/words_out.txt
+	go run main.go words --file=$(screenshot_filepath) --save=true -o=$(words_filepath)
+	go run main.go frequency --file=$(words_filepath)
 
 docker_image = itcrack-dev
 
