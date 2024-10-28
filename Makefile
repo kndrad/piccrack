@@ -28,7 +28,7 @@ words-file:
 words-dir:
 	go run main.go words --file=./internal/screenshot/testdata/ --save=true -o=./internal/screenshot/testdata/words_out.txt
 
-text-analysis:
+frequency:
 	go run main.go frequency --file=./internal/screenshot/testdata/words_out.txt
 
 all:
