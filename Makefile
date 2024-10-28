@@ -37,3 +37,11 @@ all:
 	go test ./... -count=1 -failfast -coverprofile=coverage.out
 	go run main.go words --file=./internal/screenshot/testdata/golang_0.png --save=true -o=./internal/screenshot/testdata/words_out.txt
 	go run main.go frequency --file=./internal/screenshot/testdata/words_out.txt
+
+docker_image = itcrack-dev
+
+docker-build:
+	docker build --tag=$(docker_image) .
+
+docker-run:
+	docker run $(docker_image)
