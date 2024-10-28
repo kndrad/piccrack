@@ -39,6 +39,7 @@ var rootCmd = &cobra.Command{
 	// Uncomment the following line if your bare application
 	// has an action associated with it:
 	RunE: func(cmd *cobra.Command, args []string) error {
+		cmd.Help()
 		return nil
 	},
 }

@@ -22,9 +22,6 @@ THE SOFTWARE.
 package cmd
 
 import (
-	"bufio"
-	"bytes"
-	"encoding/json"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -115,86 +112,6 @@ var wordsCmd = &cobra.Command{
 	},
 }
 
-// frequencyCmd represents the frequency command.
-var frequencyCmd = &cobra.Command{
-	Use:   "frequency",
-	Short: "",
-	Long:  ``,
-	RunE: func(cmd *cobra.Command, args []string) error {
-		var (
-			textFilePath = filepath.Clean(TextFilePath)
-			outPath      = filepath.Clean(OutPath)
-		)
-		if verbose {
-			logger.Info("frequencyCmd", "filename", textFilePath)
-		}
-
-		shutdown := OnShutdown()
-		defer shutdown()
-
-		content, err := os.ReadFile(textFilePath)
-		if err != nil {
-			logger.Error("frequencyCmd", "err", err)
-
-			return fmt.Errorf("frequencyCmd err: %w", err)
-		}
-		scanner := bufio.NewScanner(bytes.NewReader(content))
-		scanner.Split(bufio.ScanWords)
-
-		words := make([]string, 0)
-		words = append(words, "test")
-
-		for scanner.Scan() {
-			word := scanner.Text()
-			words = append(words, word)
-		}
-		if err := scanner.Err(); err != nil {
-			logger.Error("frequencyCmd", "err", err)
-
-			return fmt.Errorf("frequencyCmd: %w", err)
-		}
-
-		analysis, err := screenshot.AnalyzeWordFrequency(words)
-		if err != nil {
-			logger.Error("frequencyCmd", "err", err)
-
-			return fmt.Errorf("frequencyCmd: %w", err)
-		}
-
-		// Join to create new out file path with an extension.
-		name, err := analysis.Name()
-		if err != nil {
-			logger.Error("frequencyCmd", "err", err)
-
-			return fmt.Errorf("frequencyCmd: %w", err)
-		}
-		jsonPath := Join(outPath, name, "json")
-		logger.Info("frequencyCmd opening file", "jsonPath", jsonPath)
-		jsonFile, err := OpenCleanFile(jsonPath, os.O_CREATE|os.O_RDWR, 0o600)
-		if err != nil {
-			logger.Error("frequencyCmd", "err", err)
-
-			return fmt.Errorf("frequencyCmd: %w", err)
-		}
-		defer jsonFile.Close()
-
-		jsonAnalysis, err := json.MarshalIndent(analysis, "", " ")
-		if err != nil {
-			logger.Error("frequencyCmd", "err", err)
-
-			return fmt.Errorf("frequencyCmd: %w", err)
-		}
-		logger.Info("frequencyCmd writing analysisJson")
-		if _, err := jsonFile.Write(jsonAnalysis); err != nil {
-			logger.Error("frequencyCmd", "err", err)
-
-			return fmt.Errorf("frequencyCmd: %w", err)
-		}
-
-		return nil
-	},
-}
-
 func init() {
 	rootCmd.AddCommand(wordsCmd)
 
@@ -206,15 +123,4 @@ func init() {
 	wordsCmd.Flags().StringVarP(&TextFilePath, "out", "o", "", "Output path")
 	wordsCmd.MarkFlagsRequiredTogether("save", "out")
 	wordsCmd.Flags().BoolVarP(&verbose, "verbose", "v", true, "Verbose")
-
-	rootCmd.AddCommand(frequencyCmd)
-	frequencyCmd.PersistentFlags().StringVarP(
-		&TextFilePath, "file", "f", "", "File to analyze words output frequency from",
-	)
-	if err := frequencyCmd.MarkPersistentFlagRequired("file"); err != nil {
-		logger.Error("frequencyCmd", "err", err.Error())
-	}
-
-	frequencyCmd.Flags().StringVarP(&OutPath, "out", "o", ".", "Output path")
-	frequencyCmd.Flags().BoolVarP(&verbose, "verbose", "v", true, "Verbose")
 }
