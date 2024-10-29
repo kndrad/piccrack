@@ -67,6 +67,13 @@ func TestOpenCleanFile(t *testing.T) {
 			perm:     0,
 			mustFail: false,
 		},
+		{
+			desc:     "Should handle directory input",
+			name:     tmpDir,
+			flag:     cmd.DefaultFlag,
+			perm:     cmd.DefaultPerm,
+			mustFail: false,
+		},
 	}
 	for _, tc := range testCases {
 		t.Run(tc.desc, func(t *testing.T) {
