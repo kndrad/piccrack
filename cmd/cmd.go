@@ -36,14 +36,14 @@ func OpenCleanFile(path string, flag int, perm fs.FileMode) (*os.File, error) {
 		return nil, fmt.Errorf("OpenCleanFile: %w", err)
 	}
 
-	// Make a new name for a text file containing words if
-	// the cleaned path is a directory
+	// Make a new name for a analysis text file containing words if
+	// the cleaned path points to a directory.
 	if stat.IsDir() {
 		filename, err := screenshot.GenerateAnalysisName()
 		if err != nil {
-			logger.Error("wordsCmd", "err", err)
+			logger.Error("OpenCleanFile", "err", err)
 
-			return nil, fmt.Errorf("wordsCmd: %w", err)
+			return nil, fmt.Errorf("OpenCleanFile: %w", err)
 		}
 		path = Join(path, filename, "txt")
 	}
