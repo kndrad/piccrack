@@ -77,7 +77,7 @@ func randomInt(x int64) (*big.Int, error) {
 	i := big.NewInt(x)
 	v, err := rand.Int(rand.Reader, i)
 	if err != nil {
-		return nil, fmt.Errorf("NewTextAnalysis: %w", err)
+		return nil, fmt.Errorf("randomInt: %w", err)
 	}
 
 	return v, nil
@@ -93,7 +93,7 @@ func GenerateAnalysisName() (string, error) {
 
 	rv, err := randomInt(10000)
 	if err != nil {
-		return "", fmt.Errorf("NewTextAnalysisName: %w", err)
+		return "", fmt.Errorf("GenerateAnalysisName: %w", err)
 	}
 	b := new(strings.Builder)
 	b.WriteString("analysis")

@@ -8,7 +8,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestGenerateAnalysisName(t *testing.T) {
+func TestGenerateDatedStr(t *testing.T) {
 	t.Parallel()
 
 	// Should return generated result.
