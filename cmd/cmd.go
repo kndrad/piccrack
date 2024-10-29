@@ -9,11 +9,11 @@ import (
 	"github.com/kndrad/itcrack/internal/screenshot"
 )
 
-func Join(dir, filename, ext string) string {
+func JoinPaths(dir, name, ext string) string {
 	return filepath.Join(
 		filepath.Clean(dir),
 		string(filepath.Separator),
-		filename+"."+ext,
+		name+"."+ext,
 	)
 }
 
@@ -45,7 +45,7 @@ func OpenCleanFile(path string, flag int, perm fs.FileMode) (*os.File, error) {
 
 			return nil, fmt.Errorf("OpenCleanFile: %w", err)
 		}
-		path = Join(path, filename, "txt")
+		path = JoinPaths(path, filename, "txt")
 	}
 
 	f, err := os.OpenFile(path, flag, perm)

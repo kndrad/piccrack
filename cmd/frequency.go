@@ -86,7 +86,7 @@ var frequencyCmd = &cobra.Command{
 
 			return fmt.Errorf("frequencyCmd: %w", err)
 		}
-		jsonPath := Join(outPath, name, "json")
+		jsonPath := JoinPaths(outPath, name, "json")
 		logger.Info("frequencyCmd opening file", "jsonPath", jsonPath)
 		jsonFile, err := OpenCleanFile(jsonPath, os.O_CREATE|os.O_RDWR, 0o600)
 		if err != nil {

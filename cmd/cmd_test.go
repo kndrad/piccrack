@@ -10,10 +10,10 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestJoin(t *testing.T) {
+func TestJoinPaths(t *testing.T) {
 	t.Parallel()
 
-	result := cmd.Join("dir", "file", "json")
+	result := cmd.JoinPaths("dir", "file", "json")
 	expected := "dir/file.json"
 	assert.Equal(t, expected, result)
 }
