@@ -34,7 +34,6 @@ var (
 	ScreenshotPath string
 	TextFilePath   string
 	OutPath        string
-	Save           bool
 	verbose        bool
 )
 
@@ -119,8 +118,7 @@ func init() {
 	if err := wordsCmd.MarkPersistentFlagRequired("file"); err != nil {
 		logger.Error("rootcmd", "err", err.Error())
 	}
-	wordsCmd.Flags().BoolVarP(&Save, "save", "s", false, "Save the output")
-	wordsCmd.Flags().StringVarP(&TextFilePath, "out", "o", "", "Output path")
-	wordsCmd.MarkFlagsRequiredTogether("save", "out")
+
+	wordsCmd.Flags().StringVarP(&TextFilePath, "out", "o", ".", "Output path")
 	wordsCmd.Flags().BoolVarP(&verbose, "verbose", "v", true, "Verbose")
 }

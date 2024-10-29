@@ -27,10 +27,10 @@ screenshot_filepath = ./internal/screenshot/testdata/golang_0.png
 screenshot_testdata_filepath = ./internal/screenshot/testdata/
 
 words-1:
-	go run main.go words --file=$(screenshot_filepath) --save=true -o=$(words_filepath)
+	go run main.go words --file=$(screenshot_filepath)-o=$(words_filepath)
 
 words-2:
-	go run main.go words --file=./internal/screenshot/testdata/ --save=true -o=$(words_filepath)
+	go run main.go words --file=./internal/screenshot/testdata/ -o=$(words_filepath)
 
 frequency:
 	go run main.go frequency --file=$(words_filepath)
@@ -39,7 +39,7 @@ all:
 	./scripts/format.sh
 	./scripts/check.sh
 	go test ./... -count=1 -failfast -coverprofile=coverage.out
-	go run main.go words --file=$(screenshot_filepath) --save=true -o=$(words_filepath)
+	go run main.go words --file=$(screenshot_filepath) -o=$(words_filepath)
 	go run main.go frequency --file=$(words_filepath)
 
 docker_image = itcrack-dev
@@ -47,5 +47,16 @@ docker_image = itcrack-dev
 docker-build:
 	docker build --tag=$(docker_image) .
 
-docker-run:
-	docker run $(docker_image)
+screenshots_dir = Screenshots
+
+docker-test-1:
+	docker run -v $(shell pwd)/$(screenshots_dir):/$(screenshots_dir) itcrack-dev:latest words --file=$(screenshots_dir)/golang_0.png
+
+docker-test-2:
+	docker run -v $(shell pwd)/$(screenshots_dir):/$(screenshots_dir) itcrack-dev:latest words --file=$(screenshots_dir)
+
+docker-all:
+	docker build -t $(docker_image) .
+	docker run -v $(shell pwd)/$(screenshots_dir):/$(screenshots_dir) itcrack-dev:latest words --file=$(screenshots_dir)/golang_0.png
+	docker run -v $(shell pwd)/$(screenshots_dir):/$(screenshots_dir) itcrack-dev:latest words --file=$(screenshots_dir)
+
