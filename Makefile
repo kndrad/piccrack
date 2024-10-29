@@ -47,16 +47,17 @@ docker_image = itcrack-dev
 docker-build:
 	docker build --tag=$(docker_image) .
 
-screenshots_dir = Screenshots
+screenshots_dir = screenshots
+output_dir = output
 
 docker-test-1:
-	docker run -v $(shell pwd)/$(screenshots_dir):/$(screenshots_dir) itcrack-dev:latest words --file=$(screenshots_dir)/golang_0.png
+	docker run -v $(shell pwd)/screenshots:/screenshots -v $(shell pwd)/output:/app/output itcrack-dev:latest words --file=/screenshots/golang_0.png --out=app/output
 
 docker-test-2:
 	docker run -v $(shell pwd)/$(screenshots_dir):/$(screenshots_dir) itcrack-dev:latest words --file=$(screenshots_dir)
 
 docker-all:
 	docker build -t $(docker_image) .
-	docker run -v $(shell pwd)/$(screenshots_dir):/$(screenshots_dir) itcrack-dev:latest words --file=$(screenshots_dir)/golang_0.png
-	docker run -v $(shell pwd)/$(screenshots_dir):/$(screenshots_dir) itcrack-dev:latest words --file=$(screenshots_dir)
+	docker run -v $(shell pwd)/screenshots:/screenshots -v $(shell pwd)/output:/app/output itcrack-dev:latest words --file=/screenshots/golang_0.png --out=app/output
+	docker run -v $(shell pwd)/$(screenshots_dir):/$(screenshots_dir) -v $(shell pwd)/output:/app/output itcrack-dev:latest words --file=$(screenshots_dir) --out=app/output
 
