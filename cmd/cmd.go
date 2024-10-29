@@ -5,6 +5,8 @@ import (
 	"io/fs"
 	"os"
 	"path/filepath"
+
+	"github.com/kndrad/itcrack/internal/screenshot"
 )
 
 func Join(dir, filename, ext string) string {
@@ -20,14 +22,33 @@ const (
 	DefaultFlag = os.O_CREATE | os.O_RDWR
 )
 
-func OpenCleanFile(name string, flag int, perm fs.FileMode) (*os.File, error) {
+func OpenCleanFile(path string, flag int, perm fs.FileMode) (*os.File, error) {
 	if flag == 0 {
 		flag = DefaultFlag
 	}
 	if perm == 0 {
 		perm = DefaultPerm
 	}
-	f, err := os.OpenFile(filepath.Clean(name), flag, perm)
+	stat, err := os.Stat(path)
+	if err != nil {
+		logger.Error("OpenCleanFile", "err", err)
+
+		return nil, fmt.Errorf("OpenCleanFile: %w", err)
+	}
+
+	// Make a new name for a text file containing words if
+	// the cleaned path is a directory
+	if stat.IsDir() {
+		filename, err := screenshot.GenerateAnalysisName()
+		if err != nil {
+			logger.Error("wordsCmd", "err", err)
+
+			return nil, fmt.Errorf("wordsCmd: %w", err)
+		}
+		path = Join(path, filename, "txt")
+	}
+
+	f, err := os.OpenFile(path, flag, perm)
 	if err != nil {
 		return nil, fmt.Errorf("OpenCleanFile: %w", err)
 	}
