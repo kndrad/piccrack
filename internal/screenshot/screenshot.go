@@ -113,11 +113,8 @@ func RecognizeWords(content []byte) ([]byte, error) {
 }
 
 const (
-	// MaxSize is the maximum allowed size for an image, set to 3 MB.
-	MaxSize int = 3 * 1024 * 1024
-
-	// MinSize is the minimum allowed size for an image, set to 1 KB.
-	MinSize = 1 * 16
+	MaxSize int = 3 * 1024 * 1024 // 3MB
+	MinSize     = 1 * 16          // 16B
 )
 
 // ValidateSize checks if the content buffer size is within the allowed size range.
