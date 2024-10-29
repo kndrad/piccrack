@@ -1,6 +1,10 @@
 package screenshot_test
 
 import (
+	"bytes"
+	"os"
+	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/kndrad/itcrack/internal/screenshot"
@@ -53,4 +57,66 @@ func NewTestTextAnalysis(t *testing.T) *screenshot.TextAnalysis {
 	require.NoError(t, err)
 
 	return ta
+}
+
+func TestScreenshotWordsFrequencyAnalysis(t *testing.T) {
+	t.Parallel()
+
+	testCases := []struct {
+		desc string
+
+		words    []string
+		mustFail bool
+	}{
+		{
+			desc:     "Nil words input fails",
+			words:    nil,
+			mustFail: true,
+		},
+		{
+			desc:     "Success on analysing words read from a file",
+			words:    NewTestWords(t),
+			mustFail: false,
+		},
+	}
+	for _, tc := range testCases {
+		t.Run(tc.desc, func(t *testing.T) {
+			analysis, err := screenshot.AnalyzeFrequency(tc.words)
+
+			if tc.mustFail {
+				require.Error(t, err, "wanted failure but got: %w", err)
+			} else {
+				require.NoError(t, err, "wanted success but got: %w", err)
+				assert.NotNil(t, analysis)
+			}
+		})
+	}
+}
+
+func NewTestWords(t *testing.T) []string {
+	t.Helper()
+
+	wd, err := os.Getwd()
+	if err != nil {
+		t.Fatalf("NewTestWords: %v", err)
+
+		return nil
+	}
+	sep := string(filepath.Separator)
+	name := "words.txt"
+	path := filepath.Join(
+		wd+sep,
+		"testdata"+sep,
+		name,
+	)
+
+	data, err := os.ReadFile(path)
+	if err != nil {
+		t.Fatalf("NewTestWords: %v", err)
+
+		return nil
+	}
+	buffer := bytes.NewBuffer(data)
+
+	return strings.Split(buffer.String(), " ")
 }

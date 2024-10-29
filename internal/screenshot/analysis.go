@@ -13,7 +13,7 @@ import (
 
 var ErrEmptyWords = errors.New("words is empty")
 
-func AnalyzeWordFrequency(words []string) (*TextAnalysis, error) {
+func AnalyzeFrequency(words []string) (*TextAnalysis, error) {
 	if words == nil {
 		return nil, ErrEmptyWords
 	}

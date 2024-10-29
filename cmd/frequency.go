@@ -72,7 +72,7 @@ var frequencyCmd = &cobra.Command{
 			return fmt.Errorf("frequencyCmd: %w", err)
 		}
 
-		analysis, err := screenshot.AnalyzeWordFrequency(words)
+		analysis, err := screenshot.AnalyzeFrequency(words)
 		if err != nil {
 			logger.Error("frequencyCmd", "err", err)
 
