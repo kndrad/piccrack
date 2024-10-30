@@ -43,9 +43,10 @@ all:
 	go run main.go frequency --file=$(words_filepath)
 
 docker_image = itcrack-dev
+docker_image_path = .
 
 docker-build:
-	docker build --tag=$(docker_image) .
+	docker build --tag=$(docker_image) $(docker_image_path)
 
 screenshots_dir = screenshots
 output_dir = output
@@ -57,7 +58,7 @@ docker-test-2:
 	docker run -v $(shell pwd)/$(screenshots_dir):/$(screenshots_dir) itcrack-dev:latest words --file=$(screenshots_dir)
 
 docker-all:
-	docker build -t $(docker_image) .
+	docker build -t $(docker_image) $(docker_image_path)
 	docker run -v $(shell pwd)/screenshots:/screenshots -v $(shell pwd)/output:/app/output itcrack-dev:latest words --file=/screenshots/golang_0.png --out=app/output
 	docker run -v $(shell pwd)/$(screenshots_dir):/$(screenshots_dir) -v $(shell pwd)/output:/app/output itcrack-dev:latest words --file=$(screenshots_dir) --out=app/output
 
