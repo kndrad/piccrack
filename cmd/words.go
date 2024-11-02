@@ -40,8 +40,11 @@ var (
 // wordsCmd represents the words command.
 var wordsCmd = &cobra.Command{
 	Use:   "words",
-	Short: "",
-	Long:  ``,
+	Short: "Extract text from image files (PNG/JPG/JPEG) using OCR",
+	Long: `Extract text from image files (PNG/JPG/JPEG) using OCR
+  -f, --file     Screenshot file or directory path to process (required)
+  -o, --out      Output text file path (default: current directory)
+  -v, --verbose  Enable verbose logging (default: true)`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		var (
 			screenshotPath = filepath.Clean(ScreenshotPath)

@@ -34,8 +34,7 @@ var cfgFile string
 // rootCmd represents the base command when called without any subcommands.
 var rootCmd = &cobra.Command{
 	Use:   "itcrack",
-	Short: "",
-	Long:  ``,
+	Short: "A tool for analyzing text from screenshots and performing word frequency analysis",
 	// Uncomment the following line if your bare application
 	// has an action associated with it:
 	RunE: func(cmd *cobra.Command, args []string) error {

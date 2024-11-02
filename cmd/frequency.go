@@ -36,8 +36,11 @@ import (
 // frequencyCmd represents the frequency command.
 var frequencyCmd = &cobra.Command{
 	Use:   "frequency",
-	Short: "",
-	Long:  ``,
+	Short: "Analyze word frequency in a text file",
+	Long: `itcrack frequency - Analyze word frequency in a text file
+	-f, --file     Input text file to analyze (required)
+	-o, --out      Output directory for analysis results (default: current directory)
+	-v, --verbose  Enable verbose logging (default: true)`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		var (
 			textFilePath = filepath.Clean(TextFilePath)

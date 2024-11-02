@@ -72,3 +72,7 @@ docker-test-2:
 
 .PHONY: docker-all
 docker-all: docker-build docker-test-1 docker-test-2
+
+.PHONY: compose-up
+compose-up:
+	docker-compose up --build -d

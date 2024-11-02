@@ -1,6 +1,6 @@
 # syntax=docker/dockerfile:1
 
-FROM golang:1.23.2-alpine3.20 AS build-stage
+FROM golang:1.23.2-alpine3.20 AS builder
 LABEL maintainer="Konrad Nowara"
 WORKDIR /
 
@@ -24,7 +24,7 @@ COPY . ./
 RUN go build -o main ./
 
 # Export Go binary
-FROM alpine:3.20.3 AS final-stage
+FROM alpine:3.20.3
 WORKDIR /
 
 # Once again install tesseract and dependencies to make the Go binary work
@@ -33,6 +33,7 @@ RUN apk add --no-cache \
     tesseract-ocr-data-eng \
     leptonica
 
-COPY --from=build-stage /app/main /main
+COPY --from=builder /app/main /main
 
-ENTRYPOINT ["./main"]
+ENTRYPOINT [ "./main" ]
+CMD [ "--help" ]
