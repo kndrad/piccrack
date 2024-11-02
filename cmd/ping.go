@@ -30,7 +30,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// pingCmd represents the ping command
+// pingCmd represents the ping command.
 var pingCmd = &cobra.Command{
 	Use:   "ping",
 	Short: "Pings a database",
