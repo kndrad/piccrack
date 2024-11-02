@@ -18,16 +18,16 @@ func JoinPaths(dir, name, ext string) string {
 }
 
 const (
-	DefaultPerm = 0o600
-	DefaultFlag = os.O_CREATE | os.O_RDWR
+	DefaultOpenPerm = 0o600
+	DefaultOpenFlag = os.O_CREATE | os.O_RDWR
 )
 
 func OpenCleanFile(path string, flag int, perm fs.FileMode) (*os.File, error) {
 	if flag == 0 {
-		flag = DefaultFlag
+		flag = DefaultOpenFlag
 	}
 	if perm == 0 {
-		perm = DefaultPerm
+		perm = DefaultOpenPerm
 	}
 	stat, err := os.Stat(path)
 	if err != nil {

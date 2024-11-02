@@ -33,3 +33,9 @@ analysis_*_*_*_*.txt
 analysis_*.json
 words_dictionary.json
 
+#vscode
+.vscode/
+
+
+#sql
+*.session.sql

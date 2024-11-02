@@ -82,7 +82,7 @@ var wordsCmd = &cobra.Command{
 			screenshotFiles = append(screenshotFiles, screenshotPath)
 		}
 
-		textFile, err := OpenCleanFile(textFilePath, os.O_APPEND|DefaultFlag, DefaultPerm)
+		textFile, err := OpenCleanFile(textFilePath, os.O_APPEND|DefaultOpenFlag, DefaultOpenPerm)
 		if err != nil {
 			logger.Error("wordsCmd", "err", err)
 
