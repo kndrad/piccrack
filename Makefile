@@ -1,64 +1,74 @@
+# Binary and build configuration
+BINARY_NAME=itcrack
+DOCKER_IMAGE=itcrack-dev
+DOCKER_IMAGE_PATH=.
+
+# File paths
+WORDS_FILEPATH=./internal/screenshot/testdata/words.txt
+SCREENSHOT_FILEPATH=./internal/screenshot/testdata/golang_0.png
+SCREENSHOT_TESTDATA_FILEPATH=./internal/screenshot/testdata/
+SCREENSHOTS_DIR=screenshots
+OUTPUT_DIR=output
+
+.PHONY: build
+build:
+	go build -o bin/$(BINARY_NAME) ./cmd/main.go
+
+.PHONY: fmt
 fmt:
 	./scripts/format.sh
 
+.PHONY: review
 review: fmt
 	./scripts/check.sh
+	go test ./... -count=1 -failfast -coverprofile=coverage.out
 
+.PHONY: cover-html
 cover-html:
 	go test ./... -count=1 -failfast -coverprofile=coverage.out
 	go tool cover -html=coverage.out
 
+.PHONY: cover
 cover:
 	go test ./... -count=1 -failfast -coverprofile=coverage.out
 
+.PHONY: tests
 tests:
 	go test ./... -count=1 -failfast
 
-staging:
-	./scripts/format.sh
-	./scripts/check.sh
-	go test ./... -count=1 -failfast -coverprofile=coverage.out
+.PHONY: staging
+staging: fmt review cover
 
-main:
+.PHONY: run
+run:
 	go run ./cmd/main.go
 
-words_filepath = ./internal/screenshot/testdata/words.txt
-screenshot_filepath = ./internal/screenshot/testdata/golang_0.png
-screenshot_testdata_filepath = ./internal/screenshot/testdata/
-
+.PHONY: words-1
 words-1:
-	go run main.go words --file=$(screenshot_filepath)-o=$(words_filepath)
+	go run main.go words --file=$(SCREENSHOT_FILEPATH) -o=$(WORDS_FILEPATH)
 
+.PHONY: words-2
 words-2:
-	go run main.go words --file=./internal/screenshot/testdata/ -o=$(words_filepath)
+	go run main.go words --file=$(SCREENSHOT_TESTDATA_FILEPATH) -o=$(WORDS_FILEPATH)
 
+.PHONY: frequency
 frequency:
-	go run main.go frequency --file=$(words_filepath)
+	go run main.go frequency --file=$(WORDS_FILEPATH)
 
-all:
-	./scripts/format.sh
-	./scripts/check.sh
-	go test ./... -count=1 -failfast -coverprofile=coverage.out
-	go run main.go words --file=$(screenshot_filepath) -o=$(words_filepath)
-	go run main.go frequency --file=$(words_filepath)
+.PHONY: all
+all: fmt review cover words-1 frequency
 
-docker_image = itcrack-dev
-docker_image_path = .
-
+.PHONY: docker-build
 docker-build:
-	docker build --tag=$(docker_image) $(docker_image_path)
+	docker build --tag=$(DOCKER_IMAGE) $(DOCKER_IMAGE_PATH)
 
-screenshots_dir = screenshots
-output_dir = output
-
+.PHONY: docker-test-1
 docker-test-1:
-	docker run -v $(shell pwd)/screenshots:/screenshots -v $(shell pwd)/output:/app/output itcrack-dev:latest words --file=/screenshots/golang_0.png --out=app/output
+	docker run -v $(shell pwd)/screenshots:/screenshots -v $(shell pwd)/output:/app/output $(DOCKER_IMAGE):latest words --file=/screenshots/golang_0.png --out=app/output
 
+.PHONY: docker-test-2
 docker-test-2:
-	docker run -v $(shell pwd)/$(screenshots_dir):/$(screenshots_dir) itcrack-dev:latest words --file=$(screenshots_dir)
+	docker run -v $(shell pwd)/$(SCREENSHOTS_DIR):/$(SCREENSHOTS_DIR) $(DOCKER_IMAGE):latest words --file=$(SCREENSHOTS_DIR)
 
-docker-all:
-	docker build -t $(docker_image) $(docker_image_path)
-	docker run -v $(shell pwd)/screenshots:/screenshots -v $(shell pwd)/output:/app/output itcrack-dev:latest words --file=/screenshots/golang_0.png --out=app/output
-	docker run -v $(shell pwd)/$(screenshots_dir):/$(screenshots_dir) -v $(shell pwd)/output:/app/output itcrack-dev:latest words --file=$(screenshots_dir) --out=app/output
-
+.PHONY: docker-all
+docker-all: docker-build docker-test-1 docker-test-2
