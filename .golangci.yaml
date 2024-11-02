@@ -82,7 +82,7 @@ linters:
     #- errcheck
     - errchkjson
     - errname
-    - errorlint
+    # - errorlint
     # - execinquery
     - exhaustive
     #- exhaustruct
@@ -196,7 +196,7 @@ linters:
     - errcheck
   # - errchkjson
   # - errname
-  # - errorlint
+    - errorlint
   # - execinquery
   # - exhaustive
     - exhaustruct
