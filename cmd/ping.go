@@ -27,6 +27,7 @@ import (
 	"time"
 
 	"github.com/kndrad/itcrack/internal/textproc/db"
+	"github.com/kndrad/itcrack/pkg/retry"
 	"github.com/spf13/cobra"
 )
 
@@ -35,7 +36,7 @@ var pingCmd = &cobra.Command{
 	Use:   "ping",
 	Short: "Pings a database",
 	RunE: func(cmd *cobra.Command, args []string) error {
-		logger.Info("Pinging database...")
+		logger.Info("Loading database config.")
 
 		cfg, err := db.LoadConfig(DefaultEnvFilePath)
 		if err != nil {
@@ -45,6 +46,7 @@ var pingCmd = &cobra.Command{
 		}
 
 		logger.Info("Establishing connection to a database.")
+
 		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 		defer cancel()
 
@@ -56,6 +58,14 @@ var pingCmd = &cobra.Command{
 		}
 		defer pool.Close()
 
+		logger.Info("Pinging database...")
+		if err := retry.PingDatabase(ctx, pool, retry.MaxRetries); err != nil {
+			logger.Error("Pinging db pool failed", "err", err.Error())
+
+			return fmt.Errorf("db pool: %w", err)
+		}
+		logger.Info("Pinging db success.")
+
 		conn, err := db.DatabaseConnection(ctx, pool)
 		if err != nil {
 			logger.Error("Failed to connect to a database", "err", err.Error())
@@ -65,6 +75,7 @@ var pingCmd = &cobra.Command{
 		defer conn.Close(ctx)
 
 		logger.Info("Database OK.")
+
 		logger.Info("Program completed successfully.")
 
 		return nil

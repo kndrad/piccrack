@@ -112,6 +112,8 @@ var frequencyCmd = &cobra.Command{
 			return fmt.Errorf("frequencyCmd: %w", err)
 		}
 
+		logger.Info("Program completed successfully.")
+
 		return nil
 	},
 }

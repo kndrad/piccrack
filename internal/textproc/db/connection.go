@@ -7,7 +7,6 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/cenkalti/backoff/v4"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/pkg/errors"
@@ -92,18 +91,6 @@ func DatabasePool(ctx context.Context, cfg Config) (*pgxpool.Pool, error) {
 		return nil, fmt.Errorf("creating connection pool: %w", err)
 	}
 
-	op := func() error {
-		if err := ping(ctx, pool); err != nil {
-			return fmt.Errorf("pinging pool: %w", err)
-		}
-
-		return nil
-	}
-
-	if err := backoff.Retry(op, backoff.NewExponentialBackOff()); err != nil {
-		return nil, fmt.Errorf("retrying operation: %w", err)
-	}
-
 	return pool, nil
 }
 
@@ -114,19 +101,6 @@ func DatabaseConnection(ctx context.Context, pool *pgxpool.Pool) (*pgx.Conn, err
 	}
 
 	return conn, nil
-}
-
-func ping(ctx context.Context, pool *pgxpool.Pool) error {
-	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
-	defer cancel()
-
-	if err := pool.Ping(ctx); err != nil {
-		pool.Close()
-
-		return fmt.Errorf("pinging db: %w", err)
-	}
-
-	return nil
 }
 
 var ErrInvalidConfig = errors.New("invalid configuration: missing required fields")
