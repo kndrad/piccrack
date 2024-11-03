@@ -29,7 +29,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/kndrad/itcrack/internal/screenshot"
+	"github.com/kndrad/itcrack/internal/textproc"
 	"github.com/spf13/cobra"
 )
 
@@ -75,7 +75,7 @@ var frequencyCmd = &cobra.Command{
 			return fmt.Errorf("frequencyCmd: %w", err)
 		}
 
-		analysis, err := screenshot.AnalyzeFrequency(words)
+		analysis, err := textproc.AnalyzeFrequency(words)
 		if err != nil {
 			logger.Error("frequencyCmd", "err", err)
 

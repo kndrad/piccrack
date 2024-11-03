@@ -3,8 +3,6 @@ package screenshot
 import (
 	"bytes"
 	"fmt"
-	"log/slog"
-	"os"
 	"path/filepath"
 	"strings"
 
@@ -40,12 +38,6 @@ var (
 	ErrUnknownLanguage = errors.New("unknown language")
 )
 
-var logger *slog.Logger
-
-func init() {
-	logger = slog.New(slog.NewTextHandler(os.Stdout, nil))
-}
-
 // RecognizeWords runs OCR on the provided image content using Tesseract and returns cleaned from stop words
 // text as a slice of bytes.
 //
@@ -59,10 +51,8 @@ func RecognizeWords(content []byte) ([]byte, error) {
 		return nil, fmt.Errorf("decode: %w", err)
 	}
 
-	logger.Info("screenshot: launching tesseract.")
 	client := gosseract.NewClient()
 	defer client.Close()
-	logger.Info("screenshot: tesseract client initialized.")
 
 	client.Trim = true
 
@@ -72,7 +62,6 @@ func RecognizeWords(content []byte) ([]byte, error) {
 	if err := client.SetImageFromBytes(content); err != nil {
 		return nil, fmt.Errorf("decode: %w", err)
 	}
-	logger.Info("screenshot: starting recoginition with tesseract client.")
 	text, err := client.Text()
 	if err != nil {
 		return nil, fmt.Errorf("decode: %w", err)
@@ -80,7 +69,6 @@ func RecognizeWords(content []byte) ([]byte, error) {
 	if text == "" {
 		return nil, ErrEmptyContent
 	}
-	logger.Info("screenshot: finisihed text recognition tesseract client.", "text_total", len(text))
 
 	languages := []lingua.Language{
 		lingua.English,
@@ -88,7 +76,6 @@ func RecognizeWords(content []byte) ([]byte, error) {
 	}
 
 	// Build the detector with valid languages
-	logger.Info("screenshot: building language detector - detecting.")
 	d := lingua.NewLanguageDetectorBuilder().
 		FromLanguages(languages...).
 		Build()
@@ -96,18 +83,14 @@ func RecognizeWords(content []byte) ([]byte, error) {
 	if !exists {
 		return nil, ErrUnknownLanguage
 	}
-	logger.Info("screenshot: detected language of text", "lang", lang.String())
 
 	// Get language code to pass into stopwords.Clean
 	code := lang.IsoCode639_1().String()
-	logger.Info("screenshot: language detector finished.", "detected_language", code)
 
-	logger.Info("screenshot: cleaning text from stop-words.")
 	words := bytes.Trim(
 		stopwords.Clean([]byte(text), code, true),
 		" ",
 	)
-	logger.Info("screenshot: finished cleaning text.", "words_total", len(words))
 
 	return words, nil
 }

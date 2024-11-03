@@ -1,4 +1,4 @@
-package screenshot
+package textproc
 
 import (
 	"crypto/rand"

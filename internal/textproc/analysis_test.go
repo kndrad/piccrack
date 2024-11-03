@@ -1,4 +1,4 @@
-package screenshot_test
+package textproc_test
 
 import (
 	"bytes"
@@ -7,7 +7,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/kndrad/itcrack/internal/screenshot"
+	"github.com/kndrad/itcrack/internal/textproc"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -16,7 +16,7 @@ func TestGenerateDatedStr(t *testing.T) {
 	t.Parallel()
 
 	// Should return generated result.
-	name, err := screenshot.GenerateAnalysisName()
+	name, err := textproc.GenerateAnalysisName()
 	require.NoError(t, err)
 	assert.NotEmpty(t, name)
 }
@@ -50,16 +50,16 @@ func TestTextAnalysis_Add(t *testing.T) {
 	assert.Equal(t, 2, analysis.WordFrequency[word])
 }
 
-func NewTestTextAnalysis(t *testing.T) *screenshot.TextAnalysis {
+func NewTestTextAnalysis(t *testing.T) *textproc.TextAnalysis {
 	t.Helper()
 
-	ta, err := screenshot.NewTextAnalysis()
+	ta, err := textproc.NewTextAnalysis()
 	require.NoError(t, err)
 
 	return ta
 }
 
-func TestScreenshotWordsFrequencyAnalysis(t *testing.T) {
+func TestWordsFrequencyAnalysis(t *testing.T) {
 	t.Parallel()
 
 	testCases := []struct {
@@ -81,7 +81,7 @@ func TestScreenshotWordsFrequencyAnalysis(t *testing.T) {
 	}
 	for _, tc := range testCases {
 		t.Run(tc.desc, func(t *testing.T) {
-			analysis, err := screenshot.AnalyzeFrequency(tc.words)
+			analysis, err := textproc.AnalyzeFrequency(tc.words)
 
 			if tc.mustFail {
 				require.Error(t, err, "wanted failure but got: %w", err)

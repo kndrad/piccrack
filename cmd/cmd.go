@@ -6,7 +6,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/kndrad/itcrack/internal/screenshot"
+	"github.com/kndrad/itcrack/internal/textproc"
 )
 
 func JoinPaths(dir, name, ext string) string {
@@ -39,7 +39,7 @@ func OpenCleanFile(path string, flag int, perm fs.FileMode) (*os.File, error) {
 	// Make a new name for a analysis text file containing words if
 	// the cleaned path points to a directory.
 	if stat.IsDir() {
-		filename, err := screenshot.GenerateAnalysisName()
+		filename, err := textproc.GenerateAnalysisName()
 		if err != nil {
 			logger.Error("OpenCleanFile", "err", err)
 

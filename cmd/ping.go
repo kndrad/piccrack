@@ -26,7 +26,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/kndrad/itcrack/internal/screenshot"
+	"github.com/kndrad/itcrack/internal/textproc/db"
 	"github.com/spf13/cobra"
 )
 
@@ -37,7 +37,7 @@ var pingCmd = &cobra.Command{
 	RunE: func(cmd *cobra.Command, args []string) error {
 		logger.Info("Pinging database...")
 
-		cfg, err := LoadDatabaseConfig(DefaultEnvFilePath)
+		cfg, err := db.LoadConfig(DefaultEnvFilePath)
 		if err != nil {
 			logger.Error("Failed to load db config", "err", err.Error())
 
@@ -48,7 +48,7 @@ var pingCmd = &cobra.Command{
 		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 		defer cancel()
 
-		pool, err := screenshot.DatabasePool(ctx, *cfg)
+		pool, err := db.DatabasePool(ctx, *cfg)
 		if err != nil {
 			logger.Error("Failed to get db pool", "err", err.Error())
 
@@ -56,7 +56,7 @@ var pingCmd = &cobra.Command{
 		}
 		defer pool.Close()
 
-		conn, err := screenshot.DatabaseConnection(ctx, pool)
+		conn, err := db.DatabaseConnection(ctx, pool)
 		if err != nil {
 			logger.Error("Failed to connect to a database", "err", err.Error())
 
