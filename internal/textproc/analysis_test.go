@@ -12,16 +12,16 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestGenerateDatedStr(t *testing.T) {
+func TestGenerateAnalysisID(t *testing.T) {
 	t.Parallel()
 
 	// Should return generated result.
-	name, err := textproc.GenerateAnalysisName()
+	name, err := textproc.GenerateAnalysisID()
 	require.NoError(t, err)
 	assert.NotEmpty(t, name)
 }
 
-func TestTextAnalysisName(t *testing.T) {
+func TestTextAnalysisIDGeneration(t *testing.T) {
 	t.Parallel()
 
 	analysis := NewTestTextAnalysis(t)
@@ -41,11 +41,11 @@ func TestTextAnalysis_Add(t *testing.T) {
 
 	// Should add "test1" to the WordFrequency field and at first the frequency should be 1
 	word := "test1"
-	analysis.Add(word)
+	analysis.IncWordCount(word)
 	assert.Len(t, analysis.WordFrequency, 1)
 	assert.Equal(t, 1, analysis.WordFrequency[word])
 	// After another "Add" it should be two
-	analysis.Add(word)
+	analysis.IncWordCount(word)
 	assert.Len(t, analysis.WordFrequency, 1)
 	assert.Equal(t, 2, analysis.WordFrequency[word])
 }

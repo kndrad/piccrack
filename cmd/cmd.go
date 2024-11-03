@@ -39,7 +39,7 @@ func OpenCleanFile(path string, flag int, perm fs.FileMode) (*os.File, error) {
 	// Make a new name for a analysis text file containing words if
 	// the cleaned path points to a directory.
 	if stat.IsDir() {
-		filename, err := textproc.GenerateAnalysisName()
+		filename, err := textproc.GenerateAnalysisID()
 		if err != nil {
 			logger.Error("OpenCleanFile", "err", err)
 

@@ -22,7 +22,7 @@ func AnalyzeFrequency(words []string) (*TextAnalysis, error) {
 		return nil, fmt.Errorf("AnalyzeWordFrequency: %w", err)
 	}
 	for _, word := range words {
-		analysis.Add(word)
+		analysis.IncWordCount(word)
 	}
 
 	return analysis, nil
@@ -39,7 +39,7 @@ type TextAnalysis struct {
 
 // Creates a new TextAnalysis.
 func NewTextAnalysis() (*TextAnalysis, error) {
-	name, err := GenerateAnalysisName()
+	name, err := GenerateAnalysisID()
 	if err != nil {
 		return nil, fmt.Errorf("NewTextAnalysis: %w", err)
 	}
@@ -52,7 +52,7 @@ func NewTextAnalysis() (*TextAnalysis, error) {
 
 // Adds new occurrence of a word.
 // Goroutine safe.
-func (ta *TextAnalysis) Add(word string) {
+func (ta *TextAnalysis) IncWordCount(word string) {
 	ta.mu.Lock()
 	defer ta.mu.Unlock()
 
@@ -64,7 +64,7 @@ func (ta *TextAnalysis) Name() (string, error) {
 	if name != "" {
 		return name, nil
 	} else {
-		return GenerateAnalysisName()
+		return GenerateAnalysisID()
 	}
 }
 
@@ -85,7 +85,7 @@ func randomInt(x int64) (*big.Int, error) {
 
 // Returns a string of format:
 // text_analysis_randomnumber_currentdate.
-func GenerateAnalysisName() (string, error) {
+func GenerateAnalysisID() (string, error) {
 	// YYYY-MM-DD: 2022-03-23
 	YYYYMMDD := "2006_01_02"
 
