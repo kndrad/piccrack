@@ -110,6 +110,7 @@ var textCmd = &cobra.Command{
 				return fmt.Errorf("wordsCmd: %w", err)
 			}
 		}
+		logger.Info("Program completed successfully.")
 
 		return nil
 	},
