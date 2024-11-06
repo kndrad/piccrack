@@ -90,7 +90,7 @@ compose-down:
 	docker-compose down
 
 .PHONY: ping
-pings:
+ping:
 	go run main.go ping
 
 .PHONY: itcrack-words
