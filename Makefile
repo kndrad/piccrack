@@ -97,10 +97,6 @@ ping:
 itcrack-words:
 	go run main.go words
 
-.PHONY: dev-start
-dev-start:
-	air
-
 .PHONY: clear-output-dir
 clear-output-dir:
 	rm -rf ./output/*
