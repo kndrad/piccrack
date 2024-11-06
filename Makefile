@@ -1,12 +1,13 @@
 BINARY_NAME=itcrack
 DOCKER_IMAGE=itcrack:latest
+DOCKER_COMPOSE_IMAGE=itcrack-app:latest
 DOCKER_IMAGE_PATH=.
 
 TXT_FILEPATH=./internal/textproc/testdata/words.txt
 SCREENSHOT_FILEPATH=./testdata/golang_0.png
 TESTDATA_DIR=./testdata
 OUTPUT_DIR=./output
-ENV_FILEPATH=./env
+ENV_FILEPATH=$(shell pwd)/.env
 
 .PHONY: build
 build:
@@ -72,14 +73,14 @@ docker-itcrack-text-2: docker-build
 	-v $(OUTPUT_DIR):/output \
 	$(DOCKER_IMAGE) text -v --file=$(TESTDATA_DIR) --out=$(OUTPUT_DIR)
 
-.PHONY: docker-itcrack-frequency
-docker-itcrack-frequency: docker-build
+.PHONY: docker-itcrack-words-freq-file
+docker-itcrack-words-freq-file: docker-build
 	docker run \
 	-u $(shell id -u):$(shell id -g) \
 	-e $(ENV_FILEPATH) \
 	-v $(TESTDATA_DIR):/testdata \
 	-v $(OUTPUT_DIR):/output \
-	$(DOCKER_IMAGE) frequency -v --file=$(TESTDATA_DIR)/words.txt --out=$(OUTPUT_DIR)
+	$(DOCKER_IMAGE) words freq -v --file=$(TESTDATA_DIR)/words.txt --out=$(OUTPUT_DIR)
 
 .PHONY: compose-up
 compose-up:
@@ -100,3 +101,7 @@ itcrack-words:
 .PHONY: clear-output-dir
 clear-output-dir:
 	rm -rf ./output/*
+
+.PHONY: itcrack-ping
+itcrack-ping: compose-up
+	go run main.go ping
