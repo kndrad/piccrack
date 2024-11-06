@@ -59,7 +59,7 @@ var pingCmd = &cobra.Command{
 		defer pool.Close()
 
 		logger.Info("Pinging database...")
-		if err := retry.PingDatabase(ctx, pool, retry.MaxRetries); err != nil {
+		if err := retry.Ping(ctx, pool, retry.MaxRetries); err != nil {
 			logger.Error("Pinging db pool failed", "err", err.Error())
 
 			return fmt.Errorf("db pool: %w", err)
@@ -84,14 +84,4 @@ var pingCmd = &cobra.Command{
 
 func init() {
 	rootCmd.AddCommand(pingCmd)
-
-	// Here you will define your flags and configuration settings.
-
-	// Cobra supports Persistent Flags which will work for this command
-	// and all subcommands, e.g.:
-	// pingCmd.PersistentFlags().String("foo", "", "A help for foo")
-
-	// Cobra supports local flags which will only run when this command
-	// is called directly, e.g.:
-	// pingCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 }
