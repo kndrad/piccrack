@@ -78,11 +78,9 @@ func initConfig() {
 		viper.SetConfigType("yaml")
 		viper.SetConfigName(".itcrack")
 
-		// Search config in project dir
+		// Search .env file in project dir
 		wd, err := os.Getwd()
 		cobra.CheckErr(err)
-
-		// .env
 		viper.AddConfigPath(wd)
 		viper.SetConfigType("env")
 		viper.SetConfigName("")
