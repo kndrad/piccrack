@@ -36,7 +36,7 @@ var wordsCmd = &cobra.Command{
 	Use:   "words",
 	Short: "Lists words from a database",
 	RunE: func(cmd *cobra.Command, args []string) error {
-		config, err := textproc.LoadDatabaseConfig(DefaultEnvFilePath)
+		cfg, err := textproc.LoadDatabaseConfig(DefaultEnvFilePath)
 		if err != nil {
 			logger.Error("Loading database config", "err", err.Error())
 
@@ -46,7 +46,7 @@ var wordsCmd = &cobra.Command{
 		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 		defer cancel()
 
-		pool, err := textproc.DatabasePool(ctx, *config)
+		pool, err := textproc.DatabasePool(ctx, *cfg)
 		if err != nil {
 			logger.Error("Loading database pool", "err", err.Error())
 
