@@ -101,15 +101,15 @@ var frequencyCmd = &cobra.Command{
 
 		jsonAnalysis, err := json.MarshalIndent(analysis, "", " ")
 		if err != nil {
-			logger.Error("frequencyCmd", "err", err)
+			logger.Error("marshalling json analysis", "err", err)
 
-			return fmt.Errorf("frequencyCmd: %w", err)
+			return fmt.Errorf("json marshal: %w", err)
 		}
-		logger.Info("frequencyCmd writing analysisJson")
+		logger.Info("Writing analysis to json file")
 		if _, err := jsonFile.Write(jsonAnalysis); err != nil {
-			logger.Error("frequencyCmd", "err", err)
+			logger.Error("failed to write json analysis", "err", err)
 
-			return fmt.Errorf("frequencyCmd: %w", err)
+			return fmt.Errorf("json write: %w", err)
 		}
 
 		logger.Info("Program completed successfully.")
@@ -122,7 +122,7 @@ func init() {
 	rootCmd.AddCommand(frequencyCmd)
 
 	frequencyCmd.PersistentFlags().StringVarP(
-		&TextFilePath, "file", "f", "", "File to analyze words output frequency from",
+		&TextFilePath, "file", "f", "", "File to analyze words frequency from",
 	)
 	if err := frequencyCmd.MarkPersistentFlagRequired("file"); err != nil {
 		logger.Error("frequencyCmd", "err", err.Error())
