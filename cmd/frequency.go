@@ -35,14 +35,13 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// frequencyCmd represents the frequency command.
-var frequencyCmd = &cobra.Command{
-	Use:   "frequency",
-	Short: "Analyze word frequency in a text file",
-	Long: `itcrack frequency - Analyze word frequency in a text file
-	-f, --file     Input text file to analyze (required)
-	-o, --out      Output directory for analysis results (default: current directory)
-	-v, --verbose  Enable verbose logging (default: true)`,
+var wordsFreqCmd = &cobra.Command{
+	Use:   "freq",
+	Short: "Analyze words frequency",
+	Long: `itcrack frequency - Analyze word frequency
+	-f, --file     Input text file to analyze (optional)
+	-o, --out      Output directory for analysis results
+	-v, --verbose  Enable verbose logging (default: false)`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		var (
 			txtPath = filepath.Clean(InputPath)
@@ -79,13 +78,13 @@ var frequencyCmd = &cobra.Command{
 			return fmt.Errorf("frequency analysis: %w", err)
 		}
 
-		// Join to create new out file path with an extension.
 		name, err := analysis.Name()
 		if err != nil {
 			logger.Error("Failed to get analysis name", "err", err)
 
 			return fmt.Errorf("analysis name: %w", err)
 		}
+		// Join outPath, name and json extension to create new out file path with an extension.
 		jsonPath := openf.Join(outPath, name, "json")
 		logger.Info("opening file",
 			slog.String("json_path", jsonPath),
@@ -121,14 +120,14 @@ var frequencyCmd = &cobra.Command{
 }
 
 func init() {
-	rootCmd.AddCommand(frequencyCmd)
+	wordsCmd.AddCommand(wordsFreqCmd)
 
-	frequencyCmd.Flags().StringVarP(
+	wordsFreqCmd.Flags().StringVarP(
 		&InputPath, "file", "f", "", ".txt file path to analyze words frequency.",
 	)
-	if err := frequencyCmd.MarkFlagRequired("file"); err != nil {
+	if err := wordsFreqCmd.MarkFlagRequired("file"); err != nil {
 		logger.Error("Marking flag required failed", "err", err.Error())
 	}
 
-	frequencyCmd.Flags().StringVarP(&OutputPath, "out", "o", DefaultOutputPath, "JSON file output path")
+	wordsFreqCmd.Flags().StringVarP(&OutputPath, "out", "o", DefaultOutputPath, "JSON file output path")
 }
