@@ -15,7 +15,7 @@ type Pool interface {
 
 const MaxRetries uint64 = 3
 
-func PingDatabase(ctx context.Context, pool Pool, retries uint64) error {
+func Ping(ctx context.Context, pool Pool, retries uint64) error {
 	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
 

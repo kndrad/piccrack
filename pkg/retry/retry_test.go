@@ -65,7 +65,7 @@ func TestPingingDatabase(t *testing.T) {
 			pool := &poolMock{shouldErr: tC.shouldErr}
 
 			ctx := context.Background()
-			err := retry.PingDatabase(ctx, pool, tC.retries)
+			err := retry.Ping(ctx, pool, tC.retries)
 
 			if tC.shouldErr {
 				require.Error(t, err)
@@ -91,7 +91,7 @@ func TestPingDatabaseRespectsContextCancellation(t *testing.T) {
 			cancel()
 		}()
 
-		err := retry.PingDatabase(ctx, pool, retry.MaxRetries)
+		err := retry.Ping(ctx, pool, retry.MaxRetries)
 		if !errors.Is(err, context.Canceled) {
 			t.Errorf("expected context cancellation error, got: %v", err)
 		}
