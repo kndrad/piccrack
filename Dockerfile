@@ -1,6 +1,6 @@
 # syntax=docker/dockerfile:1
 
-FROM golang:1.23.2-alpine3.20 AS builder
+FROM golang:1.23.2-alpine3.20 AS build-stage
 LABEL maintainer="Konrad Nowara"
 WORKDIR /
 
@@ -21,8 +21,11 @@ WORKDIR /app
 COPY go.mod go.sum ./
 RUN go mod download
 COPY . .
-RUN make cover
 RUN go build -o main ./
+
+FROM build-stage AS test-stage
+RUN make cover
+
 
 # Export Go binary
 FROM alpine:3.20.3
@@ -34,7 +37,7 @@ RUN apk add --no-cache \
     tesseract-ocr-data-eng \
     leptonica
 
-COPY --from=builder /app/main /main
+COPY --from=build-stage /app/main /main
 
 ENTRYPOINT [ "./main" ]
 CMD [ "--help" ]
