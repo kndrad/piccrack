@@ -36,6 +36,9 @@ words_dictionary.json
 #vscode
 .vscode/
 
-
 #sql
 *.session.sql
+
+
+#tmp
+./tmp
