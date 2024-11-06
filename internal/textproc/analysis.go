@@ -39,9 +39,9 @@ type TextAnalysis struct {
 
 // Creates a new TextAnalysis.
 func NewTextAnalysis() (*TextAnalysis, error) {
-	name, err := GenerateAnalysisID()
+	name, err := NewAnalysisID()
 	if err != nil {
-		return nil, fmt.Errorf("NewTextAnalysis: %w", err)
+		return nil, fmt.Errorf("new id: %w", err)
 	}
 
 	return &TextAnalysis{
@@ -64,7 +64,7 @@ func (ta *TextAnalysis) Name() (string, error) {
 	if name != "" {
 		return name, nil
 	} else {
-		return GenerateAnalysisID()
+		return NewAnalysisID()
 	}
 }
 
@@ -77,7 +77,7 @@ func randomInt(x int64) (*big.Int, error) {
 	i := big.NewInt(x)
 	v, err := rand.Int(rand.Reader, i)
 	if err != nil {
-		return nil, fmt.Errorf("randomInt: %w", err)
+		return nil, fmt.Errorf("random int: %w", err)
 	}
 
 	return v, nil
@@ -85,22 +85,36 @@ func randomInt(x int64) (*big.Int, error) {
 
 // Returns a string of format:
 // text_analysis_randomnumber_currentdate.
-func GenerateAnalysisID() (string, error) {
-	// YYYY-MM-DD: 2022-03-23
-	YYYYMMDD := "2006_01_02"
+func NewAnalysisID() (string, error) {
+	layout := "02_01_2006_15_04"
 
-	date := time.Now().Format(YYYYMMDD)
+	now := time.Now().UTC()
+	date := now.Format(layout)
 
-	rv, err := randomInt(10000)
+	i, err := randomInt(10000)
 	if err != nil {
-		return "", fmt.Errorf("GenerateAnalysisName: %w", err)
+		return "", fmt.Errorf("failed to get random int: %w", err)
 	}
 	b := new(strings.Builder)
 	b.WriteString("analysis")
 	b.WriteString("_")
-	b.WriteString(rv.String())
+	b.WriteString(i.String())
 	b.WriteString("_")
 	b.WriteString(date)
+
+	return b.String(), nil
+}
+
+func NewAnalysisIDWithSuffix(suffix string) (string, error) {
+	id, err := NewAnalysisID()
+	if err != nil {
+		return "", fmt.Errorf("generating analysis id: %w", err)
+	}
+
+	b := new(strings.Builder)
+	b.WriteString(strings.Trim(suffix, " "))
+	b.WriteString("_")
+	b.WriteString(id)
 
 	return b.String(), nil
 }

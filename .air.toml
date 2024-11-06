@@ -6,9 +6,26 @@ tmp_dir = "tmp"
   bin = "./tmp/main"
   cmd = "docker-compose up --build"
   delay = 2000
-  exclude_dir = ["tmp"]
+  exclude_dir = [
+    "tmp",
+    "testdata",
+    "output",
+    "internal/textproc/testdata/",
+    "internal/cmd/testtmp",
+    "testtmp",
+    ]
   exclude_file = []
-  exclude_regex = ["_test.go"]
+  exclude_regex = [
+    "_test\\.go$",
+    "testdata/testtmp[0-9]+$\\",
+    "cmd/testtmp[0-9]+$",
+    "out[0-9]+.txt$",
+    "internal/textproc/testdata/testtmp[0-9]+$",
+    "$(pwd)/internal/textproc/testdata/testtmp[0-9]+$",
+    "internal/textproc/testdata/testtmp[0-9]+/out[0-9]+\\.txt$",
+    "testdata/testtmp[0-9]+$",
+    "testdata/*.txt"
+  ]
   exclude_unchanged = false
   follow_symlink = false
   full_bin = ""

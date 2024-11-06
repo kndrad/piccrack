@@ -16,7 +16,7 @@ func TestGenerateAnalysisID(t *testing.T) {
 	t.Parallel()
 
 	// Should return generated result.
-	name, err := textproc.GenerateAnalysisID()
+	name, err := textproc.NewAnalysisID()
 	require.NoError(t, err)
 	assert.NotEmpty(t, name)
 }
@@ -119,4 +119,10 @@ func NewTestWords(t *testing.T) []string {
 	buffer := bytes.NewBuffer(data)
 
 	return strings.Split(buffer.String(), " ")
+}
+
+func TestGeneratingAnalysisIDWithSuffix(t *testing.T) {
+	id, err := textproc.NewAnalysisIDWithSuffix("dir")
+	require.NoError(t, err)
+	assert.Contains(t, id, "dir_")
 }

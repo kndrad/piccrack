@@ -20,7 +20,8 @@ RUN apk add --no-cache \
 WORKDIR /app
 COPY go.mod go.sum ./
 RUN go mod download
-COPY . ./
+COPY . .
+RUN make cover
 RUN go build -o main ./
 
 # Export Go binary

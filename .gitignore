@@ -39,6 +39,8 @@ words_dictionary.json
 #sql
 *.session.sql
 
-
 #tmp
 tmp/
+
+# changing testdata
+testdata/*.txt

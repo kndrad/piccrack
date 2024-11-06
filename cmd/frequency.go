@@ -26,10 +26,12 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"log/slog"
 	"os"
 	"path/filepath"
 
 	"github.com/kndrad/itcrack/internal/textproc"
+	"github.com/kndrad/itcrack/pkg/openf"
 	"github.com/spf13/cobra"
 )
 
@@ -43,70 +45,70 @@ var frequencyCmd = &cobra.Command{
 	-v, --verbose  Enable verbose logging (default: true)`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		var (
-			textFilePath = filepath.Clean(TextFilePath)
-			outPath      = filepath.Clean(OutPath)
+			txtPath = filepath.Clean(InputPath)
+			outPath = filepath.Clean(OutputPath)
 		)
-		if verbose {
-			logger.Info("frequencyCmd", "filename", textFilePath)
-		}
 
 		shutdown := OnShutdown()
 		defer shutdown()
 
-		content, err := os.ReadFile(textFilePath)
+		content, err := os.ReadFile(txtPath)
 		if err != nil {
-			logger.Error("frequencyCmd", "err", err)
+			logger.Error("Failed to read txt file", "err", err)
 
-			return fmt.Errorf("frequencyCmd err: %w", err)
+			return fmt.Errorf("read file: %w", err)
 		}
 		scanner := bufio.NewScanner(bytes.NewReader(content))
 		scanner.Split(bufio.ScanWords)
 
 		words := make([]string, 0)
-		words = append(words, "test")
-
 		for scanner.Scan() {
 			word := scanner.Text()
 			words = append(words, word)
 		}
 		if err := scanner.Err(); err != nil {
-			logger.Error("frequencyCmd", "err", err)
+			logger.Error("scanning failed", "err", err)
 
-			return fmt.Errorf("frequencyCmd: %w", err)
+			return fmt.Errorf("scanner: %w", err)
 		}
 
 		analysis, err := textproc.AnalyzeFrequency(words)
 		if err != nil {
-			logger.Error("frequencyCmd", "err", err)
+			logger.Error("Analyzing words frequency failed", "err", err)
 
-			return fmt.Errorf("frequencyCmd: %w", err)
+			return fmt.Errorf("frequency analysis: %w", err)
 		}
 
 		// Join to create new out file path with an extension.
 		name, err := analysis.Name()
 		if err != nil {
-			logger.Error("frequencyCmd", "err", err)
+			logger.Error("Failed to get analysis name", "err", err)
 
-			return fmt.Errorf("frequencyCmd: %w", err)
+			return fmt.Errorf("analysis name: %w", err)
 		}
-		jsonPath := JoinPaths(outPath, name, "json")
-		logger.Info("frequencyCmd opening file", "jsonPath", jsonPath)
-		jsonFile, err := OpenCleanFile(jsonPath, os.O_CREATE|os.O_RDWR, 0o600)
+		jsonPath := openf.Join(outPath, name, "json")
+		logger.Info("opening file",
+			slog.String("json_path", jsonPath),
+		)
+		flags := os.O_APPEND | openf.DefaultFlags
+		jsonFile, err := openf.Cleaned(jsonPath, flags, 0o600)
 		if err != nil {
-			logger.Error("frequencyCmd", "err", err)
+			logger.Error("Failed to open cleaned json file", "err", err)
 
-			return fmt.Errorf("frequencyCmd: %w", err)
+			return fmt.Errorf("open cleaned: %w", err)
 		}
 		defer jsonFile.Close()
 
-		jsonAnalysis, err := json.MarshalIndent(analysis, "", " ")
+		data, err := json.MarshalIndent(analysis, "", " ")
 		if err != nil {
 			logger.Error("marshalling json analysis", "err", err)
 
 			return fmt.Errorf("json marshal: %w", err)
 		}
-		logger.Info("Writing analysis to json file")
-		if _, err := jsonFile.Write(jsonAnalysis); err != nil {
+		logger.Info("Writing analysis to json file",
+			slog.String("json_path", jsonPath),
+		)
+		if _, err := jsonFile.Write(data); err != nil {
 			logger.Error("failed to write json analysis", "err", err)
 
 			return fmt.Errorf("json write: %w", err)
@@ -121,13 +123,12 @@ var frequencyCmd = &cobra.Command{
 func init() {
 	rootCmd.AddCommand(frequencyCmd)
 
-	frequencyCmd.PersistentFlags().StringVarP(
-		&TextFilePath, "file", "f", "", "File to analyze words frequency from",
+	frequencyCmd.Flags().StringVarP(
+		&InputPath, "file", "f", "", ".txt file path to analyze words frequency.",
 	)
-	if err := frequencyCmd.MarkPersistentFlagRequired("file"); err != nil {
-		logger.Error("frequencyCmd", "err", err.Error())
+	if err := frequencyCmd.MarkFlagRequired("file"); err != nil {
+		logger.Error("Marking flag required failed", "err", err.Error())
 	}
 
-	frequencyCmd.Flags().StringVarP(&OutPath, "out", "o", ".", "Output path")
-	frequencyCmd.Flags().BoolVarP(&verbose, "verbose", "v", true, "Verbose")
+	frequencyCmd.Flags().StringVarP(&OutputPath, "out", "o", DefaultOutputPath, "JSON file output path")
 }

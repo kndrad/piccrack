@@ -23,50 +23,55 @@ package cmd
 
 import (
 	"fmt"
+	"log/slog"
 	"os"
 	"path/filepath"
 
 	"github.com/kndrad/itcrack/internal/screenshot"
 	"github.com/kndrad/itcrack/internal/textproc"
+	"github.com/kndrad/itcrack/pkg/openf"
 	"github.com/spf13/cobra"
 )
 
-var (
-	ScreenshotPath string
-	TextFilePath   string
-	OutPath        string
-	verbose        bool
-)
+var InputPath string
 
 // textCmd represents the words command.
 var textCmd = &cobra.Command{
 	Use:   "text",
-	Short: "Extract text from image files (PNG/JPG/JPEG) using OCR",
-	Long: `Extract text from image files (PNG/JPG/JPEG) using OCR
+	Short: "Extract text from image (screenshot) files (PNG/JPG/JPEG) using OCR",
+	Long: `Extract text from image (screenshot) files (PNG/JPG/JPEG) using OCR
   -f, --file     Screenshot file or directory path to process (required)
   -o, --out      Output text file path (default: current directory)
   -v, --verbose  Enable verbose logging (default: true)`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		var (
-			screenshotPath = filepath.Clean(ScreenshotPath)
-			textFilePath   = filepath.Clean(TextFilePath)
+			inputPath = filepath.Clean(InputPath)
+			outPath   = filepath.Clean(OutputPath)
 		)
 
 		shutdown := OnShutdown()
 		defer shutdown()
 
-		var screenshotFiles []string
+		var filePaths []string
 
-		stat, err := os.Stat(screenshotPath)
+		stat, err := os.Stat(inputPath)
 		if err != nil {
 			logger.Error("getting stat of screenshot", "err", err)
 
 			return fmt.Errorf("stat: %w", err)
 		}
-		if stat.IsDir() {
-			logger.Info("processing directory", "file", screenshotPath)
 
-			entries, err := os.ReadDir(filepath.Clean(screenshotPath))
+		// Switched to true if inputPath points to a directory.
+		addDirSuffix := false
+
+		if stat.IsDir() {
+			addDirSuffix = true
+
+			logger.Info("Processing directory",
+				slog.String("input_path", inputPath),
+			)
+
+			entries, err := os.ReadDir(inputPath)
 			if err != nil {
 				logger.Error("reading dir", "err", err)
 
@@ -75,24 +80,42 @@ var textCmd = &cobra.Command{
 			// Append image files only
 			for _, e := range entries {
 				if !e.IsDir() && screenshot.IsImageFile(e.Name()) {
-					screenshotFiles = append(screenshotFiles, filepath.Join(screenshotPath, "/", e.Name()))
+					filePaths = append(filePaths, filepath.Join(inputPath, "/", e.Name()))
 				}
 			}
-			logger.Info("number of image files in a directory", "len(files)", len(screenshotFiles))
+			logger.Info(
+				"Number of image files in a directory",
+				slog.String("input_path", inputPath),
+				slog.Int("files_total", len(filePaths)),
+			)
 		} else {
-			screenshotFiles = append(screenshotFiles, screenshotPath)
+			// Only add input path if path was not a directory.
+			filePaths = append(filePaths, inputPath)
 		}
 
-		textFile, err := OpenCleanFile(textFilePath, os.O_APPEND|DefaultOpenFlag, DefaultOpenPerm)
+		// Add the suffix if addDirSuffix was changed to true.
+		if addDirSuffix {
+			suffix := "dir"
+			id, err := textproc.NewAnalysisIDWithSuffix(suffix)
+			if err != nil {
+				logger.Error("Failed to add suffix to an out path",
+					slog.String("suffix", suffix),
+					slog.String("id", id),
+				)
+			}
+		}
+
+		flags := os.O_APPEND | openf.DefaultFlags
+		txtFile, err := openf.Cleaned(outPath, flags, openf.DefaultFileMode)
 		if err != nil {
-			logger.Error("open clean", "err", err)
+			logger.Error("Failed to open cleaned file", "err", err)
 
-			return fmt.Errorf("open clean: %w", err)
+			return fmt.Errorf("open file cleaned: %w", err)
 		}
 
-		// Process each screenshot and write an out file
-		for _, filename := range screenshotFiles {
-			content, err := os.ReadFile(filename)
+		// Process each screenshot and write output to .txt file.
+		for _, path := range filePaths {
+			content, err := os.ReadFile(path)
 			if err != nil {
 				logger.Error("reading file", "err", err)
 
@@ -100,16 +123,17 @@ var textCmd = &cobra.Command{
 			}
 			words, err := screenshot.RecognizeWords(content)
 			if err != nil {
-				logger.Error("words recognition", "err", err)
+				logger.Error("Failed to recognize words in a screenshot content", "err", err)
 
-				return fmt.Errorf("wordsCmd: %w", err)
+				return fmt.Errorf("screenshot words recognition: %w", err)
 			}
-			if err := textproc.WriteWords(words, textproc.NewWordsTextFileWriter(textFile)); err != nil {
-				logger.Error("wordsCmd", "err", err)
+			if err := textproc.WriteWords(words, textproc.NewWordsTextFileWriter(txtFile)); err != nil {
+				logger.Error("Failed to write words to a txt file", "err", err)
 
-				return fmt.Errorf("wordsCmd: %w", err)
+				return fmt.Errorf("writing words: %w", err)
 			}
 		}
+
 		logger.Info("Program completed successfully.")
 
 		return nil
@@ -119,11 +143,10 @@ var textCmd = &cobra.Command{
 func init() {
 	rootCmd.AddCommand(textCmd)
 
-	textCmd.PersistentFlags().StringVarP(&ScreenshotPath, "file", "f", "", "Screenshot file to recognize words from")
-	if err := textCmd.MarkPersistentFlagRequired("file"); err != nil {
-		logger.Error("rootcmd", "err", err.Error())
+	textCmd.Flags().StringVar(&InputPath, "file", "", "screenshot file to recognize words from")
+	if err := textCmd.MarkFlagRequired("file"); err != nil {
+		logger.Error("Marking persistent flag required failed", "err", err.Error())
 	}
 
-	textCmd.Flags().StringVarP(&TextFilePath, "out", "o", ".", "Output path")
-	textCmd.Flags().BoolVarP(&verbose, "verbose", "v", true, "Verbose")
+	textCmd.Flags().StringVarP(&OutputPath, "out", "o", DefaultOutputPath, "output path")
 }

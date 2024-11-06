@@ -1,14 +1,12 @@
-# Binary and build configuration
 BINARY_NAME=itcrack
-DOCKER_IMAGE=itcrack-dev
+DOCKER_IMAGE=itcrack:latest
 DOCKER_IMAGE_PATH=.
 
-# File paths
-WORDS_FILEPATH=./internal/textproc/testdata/words.txt
-SCREENSHOT_FILEPATH=./internal/screenshot/testdata/golang_0.png
-SCREENSHOT_TESTDATA_FILEPATH=./internal/screenshot/testdata/
-SCREENSHOTS_DIR=screenshots
-OUTPUT_DIR=output
+TXT_FILEPATH=./internal/textproc/testdata/words.txt
+SCREENSHOT_FILEPATH=./testdata/golang_0.png
+TESTDATA_DIR=./testdata
+OUTPUT_DIR=./output
+ENV_FILEPATH=./env
 
 .PHONY: build
 build:
@@ -36,42 +34,52 @@ cover:
 tests:
 	go test ./... -count=1 -failfast
 
-.PHONY: staging
-staging: fmt review cover
-
 .PHONY: run
 run:
 	go run ./cmd/main.go
 
-.PHONY: text-1
-text-1:
-	go run main.go text --file=$(SCREENSHOT_FILEPATH) -o=$(WORDS_FILEPATH)
+.PHONY: itcrack-text-file
+itcrack-text-file:
+	go run main.go text --file=$(SCREENSHOT_FILEPATH) -o=$(TXT_FILEPATH)
 
-.PHONY: text-2
-text-2:
-	go run main.go text --file=$(SCREENSHOT_TESTDATA_FILEPATH) -o=$(WORDS_FILEPATH)
+.PHONY: itcrack-text-dir
+itcrack-text-dir:
+	go run main.go text --file=$(TESTDATA_DIR) -o=$(TXT_FILEPATH)
 
-.PHONY: frequency
-frequency:
-	go run main.go frequency --file=$(WORDS_FILEPATH)
-
-.PHONY: all
-all: fmt review cover text-1 frequency
+.PHONY: itcrack-frequency
+itcrack-frequency:
+	go run main.go frequency --file=$(TXT_FILEPATH)
 
 .PHONY: docker-build
 docker-build:
 	docker build --tag=$(DOCKER_IMAGE) $(DOCKER_IMAGE_PATH)
 
-.PHONY: docker-test-1
-docker-test-1:
-	docker run -v $(shell pwd)/screenshots:/screenshots -v $(shell pwd)/output:/app/output $(DOCKER_IMAGE):latest words --file=/screenshots/golang_0.png --out=app/output
+.PHONY: docker-itcrack-text-1
+docker-itcrack-text-1: docker-build
+	docker run \
+	-u $(shell id -u):$(shell id -g) \
+	-e $(ENV_FILEPATH) \
+	-v $(TESTDATA_DIR):/testdata \
+	-v $(OUTPUT_DIR):/output \
+	$(DOCKER_IMAGE) text -v --file=$(TESTDATA_DIR)/golang_0.png --out=$(OUTPUT_DIR)
 
-.PHONY: docker-test-2
-docker-test-2:
-	docker run -v $(shell pwd)/$(SCREENSHOTS_DIR):/$(SCREENSHOTS_DIR) $(DOCKER_IMAGE):latest words --file=$(SCREENSHOTS_DIR)
+.PHONY: docker-itcrack-text-2
+docker-itcrack-text-2: docker-build
+	docker run \
+	-u $(shell id -u):$(shell id -g) \
+	-e $(ENV_FILEPATH) \
+	-v $(TESTDATA_DIR):/testdata \
+	-v $(OUTPUT_DIR):/output \
+	$(DOCKER_IMAGE) text -v --file=$(TESTDATA_DIR) --out=$(OUTPUT_DIR)
 
-.PHONY: docker-all
-docker-all: docker-build docker-test-1 docker-test-2
+.PHONY: docker-itcrack-frequency
+docker-itcrack-frequency: docker-build
+	docker run \
+	-u $(shell id -u):$(shell id -g) \
+	-e $(ENV_FILEPATH) \
+	-v $(TESTDATA_DIR):/testdata \
+	-v $(OUTPUT_DIR):/output \
+	$(DOCKER_IMAGE) frequency -v --file=$(TESTDATA_DIR)/words.txt --out=$(OUTPUT_DIR)
 
 .PHONY: compose-up
 compose-up:
@@ -88,3 +96,11 @@ pings:
 .PHONY: itcrack-words
 itcrack-words:
 	go run main.go words
+
+.PHONY: dev-start
+dev-start:
+	air
+
+.PHONY: clear-output-dir
+clear-output-dir:
+	rm -rf ./output/*

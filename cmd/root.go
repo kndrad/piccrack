@@ -29,14 +29,22 @@ import (
 	"github.com/spf13/viper"
 )
 
-const DefaultEnvFilePath = ".env"
+const (
+	DefaultEnvFilePath = ".env"
+	DefaultOutputPath  = "./output"
+)
+
+var (
+	OutputPath string
+	Verbose    bool
+)
 
 var cfgFile string
 
 // rootCmd represents the base command when called without any subcommands.
 var rootCmd = &cobra.Command{
 	Use:   "itcrack",
-	Short: "A tool for analyzing text from screenshots and performing word frequency analysis",
+	Short: "Analyze text from screenshots and performing word frequency analysis.",
 	// Uncomment the following line if your bare application
 	// has an action associated with it:
 	RunE: func(cmd *cobra.Command, args []string) error {
@@ -59,6 +67,7 @@ func init() {
 	cobra.OnInitialize(initConfig)
 
 	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.itcrack.yaml)")
+	rootCmd.PersistentFlags().BoolVarP(&Verbose, "verbose", "v", true, "print verbose actions")
 
 	rootCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 }
