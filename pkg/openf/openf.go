@@ -39,11 +39,11 @@ func Cleaned(path string, flags int, fm fs.FileMode) (*os.File, error) {
 	} else if stat.IsDir() {
 		// Make a new name for .txt file containing words if
 		// the cleaned path points to a directory.
-		filename, err := textproc.NewAnalysisID()
+		id, err := textproc.NewAnalysisID()
 		if err != nil {
 			return nil, fmt.Errorf("generating analysis id: %w", err)
 		}
-		path = Join(path, filename, "txt")
+		path = Join(path, id, "txt")
 	}
 
 	// Continue to open
