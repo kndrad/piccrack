@@ -81,6 +81,10 @@ compose-up:
 compose-down:
 	docker-compose down
 
-.PHONY: ping-db
-ping-db:
+.PHONY: ping
+pings:
 	go run main.go ping
+
+.PHONY: itcrack-words
+itcrack-words:
+	go run main.go words
