@@ -20,8 +20,8 @@ fmt:
 .PHONY: review
 review:
 	./scripts/format.sh
-	./scripts/check.sh
 	go test ./... -count=1 -failfast -coverprofile=coverage.out
+	./scripts/check.sh
 
 .PHONY: cover-html
 cover-html:
