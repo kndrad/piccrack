@@ -37,7 +37,7 @@ import (
 
 var wordsFreqCmd = &cobra.Command{
 	Use:   "frequency",
-	Short: "Analyze words frequency",
+	Short: "Outputs words frequency found in input",
 	Long: `itcrack frequency - Analyze word frequency
 	-f, --file     Input text file to analyze (optional)
 	-o, --out      Output directory for analysis results
@@ -78,14 +78,8 @@ var wordsFreqCmd = &cobra.Command{
 			return fmt.Errorf("frequency analysis: %w", err)
 		}
 
-		name, err := analysis.Name()
-		if err != nil {
-			logger.Error("Failed to get analysis name", "err", err)
-
-			return fmt.Errorf("analysis name: %w", err)
-		}
 		// Join outPath, name and json extension to create new out file path with an extension.
-		jsonPath := openf.Join(outPath, name, "json")
+		jsonPath := openf.Join(outPath, analysis.ID, "json")
 		logger.Info("Opening file",
 			slog.String("json_path", jsonPath),
 		)
