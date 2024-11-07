@@ -115,8 +115,8 @@ itcrack-words-add-many: compose-up
 quit:
 	docker-compose down
 	./scripts/format.sh
-	./scripts/check.sh
 	go test ./... -count=1 -failfast -coverprofile=coverage.out
+	./scripts/check.sh
 
 # Start development
 .PHONY: start
@@ -125,6 +125,7 @@ start:
 	./scripts/format.sh
 	sudo systemctl stop postgresql.service
 	docker-compose up --build -d
+	go run main.go ping
 
 .PHONY: itcrack-words-frequency
 itcrack-words-frequency:
