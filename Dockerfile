@@ -24,6 +24,7 @@ COPY . .
 RUN go build -o main ./
 
 FROM build-stage AS test-stage
+WORKDIR /app
 RUN make cover
 
 
