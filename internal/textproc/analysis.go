@@ -98,9 +98,9 @@ func NewAnalysisID() (string, error) {
 	b := new(strings.Builder)
 	b.WriteString("analysis")
 	b.WriteString("_")
-	b.WriteString(i.String())
-	b.WriteString("_")
 	b.WriteString(date)
+	b.WriteString("_")
+	b.WriteString(i.String())
 
 	return b.String(), nil
 }
