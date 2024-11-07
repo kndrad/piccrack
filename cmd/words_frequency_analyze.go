@@ -35,9 +35,9 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var wordsFreqCmd = &cobra.Command{
-	Use:   "frequency",
-	Short: "Outputs words frequency found in input",
+var wordsFrequencyAnalyzeCmd = &cobra.Command{
+	Use:   "analyze",
+	Short: "Analyze words frequency in .txt and write output to .json",
 	Long: `itcrack frequency - Analyze word frequency
 	-f, --file     Input file to analyze
 	-o, --out      Output directory`,
@@ -113,14 +113,14 @@ var wordsFreqCmd = &cobra.Command{
 }
 
 func init() {
-	wordsCmd.AddCommand(wordsFreqCmd)
+	wordsFrequencyCmd.AddCommand(wordsFrequencyAnalyzeCmd)
 
-	wordsFreqCmd.Flags().StringVarP(
+	wordsFrequencyAnalyzeCmd.Flags().StringVarP(
 		&InputPath, "file", "f", "", ".txt file path to analyze words frequency.",
 	)
-	if err := wordsFreqCmd.MarkFlagRequired("file"); err != nil {
+	if err := wordsFrequencyAnalyzeCmd.MarkFlagRequired("file"); err != nil {
 		logger.Error("Marking flag required failed", "err", err.Error())
 	}
 
-	wordsFreqCmd.Flags().StringVarP(&OutputPath, "out", "o", DefaultOutputPath, "JSON file output path")
+	wordsFrequencyAnalyzeCmd.Flags().StringVarP(&OutputPath, "out", "o", DefaultOutputPath, "JSON file output path")
 }
