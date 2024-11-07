@@ -31,7 +31,7 @@ func AnalyzeFrequency(words []string) (*TextAnalysis, error) {
 // TextAnalysis represents a struct which contains WordFrequency field and a Name field
 // of this analysis.
 type TextAnalysis struct {
-	name          string
+	ID            string         `json:"id"`
 	WordFrequency map[string]int `json:"wordFrequency"`
 
 	mu sync.Mutex
@@ -39,13 +39,13 @@ type TextAnalysis struct {
 
 // Creates a new TextAnalysis.
 func NewTextAnalysis() (*TextAnalysis, error) {
-	name, err := NewAnalysisID()
+	id, err := NewAnalysisID()
 	if err != nil {
 		return nil, fmt.Errorf("new id: %w", err)
 	}
 
 	return &TextAnalysis{
-		name:          name,
+		ID:            id,
 		WordFrequency: make(map[string]int),
 	}, nil
 }
@@ -57,15 +57,6 @@ func (ta *TextAnalysis) IncWordCount(word string) {
 	defer ta.mu.Unlock()
 
 	ta.WordFrequency[word]++
-}
-
-func (ta *TextAnalysis) Name() (string, error) {
-	name := ta.name
-	if name != "" {
-		return name, nil
-	} else {
-		return NewAnalysisID()
-	}
 }
 
 var defaultMaxInt int64 = 10000
