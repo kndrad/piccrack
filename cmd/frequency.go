@@ -39,9 +39,8 @@ var wordsFreqCmd = &cobra.Command{
 	Use:   "frequency",
 	Short: "Outputs words frequency found in input",
 	Long: `itcrack frequency - Analyze word frequency
-	-f, --file     Input text file to analyze (optional)
-	-o, --out      Output directory for analysis results
-	-v, --verbose  Enable verbose logging (default: false)`,
+	-f, --file     Input file to analyze
+	-o, --out      Output directory`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		var (
 			txtPath = filepath.Clean(InputPath)
