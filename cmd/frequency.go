@@ -77,7 +77,7 @@ var wordsFreqCmd = &cobra.Command{
 			return fmt.Errorf("frequency analysis: %w", err)
 		}
 
-		// Join outPath, name and json extension to create new out file path with an extension.
+		// Join outPath, id and json extension to create new out file path with an extension.
 		jsonPath := openf.Join(outPath, analysis.ID, "json")
 		logger.Info("Opening file",
 			slog.String("json_path", jsonPath),
