@@ -21,13 +21,12 @@ func TestGenerateAnalysisID(t *testing.T) {
 	assert.NotEmpty(t, name)
 }
 
-func TestTextAnalysisIDGeneration(t *testing.T) {
+func TestTextAnalysisID(t *testing.T) {
 	t.Parallel()
 
 	analysis := NewTestTextAnalysis(t)
-	name, err := analysis.Name()
-	require.NoError(t, err)
-	assert.NotEmpty(t, name, "analysis name should not be empty")
+	id := analysis.ID
+	assert.NotEmpty(t, id)
 }
 
 func TestTextAnalysis_Add(t *testing.T) {
