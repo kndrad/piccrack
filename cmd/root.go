@@ -67,7 +67,7 @@ func init() {
 	cobra.OnInitialize(initConfig)
 
 	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.itcrack.yaml)")
-	rootCmd.PersistentFlags().BoolVarP(&Verbose, "verbose", "v", true, "print verbose actions")
+	rootCmd.PersistentFlags().BoolVarP(&Verbose, "verbose", "v", false, "print verbose actions")
 
 	rootCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 }
