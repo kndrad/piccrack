@@ -18,7 +18,8 @@ fmt:
 	./scripts/format.sh
 
 .PHONY: review
-review: fmt
+review:
+	./scripts/format.sh
 	./scripts/check.sh
 	go test ./... -count=1 -failfast -coverprofile=coverage.out
 
@@ -34,10 +35,6 @@ cover:
 .PHONY: tests
 tests:
 	go test ./... -count=1 -failfast
-
-.PHONY: run
-run:
-	go run ./cmd/main.go
 
 .PHONY: itcrack-text-file
 itcrack-text-file:
@@ -109,12 +106,21 @@ itcrack-ping: compose-up
 ANALYSIS_JSON_TEST_FILE=analysis_07_11_2024_07_47_1691.json
 
 .PHONY: itcrack-words-add-many
-itcrack-words-add-many:
+itcrack-words-add-many: compose-up
 	go run main.go words add many '$(TESTDATA_DIR)/$(ANALYSIS_JSON_TEST_FILE)'
 
-.PHONY: exit
-exit:
+
+# Stop development
+.PHONY: quit
+quit:
 	docker-compose down
 	./scripts/format.sh
 	./scripts/check.sh
 	go test ./... -count=1 -failfast -coverprofile=coverage.out
+
+# Start development
+.PHONY: start
+start:
+	./scripts/format.sh
+	sudo systemctl stop postgresql.service
+	docker-compose up --build -d
