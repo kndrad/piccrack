@@ -52,29 +52,6 @@ func (q *Queries) AllWords(ctx context.Context, arg AllWordsParams) ([]AllWordsR
 	return items, nil
 }
 
-const getWordByValue = `-- name: GetWordByValue :one
-SELECT id,
-    value,
-    created_at
-FROM words
-WHERE value = $1
-    AND deleted_at IS NULL
-LIMIT 1
-`
-
-type GetWordByValueRow struct {
-	ID        int64              `json:"id"`
-	Value     string             `json:"value"`
-	CreatedAt pgtype.Timestamptz `json:"created_at"`
-}
-
-func (q *Queries) GetWordByValue(ctx context.Context, value string) (GetWordByValueRow, error) {
-	row := q.db.QueryRow(ctx, getWordByValue, value)
-	var i GetWordByValueRow
-	err := row.Scan(&i.ID, &i.Value, &i.CreatedAt)
-	return i, err
-}
-
 const insertWord = `-- name: InsertWord :one
 INSERT INTO words (value, created_at)
 VALUES ($1, CURRENT_TIMESTAMP) ON CONFLICT (value) DO NOTHING
@@ -94,16 +71,4 @@ func (q *Queries) InsertWord(ctx context.Context, value string) (InsertWordRow, 
 	var i InsertWordRow
 	err := row.Scan(&i.ID, &i.Value, &i.CreatedAt)
 	return i, err
-}
-
-const softDeleteWord = `-- name: SoftDeleteWord :exec
-UPDATE words
-SET deleted_at = CURRENT_TIMESTAMP
-WHERE id = $1
-    AND deleted_at IS NULL
-`
-
-func (q *Queries) SoftDeleteWord(ctx context.Context, id int64) error {
-	_, err := q.db.Exec(ctx, softDeleteWord, id)
-	return err
 }

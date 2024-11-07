@@ -10,9 +10,7 @@ import (
 
 type Querier interface {
 	AllWords(ctx context.Context, arg AllWordsParams) ([]AllWordsRow, error)
-	GetWordByValue(ctx context.Context, value string) (GetWordByValueRow, error)
 	InsertWord(ctx context.Context, value string) (InsertWordRow, error)
-	SoftDeleteWord(ctx context.Context, id int64) error
 }
 
 var _ Querier = (*Queries)(nil)
