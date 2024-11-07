@@ -52,6 +52,39 @@ func (q *Queries) AllWords(ctx context.Context, arg AllWordsParams) ([]AllWordsR
 	return items, nil
 }
 
+const getWordFrequency = `-- name: GetWordFrequency :many
+SELECT words.value,
+    count(*)
+FROM words
+WHERE deleted_at IS NULL
+GROUP BY words.value
+`
+
+type GetWordFrequencyRow struct {
+	Value string `json:"value"`
+	Count int64  `json:"count"`
+}
+
+func (q *Queries) GetWordFrequency(ctx context.Context) ([]GetWordFrequencyRow, error) {
+	rows, err := q.db.Query(ctx, getWordFrequency)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GetWordFrequencyRow
+	for rows.Next() {
+		var i GetWordFrequencyRow
+		if err := rows.Scan(&i.Value, &i.Count); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const insertWord = `-- name: InsertWord :one
 INSERT INTO words (value, created_at)
 VALUES ($1, CURRENT_TIMESTAMP) ON CONFLICT (value) DO NOTHING
