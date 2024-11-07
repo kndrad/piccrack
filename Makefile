@@ -70,14 +70,14 @@ docker-itcrack-text-2: docker-build
 	-v $(OUTPUT_DIR):/output \
 	$(DOCKER_IMAGE) text -v --file=$(TESTDATA_DIR) --out=$(OUTPUT_DIR)
 
-.PHONY: docker-itcrack-words-freq-file
-docker-itcrack-words-freq-file: docker-build
+.PHONY: docker-itcrack-words-frequency-analyze-file
+docker-itcrack-words-frequency-analyze-file: docker-build
 	docker run \
 	-u $(shell id -u):$(shell id -g) \
 	-e $(ENV_FILEPATH) \
 	-v $(TESTDATA_DIR):/testdata \
 	-v $(OUTPUT_DIR):/output \
-	$(DOCKER_IMAGE) words frequency -v --file=$(TESTDATA_DIR)/words.txt --out=$(OUTPUT_DIR)
+	$(DOCKER_IMAGE) words frequency analyze -v --file=$(TESTDATA_DIR)/words.txt --out=$(OUTPUT_DIR)
 
 .PHONY: compose-up
 compose-up:
@@ -121,6 +121,11 @@ quit:
 # Start development
 .PHONY: start
 start:
+	sqlc generate
 	./scripts/format.sh
 	sudo systemctl stop postgresql.service
 	docker-compose up --build -d
+
+.PHONY: itcrack-words-frequency
+itcrack-words-frequency:
+	go run main.go words frequency
