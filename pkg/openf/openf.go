@@ -47,14 +47,18 @@ func Cleaned(path string, flags int, fm fs.FileMode) (*os.File, error) {
 	}
 
 	// Continue to open
-	f, err := os.OpenFile(path, flags, fm)
+	f, err := os.OpenFile(filepath.Clean(path), flags, fm)
 	if err != nil {
-		f.Close()
+		if err := f.Close(); err != nil {
+			return nil, fmt.Errorf("close file: %w", err)
+		}
 
 		return nil, fmt.Errorf("open file: %w", err)
 	}
 	if err := f.Truncate(0); err != nil {
-		f.Close()
+		if err := f.Close(); err != nil {
+			return nil, fmt.Errorf("close file: %w", err)
+		}
 
 		return nil, fmt.Errorf("truncate file: %w", err)
 	}
