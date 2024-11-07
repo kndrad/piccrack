@@ -49,7 +49,7 @@ itcrack-text-dir:
 
 .PHONY: itcrack-frequency
 itcrack-frequency:
-	go run main.go frequency --file=$(TXT_FILEPATH)
+	go run main.go words frequency --file=$(TESTDATA_DIR)/words.txt
 
 .PHONY: docker-build
 docker-build:
@@ -80,7 +80,7 @@ docker-itcrack-words-freq-file: docker-build
 	-e $(ENV_FILEPATH) \
 	-v $(TESTDATA_DIR):/testdata \
 	-v $(OUTPUT_DIR):/output \
-	$(DOCKER_IMAGE) words freq -v --file=$(TESTDATA_DIR)/words.txt --out=$(OUTPUT_DIR)
+	$(DOCKER_IMAGE) words frequency -v --file=$(TESTDATA_DIR)/words.txt --out=$(OUTPUT_DIR)
 
 .PHONY: compose-up
 compose-up:

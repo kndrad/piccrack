@@ -36,7 +36,7 @@ import (
 )
 
 var wordsFreqCmd = &cobra.Command{
-	Use:   "freq",
+	Use:   "frequency",
 	Short: "Analyze words frequency",
 	Long: `itcrack frequency - Analyze word frequency
 	-f, --file     Input text file to analyze (optional)
@@ -66,7 +66,7 @@ var wordsFreqCmd = &cobra.Command{
 			words = append(words, word)
 		}
 		if err := scanner.Err(); err != nil {
-			logger.Error("scanning failed", "err", err)
+			logger.Error("Scanning failed", "err", err)
 
 			return fmt.Errorf("scanner: %w", err)
 		}
@@ -86,7 +86,7 @@ var wordsFreqCmd = &cobra.Command{
 		}
 		// Join outPath, name and json extension to create new out file path with an extension.
 		jsonPath := openf.Join(outPath, name, "json")
-		logger.Info("opening file",
+		logger.Info("Opening file",
 			slog.String("json_path", jsonPath),
 		)
 		flags := os.O_APPEND | openf.DefaultFlags
@@ -100,7 +100,7 @@ var wordsFreqCmd = &cobra.Command{
 
 		data, err := json.MarshalIndent(analysis, "", " ")
 		if err != nil {
-			logger.Error("marshalling json analysis", "err", err)
+			logger.Error("Failed to marshal json analysis", "err", err)
 
 			return fmt.Errorf("json marshal: %w", err)
 		}
@@ -108,7 +108,7 @@ var wordsFreqCmd = &cobra.Command{
 			slog.String("json_path", jsonPath),
 		)
 		if _, err := jsonFile.Write(data); err != nil {
-			logger.Error("failed to write json analysis", "err", err)
+			logger.Error("Failed to write json analysis", "err", err)
 
 			return fmt.Errorf("json write: %w", err)
 		}
