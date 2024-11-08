@@ -24,6 +24,7 @@ package cmd
 import (
 	"context"
 	"fmt"
+	"strconv"
 	"time"
 
 	"github.com/kndrad/itcrack/internal/textproc"
@@ -70,7 +71,17 @@ var wordsCmd = &cobra.Command{
 
 		queries := textproc.New(conn)
 
-		words, err := queries.AllWords(ctx, textproc.AllWordsParams{Limit: 20})
+		var limit int32 = 30
+		params := textproc.AllWordsParams{Limit: limit}
+
+		if len(args) > 0 {
+			limit, err := strconv.ParseInt(args[0], 10, 32)
+			if err != nil {
+				logger.Error("Failed to strconv", "err", err.Error())
+			}
+			params.Limit = int32(limit)
+		}
+		words, err := queries.AllWords(ctx, params)
 		if err != nil {
 			logger.Error("Connecting to database", "err", err.Error())
 
