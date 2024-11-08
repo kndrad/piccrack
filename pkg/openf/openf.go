@@ -50,7 +50,7 @@ func Cleaned(path string, flags int, fm fs.FileMode) (*os.File, error) {
 		// the cleaned path points to a directory.
 		timestamp := time.Now().Format("15_04_02_01_2006")
 		dir := path
-		path = filepath.Join(dir, string(filepath.Separator), fmt.Sprintf("words_%s.txt", timestamp))
+		path = filepath.Join(dir, string(filepath.Separator), timestamp+".txt")
 	}
 
 	// Continue to open
