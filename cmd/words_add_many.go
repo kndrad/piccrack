@@ -22,6 +22,8 @@ THE SOFTWARE.
 package cmd
 
 import (
+	"bufio"
+	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -29,6 +31,7 @@ import (
 	"os"
 	"path/filepath"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/kndrad/itcrack/internal/textproc"
@@ -75,20 +78,46 @@ var addManyWordsCmd = &cobra.Command{
 		defer conn.Close(ctx)
 
 		// Read words from a json file
+		textAnalysis := new(textproc.TextAnalysis)
 		path := filepath.Clean(args[0])
-		data, err := os.ReadFile(args[0])
-		if err != nil {
-			logger.Error("Failed to read file",
-				slog.String("path", path),
-			)
 
-			return fmt.Errorf("read file: %w", err)
-		}
-		var textAnalysis *textproc.TextAnalysis
-		if err := json.Unmarshal(data, &textAnalysis); err != nil {
-			logger.Error("Failed to unmarshal json into analysis")
+		switch filepath.Ext(path) {
+		case ".json":
+			data, err := os.ReadFile(args[0])
+			if err != nil {
+				logger.Error("Failed to read file",
+					slog.String("path", path),
+				)
 
-			return fmt.Errorf("unmarshal json: %w", err)
+				return fmt.Errorf("read file: %w", err)
+			}
+			if err := json.Unmarshal(data, &textAnalysis); err != nil {
+				logger.Error("Failed to unmarshal json into analysis")
+
+				return fmt.Errorf("unmarshal json: %w", err)
+			}
+		case ".txt":
+			data, err := os.ReadFile(args[0])
+			if err != nil {
+				logger.Error("Failed to read file",
+					slog.String("path", path),
+				)
+
+				return fmt.Errorf("read file: %w", err)
+			}
+			scanner := bufio.NewScanner(bytes.NewReader(data))
+			scanner.Split(bufio.ScanWords)
+
+			for scanner.Scan() {
+				word := strings.Trim(scanner.Text(), " ")
+				textAnalysis.IncWordCount(word)
+			}
+
+			if err := scanner.Err(); err != nil {
+				logger.Error("Scanner returned an error", "err", err.Error())
+
+				return fmt.Errorf("scanner err: %w", err)
+			}
 		}
 		if Verbose {
 			printWords(textAnalysis)
