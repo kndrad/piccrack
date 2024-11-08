@@ -23,10 +23,12 @@ RUN go mod download
 COPY . .
 RUN go build -o main ./
 
-FROM build-stage AS test-stage
-WORKDIR /app
+# Test Stage (separate from build)
+FROM golang:1.23.2-alpine3.20 AS tester
+WORKDIR /test
+COPY --from=builder /app .
+RUN apk add --no-cache make
 RUN make cover
-
 
 # Export Go binary
 FROM alpine:3.20.3
