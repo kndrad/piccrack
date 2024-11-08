@@ -56,6 +56,10 @@ func (ta *TextAnalysis) IncWordCount(word string) {
 	ta.mu.Lock()
 	defer ta.mu.Unlock()
 
+	if ta.WordFrequency == nil {
+		ta.WordFrequency = make(map[string]int)
+	}
+
 	ta.WordFrequency[word]++
 }
 
