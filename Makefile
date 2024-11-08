@@ -121,9 +121,6 @@ quit:
 # Start development
 .PHONY: start
 start:
-	sqlc generate
-	./scripts/format.sh
-	sudo systemctl stop postgresql.service
 	docker-compose up --build -d
 	go run main.go ping
 
