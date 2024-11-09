@@ -48,6 +48,7 @@ func FormatTime(t time.Time, layout string) string {
 	if layout == "" {
 		layout = TimeLayout
 	}
+
 	return t.Format(layout)
 }
 
