@@ -44,9 +44,13 @@ var textCmd = &cobra.Command{
   -f, --file     Screenshot file or directory path to process (required)
   -o, --out      Output text file path (default: current directory)
   -v, --verbose  Enable verbose logging (default: true)`,
+	SuggestFor: []string{
+		"txt",
+	},
+	Example: "go run main.go text <path/to/file.png> -o <path/to/out/dir>",
 	RunE: func(cmd *cobra.Command, args []string) error {
 		var (
-			inputPath = filepath.Clean(InputPath)
+			inputPath = filepath.Clean(args[0])
 			outPath   = filepath.Clean(OutputPath)
 		)
 
@@ -113,10 +117,9 @@ var textCmd = &cobra.Command{
 			return fmt.Errorf("open file cleaned: %w", err)
 		}
 
-		flags := os.O_APPEND | openf.DefaultFlags
 		txtFile, err := openf.Open(
 			ppath.String(),
-			flags,
+			os.O_APPEND|openf.DefaultFlags,
 			openf.DefaultFileMode,
 		)
 		if err != nil {
@@ -156,10 +159,6 @@ var textCmd = &cobra.Command{
 func init() {
 	rootCmd.AddCommand(textCmd)
 
-	textCmd.Flags().StringVar(&InputPath, "file", "", "screenshot file to recognize words from")
-	if err := textCmd.MarkFlagRequired("file"); err != nil {
-		logger.Error("Marking persistent flag required failed", "err", err.Error())
-	}
-
-	textCmd.Flags().StringVarP(&OutputPath, "out", "o", DefaultOutputPath, "output path")
+	textCmd.Flags().StringVarP(&OutputPath, "out", "o", "", "output path")
+	textCmd.MarkFlagRequired("out")
 }

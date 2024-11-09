@@ -93,14 +93,11 @@ func Open(path string, flags int, mode os.FileMode) (*os.File, error) {
 		return nil, fmt.Errorf("open file: %w", err)
 	}
 
-	// Truncate if we're not appending
-	if flags&os.O_APPEND == 0 {
-		if err := f.Truncate(0); err != nil {
-			return nil, fmt.Errorf("truncate file: %w", err)
-		}
-		if _, err := f.Seek(0, 0); err != nil {
-			return nil, fmt.Errorf("setting offset with seek: %w", err)
-		}
+	if err := f.Truncate(0); err != nil {
+		return nil, fmt.Errorf("truncate file: %w", err)
+	}
+	if _, err := f.Seek(0, 0); err != nil {
+		return nil, fmt.Errorf("setting offset with seek: %w", err)
 	}
 
 	return f, nil
