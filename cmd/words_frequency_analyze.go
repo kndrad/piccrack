@@ -83,7 +83,8 @@ var wordsFrequencyAnalyzeCmd = &cobra.Command{
 			slog.String("json_path", jsonPath),
 		)
 		flags := os.O_APPEND | openf.DefaultFlags
-		jsonFile, err := openf.Cleaned(jsonPath, flags, 0o600)
+
+		jsonFile, err := openf.Open(jsonPath, flags, 0o600)
 		if err != nil {
 			logger.Error("Failed to open cleaned json file", "err", err)
 

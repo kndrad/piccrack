@@ -77,12 +77,9 @@ var wordsFrequencyCmd = &cobra.Command{
 
 			return fmt.Errorf("getting word frequency count: %w", err)
 		}
-		for _, row := range rows {
-			logger.Info("Got word frequency count",
-				slog.String("value", row.Value),
-				slog.Int64("count", row.Count),
-			)
-		}
+		logger.Info("Got word frequency count rows",
+			slog.Int("len", len(rows)),
+		)
 
 		logger.Info("Program completed successfully.")
 

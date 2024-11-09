@@ -26,6 +26,7 @@ import (
 	"log/slog"
 	"os"
 	"path/filepath"
+	"time"
 
 	"github.com/kndrad/itcrack/internal/screenshot"
 	"github.com/kndrad/itcrack/internal/textproc"
@@ -105,8 +106,22 @@ var textCmd = &cobra.Command{
 			}
 		}
 
+		ppath, err := openf.PreparePath(outPath, time.Now())
+		if err != nil {
+			logger.Error("Failed to prepare out path",
+				slog.String("outPath", outPath),
+				slog.String("err", err.Error()),
+			)
+
+			return fmt.Errorf("open file cleaned: %w", err)
+		}
+
 		flags := os.O_APPEND | openf.DefaultFlags
-		txtFile, err := openf.Cleaned(outPath, flags, openf.DefaultFileMode)
+		txtFile, err := openf.Open(
+			ppath.String(),
+			flags,
+			openf.DefaultFileMode,
+		)
 		if err != nil {
 			logger.Error("Failed to open cleaned file", "err", err)
 
@@ -127,7 +142,8 @@ var textCmd = &cobra.Command{
 
 				return fmt.Errorf("screenshot words recognition: %w", err)
 			}
-			if err := textproc.WriteWords(words, textproc.NewWordsTextFileWriter(txtFile)); err != nil {
+			w := textproc.NewWordsTextFileWriter(txtFile)
+			if err := textproc.WriteWords(words, w); err != nil {
 				logger.Error("Failed to write words to a txt file", "err", err)
 
 				return fmt.Errorf("writing words: %w", err)
