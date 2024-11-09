@@ -47,9 +47,6 @@ var wordsFrequencyAnalyzeCmd = &cobra.Command{
 			outPath = filepath.Clean(OutputPath)
 		)
 
-		shutdown := OnShutdown()
-		defer shutdown()
-
 		content, err := os.ReadFile(txtPath)
 		if err != nil {
 			logger.Error("Failed to read txt file", "err", err)

@@ -50,9 +50,6 @@ var textCmd = &cobra.Command{
 			outPath   = filepath.Clean(OutputPath)
 		)
 
-		shutdown := OnShutdown()
-		defer shutdown()
-
 		var filePaths []string
 
 		stat, err := os.Stat(inputPath)
