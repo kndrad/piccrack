@@ -26,7 +26,8 @@ review:
 .PHONY: go-cover-html
 go-cover-html:
 	go test ./... -count=1 -failfast -coverprofile=coverage.out
-	go tool cover -html=coverage.out
+	go tool cover -html=coverage.out -o coverage.html
+	xdg-open coverage.html
 
 .PHONY: go-cover
 go-cover:

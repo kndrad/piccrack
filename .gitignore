@@ -45,3 +45,7 @@ tmp/
 # changing testdata
 testdata/*.txt
 internal/textproc/testdata/words.txt
+
+
+# .html
+coverage.html
