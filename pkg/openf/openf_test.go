@@ -101,7 +101,9 @@ func TestOpen(t *testing.T) {
 	require.NoError(t, err)
 	require.Empty(t, data)
 
-	f.Close()
+	if err := f.Close(); err != nil {
+		t.FailNow()
+	}
 }
 
 func TestRmTilde(t *testing.T) {
