@@ -157,7 +157,7 @@ linters:
     - tenv
     - testableexamples
     - testifylint
-    - testpackage
+    #- testpackage
     - thelper
     #- tparallel
     - typecheck
@@ -271,7 +271,7 @@ linters:
   # - tenv
   # - testableexamples
   # - testifylint
-  # - testpackage
+    - testpackage
   # - thelper
     - tparallel
   # - typecheck
