@@ -107,8 +107,8 @@ test-itcrack-words-add-many: compose-up
 
 
 # Stop development
-.PHONY: quit
-quit:
+.PHONY: stop-all
+stop-all:
 	docker-compose down
 	./scripts/format.sh
 	go test ./... -count=1 -failfast -coverprofile=coverage.out
