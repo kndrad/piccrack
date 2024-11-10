@@ -40,14 +40,10 @@ var InputPath string
 var textCmd = &cobra.Command{
 	Use:   "text",
 	Short: "Extract text from image (screenshot) files (PNG/JPG/JPEG) using OCR",
-	Long: `Extract text from image (screenshot) files (PNG/JPG/JPEG) using OCR
-  -f, --file     Screenshot file or directory path to process (required)
-  -o, --out      Output text file path (default: current directory)
-  -v, --verbose  Enable verbose logging (default: true)`,
 	SuggestFor: []string{
 		"txt",
 	},
-	Example: "go run main.go text <path/to/file.png> -o <path/to/out/dir>",
+	Example: "itcrack text <path/to/file.png> -o <path/to/out/dir>",
 	RunE: func(cmd *cobra.Command, args []string) error {
 		var (
 			inputPath = filepath.Clean(args[0])

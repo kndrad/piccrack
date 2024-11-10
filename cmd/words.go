@@ -34,8 +34,9 @@ import (
 
 // wordsCmd represents the words command.
 var wordsCmd = &cobra.Command{
-	Use:   "words",
-	Short: "Lists words from a database",
+	Use:     "words",
+	Short:   "Lists words from a database",
+	Example: "itcrack words",
 	RunE: func(cmd *cobra.Command, args []string) error {
 		cfg, err := textproc.LoadDatabaseConfig(DefaultEnvFilePath)
 		if err != nil {

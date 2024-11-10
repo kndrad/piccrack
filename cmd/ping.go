@@ -33,8 +33,9 @@ import (
 
 // pingCmd represents the ping command.
 var pingCmd = &cobra.Command{
-	Use:   "ping",
-	Short: "Pings a database",
+	Use:     "ping",
+	Short:   "Pings a database",
+	Example: "itcrack ping",
 	RunE: func(cmd *cobra.Command, args []string) error {
 		logger.Info("Loading database config.")
 
