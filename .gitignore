@@ -49,3 +49,6 @@ internal/textproc/testdata/words.txt
 
 # .html
 coverage.html
+
+# output
+output/*.txt
