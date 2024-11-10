@@ -36,7 +36,7 @@ import (
 var addWordCmd = &cobra.Command{
 	Use:     "add",
 	Short:   "Add word to a database.",
-	Example: "itcrack words add many './testdata/analysis_07_11_2024_07_47_1691.json'",
+	Example: "itcrack words add './testdata/analysis_07_11_2024_07_47_1691.json'",
 	RunE: func(cmd *cobra.Command, args []string) error {
 		config, err := textproc.LoadDatabaseConfig(DefaultEnvFilePath)
 		if err != nil {
