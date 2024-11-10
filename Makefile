@@ -60,7 +60,7 @@ test-docker-itcrack-text-1: docker-build
 	-e $(ENV_FILEPATH) \
 	-v $(TESTDATA_DIR):/testdata \
 	-v $(OUTPUT_DIR):/output \
-	$(DOCKER_IMAGE) text -v --file=$(TESTDATA_DIR)/golang_0.png --out=$(OUTPUT_DIR)
+	$(DOCKER_IMAGE) text $(TESTDATA_DIR)/golang_0.png --out=$(OUTPUT_DIR) -v
 
 .PHONY: test-docker-itcrack-text-2
 test-docker-itcrack-text-2: docker-build
