@@ -55,15 +55,21 @@ SELECT words.value, count(*)
 FROM words
 WHERE deleted_at IS NULL
 GROUP BY words.value
+LIMIT $1 OFFSET $2
 `
+
+type GetWordFrequencyParams struct {
+	Limit  int32 `json:"limit"`
+	Offset int32 `json:"offset"`
+}
 
 type GetWordFrequencyRow struct {
 	Value string `json:"value"`
 	Count int64  `json:"count"`
 }
 
-func (q *Queries) GetWordFrequency(ctx context.Context) ([]GetWordFrequencyRow, error) {
-	rows, err := q.db.Query(ctx, getWordFrequency)
+func (q *Queries) GetWordFrequency(ctx context.Context, arg GetWordFrequencyParams) ([]GetWordFrequencyRow, error) {
+	rows, err := q.db.Query(ctx, getWordFrequency, arg.Limit, arg.Offset)
 	if err != nil {
 		return nil, err
 	}

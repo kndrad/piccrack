@@ -25,6 +25,7 @@ import (
 	"context"
 	"fmt"
 	"log/slog"
+	"strconv"
 
 	"github.com/kndrad/itcrack/internal/textproc"
 	"github.com/kndrad/itcrack/pkg/retry"
@@ -71,7 +72,17 @@ var wordsFrequencyCmd = &cobra.Command{
 		// Query db to get word frequency count.
 		queries := textproc.New(conn)
 
-		rows, err := queries.GetWordFrequency(ctx)
+		var limit int32 = 30
+		params := textproc.GetWordFrequencyParams{Limit: limit}
+
+		if len(args) > 0 {
+			limit, err := strconv.ParseInt(args[0], 10, 32)
+			if err != nil {
+				logger.Error("Failed to strconv", "err", err.Error())
+			}
+			params.Limit = int32(limit)
+		}
+		rows, err := queries.GetWordFrequency(ctx, params)
 		if err != nil {
 			logger.Error("Failed to analyze word frequency count", "err", err.Error())
 
@@ -80,6 +91,12 @@ var wordsFrequencyCmd = &cobra.Command{
 		logger.Info("Got word frequency count rows",
 			slog.Int("len", len(rows)),
 		)
+
+		if Verbose {
+			for i, row := range rows {
+				fmt.Printf("%v: ROW: [word:%v, count:%v] \n", i, row.Value, row.Count)
+			}
+		}
 
 		logger.Info("Program completed successfully.")
 

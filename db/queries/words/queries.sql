@@ -12,4 +12,5 @@ RETURNING id, value, created_at;
 SELECT words.value, count(*)
 FROM words
 WHERE deleted_at IS NULL
-GROUP BY words.value;
+GROUP BY words.value
+LIMIT $1 OFFSET $2;
