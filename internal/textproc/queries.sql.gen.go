@@ -50,7 +50,7 @@ func (q *Queries) AllWords(ctx context.Context, arg AllWordsParams) ([]AllWordsR
 	return items, nil
 }
 
-const getWordFrequency = `-- name: GetWordFrequency :many
+const getWordsFrequencies = `-- name: GetWordsFrequencies :many
 SELECT words.value, count(*) AS word_count
 FROM words
 WHERE deleted_at IS NULL
@@ -59,26 +59,67 @@ ORDER BY word_count ASC
 LIMIT $1 OFFSET $2
 `
 
-type GetWordFrequencyParams struct {
+type GetWordsFrequenciesParams struct {
 	Limit  int32 `json:"limit"`
 	Offset int32 `json:"offset"`
 }
 
-type GetWordFrequencyRow struct {
+type GetWordsFrequenciesRow struct {
 	Value     string `json:"value"`
 	WordCount int64  `json:"word_count"`
 }
 
-func (q *Queries) GetWordFrequency(ctx context.Context, arg GetWordFrequencyParams) ([]GetWordFrequencyRow, error) {
-	rows, err := q.db.Query(ctx, getWordFrequency, arg.Limit, arg.Offset)
+func (q *Queries) GetWordsFrequencies(ctx context.Context, arg GetWordsFrequenciesParams) ([]GetWordsFrequenciesRow, error) {
+	rows, err := q.db.Query(ctx, getWordsFrequencies, arg.Limit, arg.Offset)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []GetWordFrequencyRow
+	var items []GetWordsFrequenciesRow
 	for rows.Next() {
-		var i GetWordFrequencyRow
+		var i GetWordsFrequenciesRow
 		if err := rows.Scan(&i.Value, &i.WordCount); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const getWordsRank = `-- name: GetWordsRank :many
+SELECT
+    words.value,
+    ROW_NUMBER() OVER (ORDER BY count(*) DESC) as rank
+FROM words
+WHERE deleted_at IS NULL
+GROUP BY words.value
+ORDER BY rank ASC
+LIMIT $1 OFFSET $2
+`
+
+type GetWordsRankParams struct {
+	Limit  int32 `json:"limit"`
+	Offset int32 `json:"offset"`
+}
+
+type GetWordsRankRow struct {
+	Value string `json:"value"`
+	Rank  int64  `json:"rank"`
+}
+
+func (q *Queries) GetWordsRank(ctx context.Context, arg GetWordsRankParams) ([]GetWordsRankRow, error) {
+	rows, err := q.db.Query(ctx, getWordsRank, arg.Limit, arg.Offset)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GetWordsRankRow
+	for rows.Next() {
+		var i GetWordsRankRow
+		if err := rows.Scan(&i.Value, &i.Rank); err != nil {
 			return nil, err
 		}
 		items = append(items, i)

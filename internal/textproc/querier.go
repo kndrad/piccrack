@@ -10,7 +10,8 @@ import (
 
 type Querier interface {
 	AllWords(ctx context.Context, arg AllWordsParams) ([]AllWordsRow, error)
-	GetWordFrequency(ctx context.Context, arg GetWordFrequencyParams) ([]GetWordFrequencyRow, error)
+	GetWordsFrequencies(ctx context.Context, arg GetWordsFrequenciesParams) ([]GetWordsFrequenciesRow, error)
+	GetWordsRank(ctx context.Context, arg GetWordsRankParams) ([]GetWordsRankRow, error)
 	InsertWord(ctx context.Context, value string) (InsertWordRow, error)
 }
 
