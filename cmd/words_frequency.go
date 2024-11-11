@@ -73,7 +73,7 @@ var wordsFrequencyCmd = &cobra.Command{
 		queries := textproc.New(conn)
 
 		var limit int32 = 30
-		params := textproc.GetWordFrequencyParams{Limit: limit}
+		params := textproc.GetWordsFrequenciesParams{Limit: limit}
 
 		if len(args) > 0 {
 			limit, err := strconv.ParseInt(args[0], 10, 32)
@@ -82,7 +82,7 @@ var wordsFrequencyCmd = &cobra.Command{
 			}
 			params.Limit = int32(limit)
 		}
-		rows, err := queries.GetWordFrequency(ctx, params)
+		rows, err := queries.GetWordsFrequencies(ctx, params)
 		if err != nil {
 			logger.Error("Failed to analyze word frequency count", "err", err.Error())
 
