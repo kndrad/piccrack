@@ -120,7 +120,7 @@ var addManyWordsCmd = &cobra.Command{
 				return fmt.Errorf("scanner err: %w", err)
 			}
 		}
-		if Verbose {
+		if verbose {
 			printWords(textAnalysis)
 		}
 

@@ -92,7 +92,7 @@ var wordsFrequencyCmd = &cobra.Command{
 			slog.Int("len", len(rows)),
 		)
 
-		if Verbose {
+		if verbose {
 			for i, row := range rows {
 				fmt.Printf("%v: ROW: [%v, %v] \n", i, row.Value, row.WordCount)
 			}

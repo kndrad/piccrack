@@ -42,7 +42,7 @@ var wordsFrequencyAnalyzeCmd = &cobra.Command{
 	RunE: func(cmd *cobra.Command, args []string) error {
 		var (
 			txtPath = filepath.Clean(InputPath)
-			outPath = filepath.Clean(OutputPath)
+			outPath = filepath.Clean(outputPath)
 		)
 
 		content, err := os.ReadFile(txtPath)
@@ -118,5 +118,5 @@ func init() {
 		logger.Error("Marking flag required failed", "err", err.Error())
 	}
 
-	wordsFrequencyAnalyzeCmd.Flags().StringVarP(&OutputPath, "out", "o", DefaultOutputPath, "JSON file output path")
+	wordsFrequencyAnalyzeCmd.Flags().StringVarP(&outputPath, "out", "o", DefaultOutputPath, "JSON file output path")
 }

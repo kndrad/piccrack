@@ -7,10 +7,10 @@ import (
 
 var logger *slog.Logger
 
-func init() {
+func initLogger() {
 	logger = slog.New(slog.NewTextHandler(os.Stdout, nil))
 
-	if Verbose {
+	if verbose {
 		slog.SetLogLoggerLevel(slog.LevelInfo)
 	} else {
 		slog.SetLogLoggerLevel(slog.LevelError)

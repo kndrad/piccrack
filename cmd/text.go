@@ -47,7 +47,7 @@ var textCmd = &cobra.Command{
 	RunE: func(cmd *cobra.Command, args []string) error {
 		var (
 			inputPath = filepath.Clean(args[0])
-			outPath   = filepath.Clean(OutputPath)
+			outPath   = filepath.Clean(outputPath)
 		)
 
 		var filePaths []string
@@ -155,6 +155,6 @@ var textCmd = &cobra.Command{
 func init() {
 	rootCmd.AddCommand(textCmd)
 
-	textCmd.Flags().StringVarP(&OutputPath, "out", "o", "", "output path")
+	textCmd.Flags().StringVarP(&outputPath, "out", "o", "", "output path")
 	textCmd.MarkFlagRequired("out")
 }
