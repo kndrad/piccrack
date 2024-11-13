@@ -41,6 +41,7 @@ RUN apk add --no-cache \
     leptonica
 
 COPY --from=build-stage /app/main /main
+COPY --from=build-stage /app/.env /.env
 
 ENTRYPOINT [ "./main" ]
 CMD [ "--help" ]
