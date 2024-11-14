@@ -1,6 +1,7 @@
 package api
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"log/slog"
@@ -16,8 +17,9 @@ import (
 )
 
 type Config struct {
-	Host string `mapstructure:"HTTP_HOST"`
-	Port string `mapstructure:"HTTP_PORT"`
+	HTTPSEnabled bool   `mapstructure:"HTTPS_ENABLED"`
+	Host         string `mapstructure:"HTTP_HOST"`
+	Port         string `mapstructure:"HTTP_PORT"`
 }
 
 func LoadConfig(path string) (*Config, error) {
@@ -33,74 +35,96 @@ func LoadConfig(path string) (*Config, error) {
 
 	viper.AutomaticEnv()
 
-	config := &Config{
-		Host: viper.GetString("HTTP_HOST"),
-		Port: viper.GetString("HTTP_PORT"),
+	cfg := &Config{
+		HTTPSEnabled: viper.GetBool("HTTPS_ENABLED"),
+		Host:         viper.GetString("HTTP_HOST"),
+		Port:         viper.GetString("HTTP_PORT"),
 	}
 
-	if err := viper.Unmarshal(&config); err != nil {
+	if err := viper.Unmarshal(&cfg); err != nil {
 		return nil, fmt.Errorf("unmarshal config: %w", err)
 	}
 
-	return config, nil
+	return cfg, nil
 }
 
 func (cfg *Config) Addr() string {
 	return net.JoinHostPort(cfg.Host, cfg.Port)
 }
 
-func NewHTTPServer(c *Config, l *slog.Logger) *http.Server {
-	if l == nil {
-		panic("logger cannot be nil")
-	}
-	if c == nil {
-		panic("config cannot be nil")
-	}
-
-	mux := http.NewServeMux()
-	mux.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(http.StatusOK)
-	})
-
-	return &http.Server{
-		Addr:           c.Addr(),
-		Handler:        mux,
-		ReadTimeout:    20 * time.Second,
-		WriteTimeout:   20 * time.Second,
-		MaxHeaderBytes: 1 << 20,
-	}
+type httpServer struct {
+	srv    *http.Server
+	cfg    *Config
+	logger *slog.Logger
 }
 
-func StartServer(ctx context.Context, srv *http.Server, logger *slog.Logger) error {
-	if srv == nil {
-		panic("server cannot be nil")
+func NewHTTPServer(cfg *Config, logger *slog.Logger) *httpServer {
+	if cfg == nil {
+		panic("config cannot be nil")
 	}
 	if logger == nil {
 		panic("logger cannot be nil")
 	}
 
-	signals := make(chan os.Signal, 1)
-	signal.Notify(signals, os.Interrupt, syscall.SIGTERM)
+	mux := http.NewServeMux()
+	mux.HandleFunc("GET /health", func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+	})
 
-	logger.Info("Starting to listen and serve", "addr", srv.Addr)
+	srv := &http.Server{
+		Addr:           cfg.Addr(),
+		Handler:        mux,
+		ReadTimeout:    20 * time.Second,
+		WriteTimeout:   20 * time.Second,
+		MaxHeaderBytes: 1 << 20,
+	}
+
+	return &httpServer{
+		srv:    srv,
+		cfg:    cfg,
+		logger: logger,
+	}
+}
+
+func (s *httpServer) Start(ctx context.Context) error {
+	if s == nil {
+		panic("server cannot be nil")
+	}
+	if s.logger == nil {
+		panic("logger cannot be nil")
+	}
+
+	s.logger.Info("Starting to listen and serve",
+		slog.String("addr", s.srv.Addr),
+		slog.Bool("https_enabled", s.cfg.HTTPSEnabled),
+	)
 
 	errs := make(chan error, 1)
 
 	// Start
 	go func() {
-		err := srv.ListenAndServe()
+		err := s.srv.ListenAndServe()
 		if err != nil && err != http.ErrServerClosed {
-			logger.Error("Failed to listen and serve", "err", err.Error())
+			s.logger.Error("Failed to listen and serve", "err", err)
 		}
-		errs <- err
+		errs <- fmt.Errorf("listen and serve err: %w", err)
 	}()
+
+	ctx, stop := signal.NotifyContext(ctx, os.Interrupt, syscall.SIGTERM)
+	defer stop()
 
 	// Wait
 	select {
 	case <-ctx.Done():
-		logger.Info("Cancelled")
-	case sig := <-signals:
-		logger.Info("Received signal", slog.String("sig_string", sig.String()))
+		if err := ctx.Err(); err != nil {
+			switch err {
+			case context.Canceled:
+				s.logger.Info("Operation cancelled")
+				stop() // Stop Receiving singla notifications as soon as possible
+			case context.DeadlineExceeded:
+				s.logger.Info("Operation timed out")
+			}
+		}
 	case err := <-errs:
 		if err != nil {
 			return fmt.Errorf("received err: %w", err)
@@ -108,10 +132,70 @@ func StartServer(ctx context.Context, srv *http.Server, logger *slog.Logger) err
 	}
 
 	// Shutdown
-	if err := srv.Shutdown(ctx); err != nil {
-		logger.Error("Failed to shutdown http server", "err", err)
+	if err := s.srv.Shutdown(ctx); err != nil {
+		s.logger.Error("Failed to shutdown http server", "err", err)
 
 		return fmt.Errorf("shutdown err: %w", err)
+	}
+
+	return nil
+}
+
+type httpClient struct {
+	c      *http.Client
+	cfg    *Config
+	logger *slog.Logger
+}
+
+func NewHTTPClient(config *Config, logger *slog.Logger) *httpClient {
+	return &httpClient{
+		c:      &http.Client{},
+		cfg:    config,
+		logger: logger,
+	}
+}
+
+func (c *httpClient) CheckHealth(ctx context.Context) error {
+	if c == nil {
+		panic("client cannot be nil")
+	}
+
+	hostPort := net.JoinHostPort(c.cfg.Host, c.cfg.Port)
+
+	var urlPrefix string
+	switch c.cfg.HTTPSEnabled {
+	case true:
+		urlPrefix = "https"
+	case false:
+		urlPrefix = "http"
+	}
+
+	url := urlPrefix + "://" + hostPort + "/" + "health"
+
+	buffer := new(bytes.Buffer)
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, buffer)
+	if err != nil {
+		c.logger.Error("Failed to create request", "err", err)
+
+		return fmt.Errorf("new request err: %w", err)
+	}
+
+	c.logger.Info("Running health check", "url", url)
+	resp, err := c.c.Do(req)
+	if err != nil {
+		c.logger.Error("Failed to do request with a client", "err", err)
+
+		return fmt.Errorf("client do request err: %w", err)
+	}
+	defer resp.Body.Close()
+
+	switch resp.StatusCode {
+	case http.StatusOK:
+		c.logger.Info("Server OK", "statusCode", resp.StatusCode)
+
+		return nil
+	default:
+		c.logger.Info("Received server response", "statusCode", resp.StatusCode)
 	}
 
 	return nil
