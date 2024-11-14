@@ -17,9 +17,9 @@ import (
 )
 
 type Config struct {
-	HTTPSEnabled bool   `mapstructure:"HTTPS_ENABLED"`
-	Host         string `mapstructure:"HTTP_HOST"`
-	Port         string `mapstructure:"HTTP_PORT"`
+	Host       string `mapstructure:"HTTP_HOST"`
+	Port       string `mapstructure:"HTTP_PORT"`
+	TLSEnabled bool   `mapstructure:"TLS_ENABLED"`
 }
 
 func LoadConfig(path string) (*Config, error) {
@@ -36,9 +36,9 @@ func LoadConfig(path string) (*Config, error) {
 	viper.AutomaticEnv()
 
 	cfg := &Config{
-		HTTPSEnabled: viper.GetBool("HTTPS_ENABLED"),
-		Host:         viper.GetString("HTTP_HOST"),
-		Port:         viper.GetString("HTTP_PORT"),
+		Host:       viper.GetString("HTTP_HOST"),
+		Port:       viper.GetString("HTTP_PORT"),
+		TLSEnabled: viper.GetBool("TLS_ENABLED"),
 	}
 
 	if err := viper.Unmarshal(&cfg); err != nil {
@@ -96,7 +96,7 @@ func (s *httpServer) Start(ctx context.Context) error {
 
 	s.logger.Info("Starting to listen and serve",
 		slog.String("addr", s.srv.Addr),
-		slog.Bool("https_enabled", s.cfg.HTTPSEnabled),
+		slog.Bool("https_enabled", s.cfg.TLSEnabled),
 	)
 
 	errs := make(chan error, 1)
@@ -147,10 +147,17 @@ type httpClient struct {
 	logger *slog.Logger
 }
 
-func NewHTTPClient(config *Config, logger *slog.Logger) *httpClient {
+func NewHTTPClient(cfg *Config, logger *slog.Logger) *httpClient {
+	if cfg == nil {
+		panic("config cannot be nil")
+	}
+	if logger == nil {
+		panic("logger cannot be nil")
+	}
+	
 	return &httpClient{
 		c:      &http.Client{},
-		cfg:    config,
+		cfg:    cfg,
 		logger: logger,
 	}
 }
@@ -163,7 +170,7 @@ func (c *httpClient) CheckHealth(ctx context.Context) error {
 	hostPort := net.JoinHostPort(c.cfg.Host, c.cfg.Port)
 
 	var urlPrefix string
-	switch c.cfg.HTTPSEnabled {
+	switch c.cfg.TLSEnabled {
 	case true:
 		urlPrefix = "https"
 	case false:
