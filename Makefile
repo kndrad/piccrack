@@ -23,18 +23,18 @@ review:
 	go test ./... -count=1 -failfast -coverprofile=coverage.out
 	./scripts/check.sh
 
-.PHONY: go-cover-html
-go-cover-html:
+.PHONY: cover-html
+cover-html:
 	go test ./... -count=1 -failfast -coverprofile=coverage.out
 	go tool cover -html=coverage.out -o coverage.html
 	xdg-open coverage.html
 
-.PHONY: go-cover
-go-cover:
+.PHONY: cover
+cover:
 	go test ./... -count=1 -failfast -coverprofile=coverage.out
 
-.PHONY: go-tests
-go-tests:
+.PHONY: tests
+tests:
 	go test ./... -count=1 -failfast
 
 .PHONY: test-itcrack-text-file
