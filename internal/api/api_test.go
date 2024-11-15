@@ -149,26 +149,25 @@ func TestClientCheckHealth(t *testing.T) {
 	for _, tC := range testCases {
 		t.Run(tC.desc, func(t *testing.T) {
 			// Init server
-			go initHTTPServer(t)
+			ctx, cancel := context.WithCancel(context.Background())
+			go initHTTPServer(t, ctx)
 
 			err := tC.client.CheckHealth(context.TODO())
-
 			if tC.mustErr {
 				require.Error(t, err)
 			}
 			require.NoError(t, err)
-
-			sendKill(t)
+			cancel()
 		})
 	}
 }
 
-func initHTTPServer(t *testing.T) error {
+func initHTTPServer(t *testing.T, ctx context.Context) error {
 	t.Helper()
 
 	srv := NewHTTPServer(newTestCfg(t), newTestLogger(t))
 
-	return srv.Start(context.TODO())
+	return srv.Start(ctx)
 }
 
 func sendKill(t *testing.T) {

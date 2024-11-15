@@ -154,7 +154,7 @@ func NewHTTPClient(cfg *Config, logger *slog.Logger) *httpClient {
 	if logger == nil {
 		panic("logger cannot be nil")
 	}
-	
+
 	return &httpClient{
 		c:      &http.Client{},
 		cfg:    cfg,
