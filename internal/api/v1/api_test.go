@@ -192,7 +192,7 @@ func TestClient(t *testing.T) {
 	for _, tC := range testCases {
 		t.Run(tC.desc, func(t *testing.T) {
 			// Init test server
-			ts := httptest.NewServer(http.HandlerFunc(healthCheckHandler))
+			ts := httptest.NewServer(NewMux())
 			defer ts.Close()
 
 			c := NewClient(newTestCfg(t), newTestLogger(t))
