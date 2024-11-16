@@ -39,7 +39,7 @@ var wordsFrequencyCmd = &cobra.Command{
 	RunE: func(cmd *cobra.Command, args []string) error {
 		config, err := textproc.LoadDatabaseConfig(DefaultEnvFilePath)
 		if err != nil {
-			logger.Error("Loading database config", "err", err.Error())
+			DefaultLogger.Error("Loading database config", "err", err.Error())
 
 			return fmt.Errorf("loading config: %w", err)
 		}
@@ -49,21 +49,21 @@ var wordsFrequencyCmd = &cobra.Command{
 
 		pool, err := textproc.DatabasePool(ctx, *config)
 		if err != nil {
-			logger.Error("Loading database pool", "err", err.Error())
+			DefaultLogger.Error("Loading database pool", "err", err.Error())
 
 			return fmt.Errorf("database pool: %w", err)
 		}
 		defer pool.Close()
 
 		if err := retry.Ping(ctx, pool, retry.MaxRetries); err != nil {
-			logger.Error("Pinging database", "err", err.Error())
+			DefaultLogger.Error("Pinging database", "err", err.Error())
 
 			return fmt.Errorf("database ping: %w", err)
 		}
 
 		conn, err := textproc.DatabaseConnection(ctx, pool)
 		if err != nil {
-			logger.Error("Connecting to database", "err", err.Error())
+			DefaultLogger.Error("Connecting to database", "err", err.Error())
 
 			return fmt.Errorf("database connection: %w", err)
 		}
@@ -78,17 +78,17 @@ var wordsFrequencyCmd = &cobra.Command{
 		if len(args) > 0 {
 			limit, err := strconv.ParseInt(args[0], 10, 32)
 			if err != nil {
-				logger.Error("Failed to strconv", "err", err.Error())
+				DefaultLogger.Error("Failed to strconv", "err", err.Error())
 			}
 			params.Limit = int32(limit)
 		}
 		rows, err := queries.GetWordsFrequencies(ctx, params)
 		if err != nil {
-			logger.Error("Failed to analyze word frequency count", "err", err.Error())
+			DefaultLogger.Error("Failed to analyze word frequency count", "err", err.Error())
 
 			return fmt.Errorf("getting word frequency count: %w", err)
 		}
-		logger.Info("Got word frequency count rows",
+		DefaultLogger.Info("Got word frequency count rows",
 			slog.Int("len", len(rows)),
 		)
 
@@ -98,7 +98,7 @@ var wordsFrequencyCmd = &cobra.Command{
 			}
 		}
 
-		logger.Info("Program completed successfully.")
+		DefaultLogger.Info("Program completed successfully.")
 
 		return nil
 	},

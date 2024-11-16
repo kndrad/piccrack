@@ -48,7 +48,7 @@ var addManyWordsCmd = &cobra.Command{
 	RunE: func(cmd *cobra.Command, args []string) error {
 		config, err := textproc.LoadDatabaseConfig(DefaultEnvFilePath)
 		if err != nil {
-			logger.Error("Loading database config", "err", err.Error())
+			DefaultLogger.Error("Loading database config", "err", err.Error())
 
 			return fmt.Errorf("loading config: %w", err)
 		}
@@ -58,21 +58,21 @@ var addManyWordsCmd = &cobra.Command{
 
 		pool, err := textproc.DatabasePool(ctx, *config)
 		if err != nil {
-			logger.Error("Loading database pool", "err", err.Error())
+			DefaultLogger.Error("Loading database pool", "err", err.Error())
 
 			return fmt.Errorf("database pool: %w", err)
 		}
 		defer pool.Close()
 
 		if err := retry.Ping(ctx, pool, retry.MaxRetries); err != nil {
-			logger.Error("Pinging database", "err", err.Error())
+			DefaultLogger.Error("Pinging database", "err", err.Error())
 
 			return fmt.Errorf("database ping: %w", err)
 		}
 
 		conn, err := textproc.DatabaseConnection(ctx, pool)
 		if err != nil {
-			logger.Error("Connecting to database", "err", err.Error())
+			DefaultLogger.Error("Connecting to database", "err", err.Error())
 
 			return fmt.Errorf("database connection: %w", err)
 		}
@@ -86,21 +86,21 @@ var addManyWordsCmd = &cobra.Command{
 		case ".json":
 			data, err := os.ReadFile(args[0])
 			if err != nil {
-				logger.Error("Failed to read file",
+				DefaultLogger.Error("Failed to read file",
 					slog.String("path", path),
 				)
 
 				return fmt.Errorf("read file: %w", err)
 			}
 			if err := json.Unmarshal(data, &textAnalysis); err != nil {
-				logger.Error("Failed to unmarshal json into analysis")
+				DefaultLogger.Error("Failed to unmarshal json into analysis")
 
 				return fmt.Errorf("unmarshal json: %w", err)
 			}
 		case ".txt":
 			data, err := os.ReadFile(args[0])
 			if err != nil {
-				logger.Error("Failed to read file",
+				DefaultLogger.Error("Failed to read file",
 					slog.String("path", path),
 				)
 
@@ -115,7 +115,7 @@ var addManyWordsCmd = &cobra.Command{
 			}
 
 			if err := scanner.Err(); err != nil {
-				logger.Error("Scanner returned an error", "err", err.Error())
+				DefaultLogger.Error("Scanner returned an error", "err", err.Error())
 
 				return fmt.Errorf("scanner err: %w", err)
 			}
@@ -129,19 +129,19 @@ var addManyWordsCmd = &cobra.Command{
 		for word := range textAnalysis.WordFrequency {
 			row, err := queries.InsertWord(ctx, word)
 			if err != nil {
-				logger.Error("Failed to insert word",
+				DefaultLogger.Error("Failed to insert word",
 					slog.String("word", word),
 				)
 
 				return fmt.Errorf("word insert: %w", err)
 			}
-			logger.Info("Inserted row to a database",
+			DefaultLogger.Info("Inserted row to a database",
 				slog.Int64("id", row.ID),
 				slog.String("word", row.Value),
 			)
 		}
 
-		logger.Info("Program completed successfully.")
+		DefaultLogger.Info("Program completed successfully.")
 
 		return nil
 	},

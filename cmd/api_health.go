@@ -35,22 +35,22 @@ var apiCheckHealthCmd = &cobra.Command{
 	RunE: func(cmd *cobra.Command, args []string) error {
 		config, err := api.LoadConfig(".env")
 		if err != nil {
-			logger.Error("Failed to load config", "err", err)
+			DefaultLogger.Error("Failed to load config", "err", err)
 
 			return fmt.Errorf("loading config err: %w", err)
 		}
-		client := api.NewHTTPClient(config, logger)
+		client := api.NewHTTPClient(config, DefaultLogger)
 
 		ctx, cancel := context.WithTimeout(context.Background(), DefaultTimeout)
 		defer cancel()
 
 		if err := client.CheckHealth(ctx); err != nil {
-			logger.Error("Failed to check http server health", "err", err)
+			DefaultLogger.Error("Failed to check http server health", "err", err)
 
 			return fmt.Errorf("checking health err: %w", err)
 		}
 
-		logger.Info("Program completed successfully.")
+		DefaultLogger.Info("Program completed successfully.")
 
 		return nil
 	},

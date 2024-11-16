@@ -40,7 +40,7 @@ var addWordCmd = &cobra.Command{
 	RunE: func(cmd *cobra.Command, args []string) error {
 		config, err := textproc.LoadDatabaseConfig(DefaultEnvFilePath)
 		if err != nil {
-			logger.Error("Loading database config", "err", err.Error())
+			DefaultLogger.Error("Loading database config", "err", err.Error())
 
 			return fmt.Errorf("loading database config failed: %w", err)
 		}
@@ -50,21 +50,21 @@ var addWordCmd = &cobra.Command{
 
 		pool, err := textproc.DatabasePool(ctx, *config)
 		if err != nil {
-			logger.Error("Loading database pool", "err", err.Error())
+			DefaultLogger.Error("Loading database pool", "err", err.Error())
 
 			return fmt.Errorf("database pool: %w", err)
 		}
 		defer pool.Close()
 
 		if err := retry.Ping(ctx, pool, retry.MaxRetries); err != nil {
-			logger.Error("Pinging database", "err", err.Error())
+			DefaultLogger.Error("Pinging database", "err", err.Error())
 
 			return fmt.Errorf("database ping: %w", err)
 		}
 
 		conn, err := textproc.DatabaseConnection(ctx, pool)
 		if err != nil {
-			logger.Error("Connecting to database", "err", err.Error())
+			DefaultLogger.Error("Connecting to database", "err", err.Error())
 
 			return fmt.Errorf("database connection: %w", err)
 		}
@@ -75,17 +75,17 @@ var addWordCmd = &cobra.Command{
 		value := args[0]
 		word, err := queries.InsertWord(ctx, value)
 		if err != nil {
-			logger.Error("Inserting word failed", "err", err.Error())
+			DefaultLogger.Error("Inserting word failed", "err", err.Error())
 
 			return fmt.Errorf("word insert: %w", err)
 		}
-		logger.Info("Inserted word",
+		DefaultLogger.Info("Inserted word",
 			slog.Int64("word", word.ID),
 			slog.String("value", word.Value),
 			slog.Time("created_at_time", word.CreatedAt.Time),
 		)
 
-		logger.Info("Program completed successfully.")
+		DefaultLogger.Info("Program completed successfully.")
 
 		return nil
 	},

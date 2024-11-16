@@ -37,7 +37,7 @@ var rankCmd = &cobra.Command{
 	RunE: func(cmd *cobra.Command, args []string) error {
 		config, err := textproc.LoadDatabaseConfig(DefaultEnvFilePath)
 		if err != nil {
-			logger.Error("Loading database config", "err", err.Error())
+			DefaultLogger.Error("Loading database config", "err", err.Error())
 
 			return fmt.Errorf("loading config: %w", err)
 		}
@@ -47,21 +47,21 @@ var rankCmd = &cobra.Command{
 
 		pool, err := textproc.DatabasePool(ctx, *config)
 		if err != nil {
-			logger.Error("Loading database pool", "err", err.Error())
+			DefaultLogger.Error("Loading database pool", "err", err.Error())
 
 			return fmt.Errorf("database pool: %w", err)
 		}
 		defer pool.Close()
 
 		if err := retry.Ping(ctx, pool, retry.MaxRetries); err != nil {
-			logger.Error("Pinging database", "err", err.Error())
+			DefaultLogger.Error("Pinging database", "err", err.Error())
 
 			return fmt.Errorf("database ping: %w", err)
 		}
 
 		conn, err := textproc.DatabaseConnection(ctx, pool)
 		if err != nil {
-			logger.Error("Connecting to database", "err", err.Error())
+			DefaultLogger.Error("Connecting to database", "err", err.Error())
 
 			return fmt.Errorf("database connection: %w", err)
 		}
@@ -74,19 +74,19 @@ var rankCmd = &cobra.Command{
 		}
 		rows, err := queries.GetWordsRank(ctx, params)
 		if err != nil {
-			logger.Error("Failed to get words rank", "err", err.Error())
+			DefaultLogger.Error("Failed to get words rank", "err", err.Error())
 
 			return fmt.Errorf("words rank err: %w", err)
 		}
 
 		for _, row := range rows {
-			logger.Info("Got word rank",
+			DefaultLogger.Info("Got word rank",
 				slog.String("value", row.Value),
 				slog.Int64("rank", row.Rank),
 			)
 		}
 
-		logger.Info("Program completed successfully.")
+		DefaultLogger.Info("Program completed successfully.")
 
 		return nil
 	},

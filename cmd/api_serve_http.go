@@ -35,19 +35,19 @@ var apiServeHTTPCmd = &cobra.Command{
 	RunE: func(cmd *cobra.Command, args []string) error {
 		config, err := api.LoadConfig(".env")
 		if err != nil {
-			logger.Error("Failed to load config", "err", err.Error())
+			DefaultLogger.Error("Failed to load config", "err", err.Error())
 
 			return fmt.Errorf("loading config err: %w", err)
 		}
 
-		srv := api.NewHTTPServer(config, logger)
+		srv := api.NewHTTPServer(config, DefaultLogger)
 
 		if err := srv.Start(context.TODO()); err != nil {
-			logger.Error("Failed to listen and serve", "err", err)
+			DefaultLogger.Error("Failed to listen and serve", "err", err)
 
 			return fmt.Errorf("listen and serve err: %w", err)
 		}
-		logger.Info("Program completed successfully.")
+		DefaultLogger.Info("Program completed successfully.")
 
 		return nil
 	},

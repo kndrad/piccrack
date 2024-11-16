@@ -5,10 +5,10 @@ import (
 	"os"
 )
 
-var logger *slog.Logger
+var DefaultLogger *slog.Logger
 
 func initLogger() {
-	logger = slog.New(slog.NewTextHandler(os.Stdout, nil))
+	DefaultLogger = slog.New(slog.NewTextHandler(os.Stdout, nil))
 
 	if verbose {
 		slog.SetLogLoggerLevel(slog.LevelInfo)
