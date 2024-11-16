@@ -24,6 +24,7 @@ package cmd
 import (
 	"context"
 	"fmt"
+	"path/filepath"
 
 	api "github.com/kndrad/itcrack/internal/api/v1"
 	"github.com/spf13/cobra"
@@ -42,7 +43,9 @@ var apiCheckHealthCmd = &cobra.Command{
 		client := api.NewClient(config, Logger, api.WithTimeout(DefaultTimeout))
 		defer client.Close()
 
-		if err := client.CheckHealth(context.Background()); err != nil {
+		url := config.BaseURL() + string(filepath.Separator) + "health"
+
+		if err := client.Get(context.Background(), url); err != nil {
 			Logger.Error("Failed to check http server health", "err", err)
 
 			return fmt.Errorf("checking health err: %w", err)

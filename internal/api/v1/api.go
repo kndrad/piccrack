@@ -3,7 +3,6 @@ package v1
 import (
 	"bytes"
 	"context"
-	"errors"
 	"fmt"
 	"log/slog"
 	"net"
@@ -11,7 +10,6 @@ import (
 	"os"
 	"os/signal"
 	"path/filepath"
-	"sync"
 	"syscall"
 	"time"
 
@@ -70,28 +68,34 @@ func (cfg Config) BaseURL() string {
 
 type httpServer struct {
 	srv    *http.Server
+	mux    *http.ServeMux
 	cfg    *Config
 	logger *slog.Logger
 }
 
-func checkHealthHandler(w http.ResponseWriter, _ *http.Request) {
+func healthCheckHandler(w http.ResponseWriter, _ *http.Request) {
 	w.WriteHeader(http.StatusOK)
 }
 
-func NewHTTPServer(cfg *Config, logger *slog.Logger) (*httpServer, error) {
-	if cfg == nil {
+func NewMux() *http.ServeMux {
+	mux := http.NewServeMux()
+	mux.HandleFunc("GET /health", healthCheckHandler)
+
+	return mux
+}
+
+func NewHTTPServer(config *Config, logger *slog.Logger) (*httpServer, error) {
+	if config == nil {
 		panic("config cannot be nil")
 	}
 	if logger == nil {
 		panic("logger cannot be nil")
 	}
 
-	mux := http.NewServeMux()
-
-	mux.HandleFunc("GET /health", checkHealthHandler)
+	mux := NewMux()
 
 	srv := &http.Server{
-		Addr:           cfg.Addr(),
+		Addr:           config.Addr(),
 		Handler:        mux,
 		ReadTimeout:    20 * time.Second,
 		WriteTimeout:   20 * time.Second,
@@ -100,7 +104,8 @@ func NewHTTPServer(cfg *Config, logger *slog.Logger) (*httpServer, error) {
 
 	return &httpServer{
 		srv:    srv,
-		cfg:    cfg,
+		mux:    mux,
+		cfg:    config,
 		logger: logger,
 	}, nil
 }
@@ -163,7 +168,6 @@ func (s *httpServer) Start(ctx context.Context) error {
 type Client struct {
 	client *http.Client
 	cfg    *Config
-	routes *routes
 	logger *slog.Logger
 }
 
@@ -180,10 +184,6 @@ func NewClient(cfg *Config, logger *slog.Logger, opts ...ClientOption) *Client {
 		cfg:    cfg,
 		logger: logger,
 	}
-
-	r := new(routes)
-	r.Add(cfg.BaseURL(), "health")
-	c.routes = r
 
 	for _, opt := range opts {
 		opt(c)
@@ -204,54 +204,19 @@ func (c *Client) Close() {
 	c.client.CloseIdleConnections()
 }
 
-type routes struct {
-	m  map[string]string
-	mu sync.Mutex
-}
-
-func (r *routes) Add(base, path string) {
-	if base == "" {
-		panic("base cannot be empty")
-	}
-	if r.m == nil {
-		r.m = make(map[string]string)
-	}
-	r.mu.Lock()
-	defer r.mu.Unlock()
-
-	r.m[path] = base + string(filepath.Separator) + path
-}
-
-var ErrNoPath = errors.New("api: no path found")
-
-func (r *routes) Get(path string) (string, error) {
-	r.mu.Lock()
-	defer r.mu.Unlock()
-
-	p, ok := r.m[path]
-	if !ok {
-		return "", ErrNoPath
-	}
-
-	return p, nil
-}
-
-func (c *Client) CheckHealth(ctx context.Context) error {
+func (c *Client) Get(ctx context.Context, url string) error {
 	if c == nil {
 		panic("client cannot be nil")
 	}
-
-	path, err := c.routes.Get("health")
-	if err != nil {
-		c.logger.Error("Failed to join path", "err", err)
-
-		return fmt.Errorf("url join path err: %w", err)
+	if url == "" {
+		panic("url cannot be empty")
 	}
+
 	buf := new(bytes.Buffer)
 	req, err := http.NewRequestWithContext(
 		ctx,
 		http.MethodGet,
-		path,
+		url,
 		buf,
 	)
 	if err != nil {
@@ -259,9 +224,8 @@ func (c *Client) CheckHealth(ctx context.Context) error {
 
 		return fmt.Errorf("new request err: %w", err)
 	}
-
-	c.logger.Info("Running health check",
-		slog.String("path", path),
+	c.logger.Info("Sending request",
+		slog.String("url", url),
 	)
 	resp, err := c.client.Do(req)
 	if err != nil {

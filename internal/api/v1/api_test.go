@@ -156,7 +156,7 @@ func TestCheckHealthHandler(t *testing.T) {
 	for _, tC := range testCases {
 		t.Run(tC.desc, func(t *testing.T) {
 			// Init server
-			ts := httptest.NewServer(http.HandlerFunc(checkHealthHandler))
+			ts := httptest.NewServer(http.HandlerFunc(healthCheckHandler))
 			defer ts.Close()
 
 			resp, err := ts.Client().Get(ts.URL)
@@ -191,10 +191,14 @@ func TestClientCheckHealth(t *testing.T) {
 	}
 	for _, tC := range testCases {
 		t.Run(tC.desc, func(t *testing.T) {
+			// Init test server
+			ts := httptest.NewServer(http.HandlerFunc(healthCheckHandler))
+			defer ts.Close()
+
 			c := NewClient(newTestCfg(t), newTestLogger(t))
 			defer c.Close()
 
-			err := c.CheckHealth(context.Background())
+			err := c.Get(context.Background(), ts.URL)
 
 			if tC.mustErr {
 				require.Error(t, err)
@@ -202,18 +206,4 @@ func TestClientCheckHealth(t *testing.T) {
 			require.NoError(t, err)
 		})
 	}
-}
-
-func TestRoutes(t *testing.T) {
-	base := newTestCfg(t).BaseURL()
-
-	r := new(routes)
-	r.Add(base, "test")
-
-	require.NotNil(t, r)
-
-	testRoute, err := r.Get("test")
-	require.NoError(t, err)
-	require.NotEmpty(t, testRoute)
-	require.Contains(t, testRoute, "test")
 }
