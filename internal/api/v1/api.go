@@ -77,9 +77,11 @@ func healthCheckHandler(w http.ResponseWriter, _ *http.Request) {
 	w.WriteHeader(http.StatusOK)
 }
 
+const Version = "v1"
+
 func NewMux() *http.ServeMux {
 	mux := http.NewServeMux()
-	mux.HandleFunc("GET /health", healthCheckHandler)
+	mux.HandleFunc("GET /api/"+Version+"/health", healthCheckHandler)
 
 	return mux
 }
