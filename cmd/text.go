@@ -54,7 +54,7 @@ var textCmd = &cobra.Command{
 
 		stat, err := os.Stat(inputPath)
 		if err != nil {
-			DefaultLogger.Error("getting stat of screenshot", "err", err)
+			Logger.Error("getting stat of screenshot", "err", err)
 
 			return fmt.Errorf("stat: %w", err)
 		}
@@ -65,13 +65,13 @@ var textCmd = &cobra.Command{
 		if stat.IsDir() {
 			addDirSuffix = true
 
-			DefaultLogger.Info("Processing directory",
+			Logger.Info("Processing directory",
 				slog.String("input_path", inputPath),
 			)
 
 			entries, err := os.ReadDir(inputPath)
 			if err != nil {
-				DefaultLogger.Error("reading dir", "err", err)
+				Logger.Error("reading dir", "err", err)
 
 				return fmt.Errorf("reading dir: %w", err)
 			}
@@ -81,7 +81,7 @@ var textCmd = &cobra.Command{
 					filePaths = append(filePaths, filepath.Join(inputPath, "/", e.Name()))
 				}
 			}
-			DefaultLogger.Info(
+			Logger.Info(
 				"Number of image files in a directory",
 				slog.String("input_path", inputPath),
 				slog.Int("files_total", len(filePaths)),
@@ -96,7 +96,7 @@ var textCmd = &cobra.Command{
 			suffix := "dir"
 			id, err := textproc.NewAnalysisIDWithSuffix(suffix)
 			if err != nil {
-				DefaultLogger.Error("Failed to add suffix to an out path",
+				Logger.Error("Failed to add suffix to an out path",
 					slog.String("suffix", suffix),
 					slog.String("id", id),
 				)
@@ -105,7 +105,7 @@ var textCmd = &cobra.Command{
 
 		ppath, err := openf.PreparePath(outPath, time.Now())
 		if err != nil {
-			DefaultLogger.Error("Failed to prepare out path",
+			Logger.Error("Failed to prepare out path",
 				slog.String("outPath", outPath),
 				slog.String("err", err.Error()),
 			)
@@ -119,7 +119,7 @@ var textCmd = &cobra.Command{
 			openf.DefaultFileMode,
 		)
 		if err != nil {
-			DefaultLogger.Error("Failed to open cleaned file", "err", err)
+			Logger.Error("Failed to open cleaned file", "err", err)
 
 			return fmt.Errorf("open file cleaned: %w", err)
 		}
@@ -128,25 +128,25 @@ var textCmd = &cobra.Command{
 		for _, path := range filePaths {
 			content, err := os.ReadFile(path)
 			if err != nil {
-				DefaultLogger.Error("reading file", "err", err)
+				Logger.Error("reading file", "err", err)
 
 				return fmt.Errorf("reading file: %w", err)
 			}
 			words, err := screenshot.RecognizeWords(content)
 			if err != nil {
-				DefaultLogger.Error("Failed to recognize words in a screenshot content", "err", err)
+				Logger.Error("Failed to recognize words in a screenshot content", "err", err)
 
 				return fmt.Errorf("screenshot words recognition: %w", err)
 			}
 			w := textproc.NewWordsTextFileWriter(txtFile)
 			if err := textproc.WriteWords(words, w); err != nil {
-				DefaultLogger.Error("Failed to write words to a txt file", "err", err)
+				Logger.Error("Failed to write words to a txt file", "err", err)
 
 				return fmt.Errorf("writing words: %w", err)
 			}
 		}
 
-		DefaultLogger.Info("Program completed successfully.")
+		Logger.Info("Program completed successfully.")
 
 		return nil
 	},

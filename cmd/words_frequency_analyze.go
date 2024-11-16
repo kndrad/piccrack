@@ -47,7 +47,7 @@ var wordsFrequencyAnalyzeCmd = &cobra.Command{
 
 		content, err := os.ReadFile(txtPath)
 		if err != nil {
-			DefaultLogger.Error("Failed to read txt file", "err", err)
+			Logger.Error("Failed to read txt file", "err", err)
 
 			return fmt.Errorf("read file: %w", err)
 		}
@@ -60,28 +60,28 @@ var wordsFrequencyAnalyzeCmd = &cobra.Command{
 			words = append(words, word)
 		}
 		if err := scanner.Err(); err != nil {
-			DefaultLogger.Error("Scanning failed", "err", err)
+			Logger.Error("Scanning failed", "err", err)
 
 			return fmt.Errorf("scanner: %w", err)
 		}
 
 		analysis, err := textproc.AnalyzeFrequency(words)
 		if err != nil {
-			DefaultLogger.Error("Analyzing words frequency failed", "err", err)
+			Logger.Error("Analyzing words frequency failed", "err", err)
 
 			return fmt.Errorf("frequency analysis: %w", err)
 		}
 
 		// Join outPath, id and json extension to create new out file path with an extension.
 		jsonPath := openf.Join(outPath, analysis.ID, "json")
-		DefaultLogger.Info("Opening file",
+		Logger.Info("Opening file",
 			slog.String("json_path", jsonPath),
 		)
 		flags := os.O_APPEND | openf.DefaultFlags
 
 		jsonFile, err := openf.Open(jsonPath, flags, 0o600)
 		if err != nil {
-			DefaultLogger.Error("Failed to open cleaned json file", "err", err)
+			Logger.Error("Failed to open cleaned json file", "err", err)
 
 			return fmt.Errorf("open cleaned: %w", err)
 		}
@@ -89,20 +89,20 @@ var wordsFrequencyAnalyzeCmd = &cobra.Command{
 
 		data, err := json.MarshalIndent(analysis, "", " ")
 		if err != nil {
-			DefaultLogger.Error("Failed to marshal json analysis", "err", err)
+			Logger.Error("Failed to marshal json analysis", "err", err)
 
 			return fmt.Errorf("json marshal: %w", err)
 		}
-		DefaultLogger.Info("Writing analysis to json file",
+		Logger.Info("Writing analysis to json file",
 			slog.String("json_path", jsonPath),
 		)
 		if _, err := jsonFile.Write(data); err != nil {
-			DefaultLogger.Error("Failed to write json analysis", "err", err)
+			Logger.Error("Failed to write json analysis", "err", err)
 
 			return fmt.Errorf("json write: %w", err)
 		}
 
-		DefaultLogger.Info("Program completed successfully.")
+		Logger.Info("Program completed successfully.")
 
 		return nil
 	},
@@ -115,7 +115,7 @@ func init() {
 		&InputPath, "file", "f", "", ".txt file path to analyze words frequency.",
 	)
 	if err := wordsFrequencyAnalyzeCmd.MarkFlagRequired("file"); err != nil {
-		DefaultLogger.Error("Marking flag required failed", "err", err.Error())
+		Logger.Error("Marking flag required failed", "err", err.Error())
 	}
 
 	wordsFrequencyAnalyzeCmd.Flags().StringVarP(&outputPath, "out", "o", DefaultOutputPath, "JSON file output path")

@@ -40,7 +40,7 @@ var wordsCmd = &cobra.Command{
 	RunE: func(cmd *cobra.Command, args []string) error {
 		cfg, err := textproc.LoadDatabaseConfig(DefaultEnvFilePath)
 		if err != nil {
-			DefaultLogger.Error("Loading database config", "err", err.Error())
+			Logger.Error("Loading database config", "err", err.Error())
 
 			return fmt.Errorf("loading database config failed: %w", err)
 		}
@@ -50,21 +50,21 @@ var wordsCmd = &cobra.Command{
 
 		pool, err := textproc.DatabasePool(ctx, *cfg)
 		if err != nil {
-			DefaultLogger.Error("Loading database pool", "err", err.Error())
+			Logger.Error("Loading database pool", "err", err.Error())
 
 			return fmt.Errorf("database pool: %w", err)
 		}
 		defer pool.Close()
 
 		if err := retry.Ping(ctx, pool, retry.MaxRetries); err != nil {
-			DefaultLogger.Error("Pinging database", "err", err.Error())
+			Logger.Error("Pinging database", "err", err.Error())
 
 			return fmt.Errorf("database ping: %w", err)
 		}
 
 		conn, err := textproc.DatabaseConnection(ctx, pool)
 		if err != nil {
-			DefaultLogger.Error("Connecting to database", "err", err.Error())
+			Logger.Error("Connecting to database", "err", err.Error())
 
 			return fmt.Errorf("database connection: %w", err)
 		}
@@ -78,17 +78,17 @@ var wordsCmd = &cobra.Command{
 		if len(args) > 0 {
 			limit, err := strconv.ParseInt(args[0], 10, 32)
 			if err != nil {
-				DefaultLogger.Error("Failed to strconv", "err", err.Error())
+				Logger.Error("Failed to strconv", "err", err.Error())
 			}
 			params.Limit = int32(limit)
 		}
 		words, err := queries.AllWords(ctx, params)
 		if err != nil {
-			DefaultLogger.Error("Connecting to database", "err", err.Error())
+			Logger.Error("Connecting to database", "err", err.Error())
 
 			return fmt.Errorf("database connection: %w", err)
 		}
-		DefaultLogger.Info("Listing words from a database", "len_words", len(words))
+		Logger.Info("Listing words from a database", "len_words", len(words))
 		for _, word := range words {
 			fmt.Println(word)
 		}

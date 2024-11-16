@@ -37,47 +37,47 @@ var pingCmd = &cobra.Command{
 	Short:   "Pings a database",
 	Example: "itcrack ping",
 	RunE: func(cmd *cobra.Command, args []string) error {
-		DefaultLogger.Info("Loading database config.")
+		Logger.Info("Loading database config.")
 
 		cfg, err := textproc.LoadDatabaseConfig(DefaultEnvFilePath)
 		if err != nil {
-			DefaultLogger.Error("Failed to load db config", "err", err.Error())
+			Logger.Error("Failed to load db config", "err", err.Error())
 
 			return fmt.Errorf("db config: %w", err)
 		}
 
-		DefaultLogger.Info("Establishing connection to a database.")
+		Logger.Info("Establishing connection to a database.")
 
 		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 		defer cancel()
 
 		pool, err := textproc.DatabasePool(ctx, *cfg)
 		if err != nil {
-			DefaultLogger.Error("Failed to get db pool", "err", err.Error())
+			Logger.Error("Failed to get db pool", "err", err.Error())
 
 			return fmt.Errorf("db pool: %w", err)
 		}
 		defer pool.Close()
 
-		DefaultLogger.Info("Pinging database...")
+		Logger.Info("Pinging database...")
 		if err := retry.Ping(ctx, pool, retry.MaxRetries); err != nil {
-			DefaultLogger.Error("Pinging db pool failed", "err", err.Error())
+			Logger.Error("Pinging db pool failed", "err", err.Error())
 
 			return fmt.Errorf("db pool: %w", err)
 		}
-		DefaultLogger.Info("Pinging db success.")
+		Logger.Info("Pinging db success.")
 
 		conn, err := textproc.DatabaseConnection(ctx, pool)
 		if err != nil {
-			DefaultLogger.Error("Failed to connect to a database", "err", err.Error())
+			Logger.Error("Failed to connect to a database", "err", err.Error())
 
 			return fmt.Errorf("db connection: %w", err)
 		}
 		defer conn.Close(ctx)
 
-		DefaultLogger.Info("Database OK.")
+		Logger.Info("Database OK.")
 
-		DefaultLogger.Info("Program completed successfully.")
+		Logger.Info("Program completed successfully.")
 
 		return nil
 	},
