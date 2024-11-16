@@ -25,7 +25,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/kndrad/itcrack/internal/api/v1"
+	api "github.com/kndrad/itcrack/internal/api/v1"
 	"github.com/spf13/cobra"
 )
 
@@ -39,13 +39,10 @@ var apiCheckHealthCmd = &cobra.Command{
 
 			return fmt.Errorf("loading config err: %w", err)
 		}
-		client := api.NewHTTPClient(config, Logger)
+		client := api.NewClient(config, Logger, api.WithTimeout(DefaultTimeout))
 		defer client.Close()
 
-		ctx, cancel := context.WithTimeout(context.Background(), DefaultTimeout)
-		defer cancel()
-
-		if err := client.CheckHealth(ctx); err != nil {
+		if err := client.CheckHealth(context.Background()); err != nil {
 			Logger.Error("Failed to check http server health", "err", err)
 
 			return fmt.Errorf("checking health err: %w", err)

@@ -25,7 +25,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/kndrad/itcrack/internal/api/v1"
+	v1 "github.com/kndrad/itcrack/internal/api/v1"
 	"github.com/spf13/cobra"
 )
 
@@ -33,14 +33,19 @@ var apiServeHTTPCmd = &cobra.Command{
 	Use:   "servehttp",
 	Short: "Start http server.",
 	RunE: func(cmd *cobra.Command, args []string) error {
-		config, err := api.LoadConfig(".env")
+		config, err := v1.LoadConfig(".env")
 		if err != nil {
 			Logger.Error("Failed to load config", "err", err.Error())
 
 			return fmt.Errorf("loading config err: %w", err)
 		}
 
-		srv := api.NewHTTPServer(config, Logger)
+		srv, err := v1.NewHTTPServer(config, Logger)
+		if err != nil {
+			Logger.Error("Failed to init new http server", "err", err)
+
+			return fmt.Errorf("new http server err: %w", err)
+		}
 
 		if err := srv.Start(context.TODO()); err != nil {
 			Logger.Error("Failed to listen and serve", "err", err)
