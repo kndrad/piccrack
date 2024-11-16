@@ -172,7 +172,7 @@ func TestCheckHealthHandler(t *testing.T) {
 	}
 }
 
-func TestClientCheckHealth(t *testing.T) {
+func TestClient(t *testing.T) {
 	t.Parallel()
 
 	testCases := []struct {
