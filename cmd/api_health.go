@@ -31,7 +31,7 @@ import (
 
 var apiCheckHealthCmd = &cobra.Command{
 	Use:   "checkhealth",
-	Short: "Checks health",
+	Short: "Checks health of api http server",
 	RunE: func(cmd *cobra.Command, args []string) error {
 		config, err := api.LoadConfig(".env")
 		if err != nil {
