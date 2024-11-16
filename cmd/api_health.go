@@ -25,7 +25,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/kndrad/itcrack/internal/api"
+	"github.com/kndrad/itcrack/internal/api/v1"
 	"github.com/spf13/cobra"
 )
 
