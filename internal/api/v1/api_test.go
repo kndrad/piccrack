@@ -137,7 +137,7 @@ func TestHTTPServerStart(t *testing.T) {
 	}
 }
 
-func TestCheckHealthHandler(t *testing.T) {
+func TestHealthCheckHandler(t *testing.T) {
 	t.Parallel()
 
 	testCases := []struct {
@@ -172,7 +172,7 @@ func TestCheckHealthHandler(t *testing.T) {
 	}
 }
 
-func TestClient(t *testing.T) {
+func TestClientGetHealthCheck(t *testing.T) {
 	t.Parallel()
 
 	testCases := []struct {
