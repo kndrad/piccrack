@@ -121,6 +121,8 @@ func NewTestWords(t *testing.T) []string {
 }
 
 func TestGeneratingAnalysisIDWithSuffix(t *testing.T) {
+	t.Parallel()
+
 	id, err := textproc.NewAnalysisIDWithSuffix("dir")
 	require.NoError(t, err)
 	assert.Contains(t, id, "dir_")
