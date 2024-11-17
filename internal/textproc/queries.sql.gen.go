@@ -51,11 +51,11 @@ func (q *Queries) AllWords(ctx context.Context, arg AllWordsParams) ([]AllWordsR
 }
 
 const getWordsFrequencies = `-- name: GetWordsFrequencies :many
-SELECT words.value, count(*) AS word_count
+SELECT words.value, count(*) AS frequency
 FROM words
 WHERE deleted_at IS NULL
 GROUP BY words.value
-ORDER BY word_count ASC
+ORDER BY frequency ASC
 LIMIT $1 OFFSET $2
 `
 
@@ -66,7 +66,7 @@ type GetWordsFrequenciesParams struct {
 
 type GetWordsFrequenciesRow struct {
 	Value     string `json:"value"`
-	WordCount int64  `json:"word_count"`
+	Frequency int64  `json:"frequency"`
 }
 
 func (q *Queries) GetWordsFrequencies(ctx context.Context, arg GetWordsFrequenciesParams) ([]GetWordsFrequenciesRow, error) {
@@ -78,7 +78,7 @@ func (q *Queries) GetWordsFrequencies(ctx context.Context, arg GetWordsFrequenci
 	var items []GetWordsFrequenciesRow
 	for rows.Next() {
 		var i GetWordsFrequenciesRow
-		if err := rows.Scan(&i.Value, &i.WordCount); err != nil {
+		if err := rows.Scan(&i.Value, &i.Frequency); err != nil {
 			return nil, err
 		}
 		items = append(items, i)

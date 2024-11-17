@@ -124,3 +124,9 @@ start:
 .PHONY: test-itcrack-words-frequency
 test-itcrack-words-frequency:
 	go run main.go words frequency
+
+
+.PHONY: docker-start-api
+docker-start-api:
+	docker-compose up --build -d
+	go run main.go api start

@@ -3,8 +3,6 @@ package v1
 import (
 	"context"
 	"log/slog"
-	"net/http"
-	"net/http/httptest"
 	"os"
 	"syscall"
 	"testing"
@@ -80,10 +78,10 @@ TLS_ENABLED=false`),
 	}
 }
 
-func newTestCfg(t *testing.T) *Config {
+func newTestCfg(t *testing.T) *ServerConfig {
 	t.Helper()
 
-	cfg := &Config{
+	cfg := &ServerConfig{
 		Host:       "localhost",
 		Port:       "8080",
 		TLSEnabled: false,
@@ -100,7 +98,7 @@ func newTestLogger(t *testing.T) *slog.Logger {
 	return logger
 }
 
-func TestHTTPServerStart(t *testing.T) {
+func TestServerStart(t *testing.T) {
 	t.Parallel()
 
 	testCases := []struct {
@@ -119,7 +117,11 @@ func TestHTTPServerStart(t *testing.T) {
 	}
 	for _, tC := range testCases {
 		t.Run(tC.desc, func(t *testing.T) {
-			srv, err := NewHTTPServer(newTestCfg(t), newTestLogger(t))
+			srv, err := NewServer(
+				newTestCfg(t),
+				&WordsService{q: mockQueries(mockWords()), logger: getTestLogger()},
+				newTestLogger(t),
+			)
 			require.NoError(t, err)
 
 			ctx := context.Background()
@@ -133,77 +135,6 @@ func TestHTTPServerStart(t *testing.T) {
 			if err := pid.Signal(tC.signal); err != nil {
 				t.Fatalf("Sending signal %v failed: %v", tC.signal, err)
 			}
-		})
-	}
-}
-
-func TestHealthCheckHandler(t *testing.T) {
-	t.Parallel()
-
-	testCases := []struct {
-		desc string
-
-		expectedStatusCode int
-		mustErr            bool
-	}{
-		{
-			desc: "status_ok",
-
-			expectedStatusCode: http.StatusOK,
-			mustErr:            false,
-		},
-	}
-	for _, tC := range testCases {
-		t.Run(tC.desc, func(t *testing.T) {
-			// Init server
-			ts := httptest.NewServer(http.HandlerFunc(healthCheckHandler))
-			defer ts.Close()
-
-			resp, err := ts.Client().Get(ts.URL)
-			resp.Body.Close()
-
-			if tC.mustErr {
-				require.Error(t, err)
-			}
-
-			require.NoError(t, err)
-			require.Equal(t, tC.expectedStatusCode, resp.StatusCode)
-		})
-	}
-}
-
-func TestClientGetHealthCheck(t *testing.T) {
-	t.Parallel()
-
-	testCases := []struct {
-		desc string
-
-		cfg                *Config
-		expectedStatusCode int
-		mustErr            bool
-	}{
-		{
-			desc: "status_ok",
-
-			expectedStatusCode: http.StatusOK,
-			mustErr:            false,
-		},
-	}
-	for _, tC := range testCases {
-		t.Run(tC.desc, func(t *testing.T) {
-			// Init test server
-			ts := httptest.NewServer(NewMux())
-			defer ts.Close()
-
-			c := NewClient(newTestCfg(t), newTestLogger(t))
-			defer c.Close()
-
-			err := c.Get(context.Background(), ts.URL)
-
-			if tC.mustErr {
-				require.Error(t, err)
-			}
-			require.NoError(t, err)
 		})
 	}
 }

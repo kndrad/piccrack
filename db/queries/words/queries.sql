@@ -9,11 +9,11 @@ INSERT INTO words (value, created_at)
 VALUES ($1, CURRENT_TIMESTAMP)
 RETURNING id, value, created_at;
 -- name: GetWordsFrequencies :many
-SELECT words.value, count(*) AS word_count
+SELECT words.value, count(*) AS frequency
 FROM words
 WHERE deleted_at IS NULL
 GROUP BY words.value
-ORDER BY word_count ASC
+ORDER BY frequency ASC
 LIMIT $1 OFFSET $2;
 -- name: GetWordsRank :many
 SELECT

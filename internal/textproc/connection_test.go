@@ -1,6 +1,7 @@
 package textproc_test
 
 import (
+	"fmt"
 	"os"
 	"testing"
 
@@ -55,18 +56,24 @@ func TestDatabaseConfigValidation(t *testing.T) {
 func TestLoadingDatabaseConfig(t *testing.T) {
 	t.Parallel()
 
-	tmpf, err := os.CreateTemp("", "config*.env")
+	tmpf, err := os.CreateTemp("testdata", "*.env")
 	require.NoError(t, err)
 	defer os.Remove(tmpf.Name())
 
-	content := `
-	DB_USER=test_user
-	DB_PASSWORD=test_password
-	DB_HOST=localhost
-	DB_PORT=5432
-	DB_NAME=test_db
-`
+	var (
+		user   = "test_user"
+		pswd   = "test_password"
+		host   = "test_host"
+		port   = "5489"
+		dbName = "test_db"
+	)
 
+	content := fmt.Sprintf(`DB_USER=%s
+DB_PASSWORD=%s
+DB_HOST=%s
+DB_PORT=%s
+DB_NAME=%s
+`, user, pswd, host, port, dbName)
 	if _, err := tmpf.WriteString(content); err != nil {
 		t.Fatalf("failed to write string: %s, err: %v", content, err)
 	}
@@ -74,9 +81,9 @@ func TestLoadingDatabaseConfig(t *testing.T) {
 
 	cfg, err := textproc.LoadDatabaseConfig(tmpf.Name())
 	require.NoError(t, err)
-	assert.Equal(t, "test_user", cfg.User)
-	assert.Equal(t, "test_password", cfg.Password)
-	assert.Equal(t, "localhost", cfg.Host)
-	assert.Equal(t, "5432", cfg.Port)
-	assert.Equal(t, "test_db", cfg.DBName)
+	require.Equal(t, user, cfg.User)
+	require.Equal(t, pswd, cfg.Password)
+	require.Equal(t, host, cfg.Host)
+	require.Equal(t, port, cfg.Port)
+	require.Equal(t, dbName, cfg.DBName)
 }

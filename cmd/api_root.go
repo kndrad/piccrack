@@ -28,7 +28,7 @@ import (
 
 var apiCmd = &cobra.Command{
 	Use:   "api",
-	Short: "Api root command.",
+	Short: "API root command.",
 	Run: func(cmd *cobra.Command, args []string) {
 		cmd.Help()
 	},

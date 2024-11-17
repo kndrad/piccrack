@@ -159,11 +159,11 @@ DB_NAME=itcrack`
 			// Pick some random words
 			switch row.Value {
 			case "leading":
-				require.Equal(t, int64(2), row.WordCount)
+				require.Equal(t, int64(2), row.Frequency)
 			case "development":
-				require.Equal(t, int64(10), row.WordCount)
+				require.Equal(t, int64(10), row.Frequency)
 			case "experience":
-				require.Equal(t, int64(28), row.WordCount)
+				require.Equal(t, int64(28), row.Frequency)
 			}
 		}
 	})

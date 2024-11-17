@@ -22,33 +22,63 @@ THE SOFTWARE.
 package cmd
 
 import (
+	"bytes"
 	"context"
 	"fmt"
-	"path/filepath"
+	"log/slog"
+	"net/http"
 
-	api "github.com/kndrad/itcrack/internal/api/v1"
+	v1 "github.com/kndrad/itcrack/internal/api/v1"
 	"github.com/spf13/cobra"
 )
 
-var apiCheckHealthCmd = &cobra.Command{
-	Use:   "health",
-	Short: "Checks health of api http server",
+var apiHealthzCmd = &cobra.Command{
+	Use:   "healthz",
+	Short: "Checks health http API server",
 	RunE: func(cmd *cobra.Command, args []string) error {
-		config, err := api.LoadConfig(".env")
+		config, err := v1.LoadConfig(".env")
 		if err != nil {
 			Logger.Error("Failed to load config", "err", err)
 
 			return fmt.Errorf("loading config err: %w", err)
 		}
-		client := api.NewClient(config, Logger, api.WithTimeout(DefaultTimeout))
-		defer client.Close()
+		url := config.BaseURL() + "/api/v1/healthz"
+		buf := new(bytes.Buffer)
+		req, err := http.NewRequestWithContext(
+			context.TODO(),
+			http.MethodGet,
+			url,
+			buf,
+		)
+		if err != nil {
+			Logger.Error("Failed to create request", "err", err)
 
-		url := config.BaseURL() + string(filepath.Separator) + "health"
+			return fmt.Errorf("new request err: %w", err)
+		}
+		Logger.Info("Sending request",
+			slog.String("url", url),
+		)
 
-		if err := client.Get(context.Background(), url); err != nil {
-			Logger.Error("Failed to check http server health", "err", err)
+		c := &http.Client{}
+		defer c.CloseIdleConnections()
 
-			return fmt.Errorf("checking health err: %w", err)
+		resp, err := c.Do(req)
+		if err != nil {
+			Logger.Error("Failed to do request with a client", "err", err)
+
+			return fmt.Errorf("client do request err: %w", err)
+		}
+		defer resp.Body.Close()
+
+		switch resp.StatusCode {
+		case http.StatusOK:
+			Logger.Info("Received response and server OK", "statusCode", resp.StatusCode)
+
+			return nil
+		case http.StatusNotFound:
+			Logger.Info("Received not found", "statusCode", resp.StatusCode)
+		default:
+			Logger.Info("Received response", "statusCode", resp.StatusCode)
 		}
 
 		Logger.Info("Program completed successfully.")
@@ -58,5 +88,5 @@ var apiCheckHealthCmd = &cobra.Command{
 }
 
 func init() {
-	apiCmd.AddCommand(apiCheckHealthCmd)
+	apiCmd.AddCommand(apiHealthzCmd)
 }

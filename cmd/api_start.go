@@ -26,28 +26,70 @@ import (
 	"fmt"
 
 	v1 "github.com/kndrad/itcrack/internal/api/v1"
+	"github.com/kndrad/itcrack/internal/textproc"
+	"github.com/kndrad/itcrack/pkg/retry"
 	"github.com/spf13/cobra"
 )
 
-var apiServeHTTPCmd = &cobra.Command{
-	Use:   "servehttp",
-	Short: "Start http server.",
+var apiStartCmd = &cobra.Command{
+	Use:   "start",
+	Short: "Starts http API server.",
 	RunE: func(cmd *cobra.Command, args []string) error {
 		config, err := v1.LoadConfig(".env")
 		if err != nil {
-			Logger.Error("Failed to load config", "err", err.Error())
+			Logger.Error("Failed to load api config", "err", err.Error())
 
 			return fmt.Errorf("loading config err: %w", err)
 		}
 
-		srv, err := v1.NewHTTPServer(config, Logger)
+		ctx, cancel := context.WithCancel(context.Background())
+		defer cancel()
+
+		dbConfig, err := textproc.LoadDatabaseConfig(".env")
+		if err != nil {
+			Logger.Error("Failed to load database config", "err", err.Error())
+
+			return fmt.Errorf("loading config err: %w", err)
+		}
+
+		pool, err := textproc.DatabasePool(ctx, *dbConfig)
+		if err != nil {
+			Logger.Error("Loading database pool", "err", err.Error())
+
+			return fmt.Errorf("database pool: %w", err)
+		}
+		defer pool.Close()
+
+		if err := retry.Ping(ctx, pool, retry.MaxRetries); err != nil {
+			Logger.Error("Pinging database", "err", err.Error())
+
+			return fmt.Errorf("database ping: %w", err)
+		}
+
+		db, err := textproc.DatabaseConnection(ctx, pool)
+		if err != nil {
+			Logger.Error("Connecting to database", "err", err.Error())
+
+			return fmt.Errorf("database connection: %w", err)
+		}
+		defer db.Close(ctx)
+
+		q := textproc.New(db)
+		wordsService := v1.NewWordsService(q, Logger)
+		Logger.Info("WordService created")
+
+		srv, err := v1.NewServer(
+			config,
+			wordsService,
+			Logger,
+		)
 		if err != nil {
 			Logger.Error("Failed to init new http server", "err", err)
 
 			return fmt.Errorf("new http server err: %w", err)
 		}
 
-		if err := srv.Start(context.TODO()); err != nil {
+		if err := srv.Start(ctx); err != nil {
 			Logger.Error("Failed to listen and serve", "err", err)
 
 			return fmt.Errorf("listen and serve err: %w", err)
@@ -59,5 +101,5 @@ var apiServeHTTPCmd = &cobra.Command{
 }
 
 func init() {
-	apiCmd.AddCommand(apiServeHTTPCmd)
+	apiCmd.AddCommand(apiStartCmd)
 }
