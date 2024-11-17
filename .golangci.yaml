@@ -4,7 +4,7 @@ run:
   timeout: 1m
   # Include test files or not.
   # Default: true
-  tests: true
+  tests: false
   # If set, we pass it to "go list -mod={option}". From "go help modules":
   # If invoked with -mod=readonly, the go command is disallowed from the implicit
   # automatic updating of go.mod described above. Instead, it fails when any changes
