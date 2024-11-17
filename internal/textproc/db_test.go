@@ -70,6 +70,7 @@ DB_NAME=itcrack`
 				return path
 			}
 			t.Logf("Didnt cut, because '%s' was not found in %s", dir, s)
+
 			return s
 		}
 		root = cut(wd, "internal/textproc")
