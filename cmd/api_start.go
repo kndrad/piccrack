@@ -25,9 +25,9 @@ import (
 	"context"
 	"fmt"
 
-	v1 "github.com/kndrad/itcrack/internal/api/v1"
-	"github.com/kndrad/itcrack/internal/textproc"
-	"github.com/kndrad/itcrack/pkg/retry"
+	v1 "github.com/kndrad/wordcrack/internal/api/v1"
+	"github.com/kndrad/wordcrack/internal/textproc"
+	"github.com/kndrad/wordcrack/pkg/retry"
 	"github.com/spf13/cobra"
 )
 

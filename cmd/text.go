@@ -28,9 +28,9 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/kndrad/itcrack/internal/screenshot"
-	"github.com/kndrad/itcrack/internal/textproc"
-	"github.com/kndrad/itcrack/pkg/openf"
+	"github.com/kndrad/wordcrack/internal/screenshot"
+	"github.com/kndrad/wordcrack/internal/textproc"
+	"github.com/kndrad/wordcrack/pkg/openf"
 	"github.com/spf13/cobra"
 )
 

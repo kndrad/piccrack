@@ -9,7 +9,7 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/kndrad/itcrack/internal/textproc"
+	"github.com/kndrad/wordcrack/internal/textproc"
 )
 
 func healthCheckHandler(logger *slog.Logger) http.HandlerFunc {
@@ -89,9 +89,5 @@ func handleAllWords(svc *WordsService, logger *slog.Logger) http.HandlerFunc {
 
 			return
 		}
-
-		// FIXME:
-		// http: superfluous response.WriteHeader call from v1.NewServer.handleAllWords.func2 (handlers.go:92)
-		w.WriteHeader(http.StatusOK)
 	}
 }

@@ -5,7 +5,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/kndrad/itcrack/internal/textproc"
+	"github.com/kndrad/wordcrack/internal/textproc"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"

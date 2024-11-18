@@ -21,7 +21,7 @@ THE SOFTWARE.
 */
 package main
 
-import "github.com/kndrad/itcrack/cmd"
+import "github.com/kndrad/wordcrack/cmd"
 
 func main() {
 	cmd.Execute()

@@ -12,7 +12,7 @@ import (
 	"time"
 
 	"github.com/jackc/pgx/v5/pgtype"
-	"github.com/kndrad/itcrack/internal/textproc"
+	"github.com/kndrad/wordcrack/internal/textproc"
 	"github.com/stretchr/testify/require"
 	"golang.org/x/exp/rand"
 )

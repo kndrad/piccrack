@@ -28,7 +28,7 @@ import (
 	"log/slog"
 	"net/http"
 
-	v1 "github.com/kndrad/itcrack/internal/api/v1"
+	v1 "github.com/kndrad/wordcrack/internal/api/v1"
 	"github.com/spf13/cobra"
 )
 
