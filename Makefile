@@ -20,22 +20,38 @@ format:
 .PHONY: review
 review:
 	./scripts/format.sh
-	go test ./... -count=1 -failfast -coverprofile=coverage.out
+	go test ./... -failfast -coverprofile=coverage.out
 	./scripts/check.sh
 
 .PHONY: cover-html
 cover-html:
-	go test ./... -count=1 -failfast -coverprofile=coverage.out
+	go test ./... -failfast -coverprofile=coverage.out
 	go tool cover -html=coverage.out -o coverage.html
 	xdg-open coverage.html
 
 .PHONY: cover
 cover:
-	go test ./... -count=1 -failfast -coverprofile=coverage.out
+	go test ./... -failfast -coverprofile=coverage.out
+
+# verbose
+.PHONY: cover-v
+cover-v:
+	go test ./... -v -failfast -coverprofile=coverage.out
 
 .PHONY: tests
 tests:
-	go test ./... -count=1 -failfast
+	go test ./... -failfast
+
+API_PKG_PATH=./internal/api/v1
+
+# verbose
+.PHONY: api-tests-v
+api-tests-v:
+	go test $(API_PKG_PATH) -v -failfast -coverprofile=coverage.out
+
+.PHONY: api-tests
+api-tests:
+	go test $(API_PKG_PATH) -failfast -coverprofile=coverage.out
 
 .PHONY: test-wordcrack-text-file
 test-wordcrack-text-file:
