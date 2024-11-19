@@ -76,8 +76,6 @@ var apiStartCmd = &cobra.Command{
 
 		q := textproc.New(db)
 		wordsService := v1.NewWordsService(q, Logger)
-		Logger.Info("WordService created")
-
 		srv, err := v1.NewServer(
 			config,
 			wordsService,
