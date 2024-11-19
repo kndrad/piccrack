@@ -1,9 +1,7 @@
 package v1
 
 import (
-	"context"
 	"encoding/json"
-	"fmt"
 	"log/slog"
 	"math"
 	"net/http"
@@ -21,38 +19,18 @@ func healthCheckHandler(logger *slog.Logger) http.HandlerFunc {
 	}
 }
 
-type WordsService struct {
-	q      textproc.Querier
-	logger *slog.Logger
-}
-
-func NewWordsService(queries textproc.Querier, logger *slog.Logger) *WordsService {
-	return &WordsService{
-		q:      queries,
-		logger: logger,
-	}
-}
-
-func (svc *WordsService) AllWords(ctx context.Context, limit, offset int32) ([]textproc.AllWordsRow, error) {
-	rows, err := svc.q.AllWords(ctx, textproc.AllWordsParams{
-		Limit:  limit,
-		Offset: offset,
-	})
-	if err != nil {
-		return nil, fmt.Errorf("query all words, err: %w", err)
-	}
-
-	return rows, nil
-}
-
-func handleAllWords(svc *WordsService, logger *slog.Logger) http.HandlerFunc {
+func handleAllWords(svc *WordService, logger *slog.Logger) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		logger.Info("Received request",
 			slog.String("url", r.URL.String()),
 		)
-		logger.Info("Connecting to database")
+		limitParam := r.URL.Query().Get("limit")
+		if limitParam == "" {
+			http.Error(w, "Failed to get limit url query param", http.StatusInternalServerError)
 
-		limit, err := strconv.ParseUint(r.PathValue("limit"), 10, 32)
+			return
+		}
+		limit, err := strconv.ParseUint(limitParam, 10, 32)
 		if err != nil {
 			http.Error(w, "Failed to convert limit path value", http.StatusInternalServerError)
 
@@ -63,7 +41,13 @@ func handleAllWords(svc *WordsService, logger *slog.Logger) http.HandlerFunc {
 
 			return
 		}
-		offset, err := strconv.ParseUint(r.PathValue("offset"), 10, 32)
+		offsetParam := r.URL.Query().Get("offset")
+		if offsetParam == "" {
+			http.Error(w, "Failed to get limit url query param", http.StatusInternalServerError)
+
+			return
+		}
+		offset, err := strconv.ParseUint(offsetParam, 10, 32)
 		if err != nil {
 			http.Error(w, "Failed to convert offset path value", http.StatusInternalServerError)
 

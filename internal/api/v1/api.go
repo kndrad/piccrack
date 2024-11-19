@@ -74,7 +74,7 @@ type Server struct {
 	srv *http.Server
 }
 
-func NewServer(config *ServerConfig, wordsService *WordsService, logger *slog.Logger) (*Server, error) {
+func NewServer(config *ServerConfig, wordsService *WordService, logger *slog.Logger) (*Server, error) {
 	if config == nil {
 		panic("config cannot be nil")
 	}
@@ -85,9 +85,7 @@ func NewServer(config *ServerConfig, wordsService *WordsService, logger *slog.Lo
 	mux := http.NewServeMux()
 	const prefix = "/api/" + Version
 	mux.Handle("GET "+prefix+"/healthz", healthCheckHandler(logger))
-
-	// TODO: Handling url query param!
-	mux.Handle("GET "+prefix+"/words/{limit}/{offset}", handleAllWords(wordsService, logger))
+	mux.Handle("GET "+prefix+"/words", handleAllWords(wordsService, logger))
 
 	var handler http.Handler = mux
 
