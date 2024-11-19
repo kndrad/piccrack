@@ -89,8 +89,7 @@ func handleAllWords(svc *WordService, logger *slog.Logger) http.HandlerFunc {
 
 			return
 		}
-		w.Header().Set("Content-Type", "application/json")
-		if err := json.NewEncoder(w).Encode(rows); err != nil {
+		if err := encode(w, r, http.StatusOK, rows); err != nil {
 			http.Error(w, "Failed to encode rows", http.StatusInternalServerError)
 
 			return
