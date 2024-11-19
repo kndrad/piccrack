@@ -119,7 +119,7 @@ func TestServerStart(t *testing.T) {
 		t.Run(tC.desc, func(t *testing.T) {
 			srv, err := NewServer(
 				newTestCfg(t),
-				&WordsService{q: mockQueries(mockWords()), logger: getTestLogger()},
+				&WordService{q: mockWordQueries(wordsMock()), logger: getTestLogger()},
 				newTestLogger(t),
 			)
 			require.NoError(t, err)

@@ -8,6 +8,7 @@ import (
 	"os"
 	"sort"
 	"strconv"
+	"strings"
 	"testing"
 	"time"
 
@@ -16,6 +17,90 @@ import (
 	"github.com/stretchr/testify/require"
 	"golang.org/x/exp/rand"
 )
+
+func TestEncodeFunc(t *testing.T) {
+	t.Parallel()
+
+	type payload struct {
+		Value string `json:"value"`
+	}
+
+	testCases := []struct {
+		desc string
+
+		valueToEncode      *payload // value to encode
+		wantBody           string   // what should be written
+		expectedStatusCode int      // which status code should be returned
+		wantErr            bool
+	}{
+		{
+			desc: "encodes_and_writes_content-type_header",
+
+			valueToEncode:      &payload{Value: "test"},
+			wantBody:           `{"value":"test"}` + "\n",
+			expectedStatusCode: http.StatusOK,
+
+			wantErr: false,
+		},
+	}
+	for _, tC := range testCases {
+		t.Run(tC.desc, func(t *testing.T) {
+			r := httptest.NewRequest(http.MethodGet, "/", nil)
+			w := httptest.NewRecorder()
+
+			err := encode(w, r, tC.expectedStatusCode, tC.valueToEncode)
+			if tC.wantErr {
+				require.Error(t, err)
+			}
+
+			require.NoError(t, err)
+			// Also check if it writes proper header
+			require.Equal(t, "application/json", w.Header().Get("Content-Type"))
+			require.Equal(t, tC.expectedStatusCode, w.Code)
+			require.Equal(t, tC.wantBody, w.Body.String())
+		})
+	}
+}
+
+func TestDecodeFunc(t *testing.T) {
+	t.Parallel()
+
+	type payload struct {
+		Value string `json:"value"`
+	}
+
+	testCases := []struct {
+		desc string
+
+		wantBody     string // value to encode
+		wantResponse payload
+		wantErr      bool
+	}{
+		{
+			desc: "decoding_response_value_field_is_equal_to_expected",
+
+			wantBody:     `{"value":"test"}`,
+			wantResponse: payload{Value: "test"},
+			wantErr:      false,
+		},
+	}
+	for _, tC := range testCases {
+		t.Run(tC.desc, func(t *testing.T) {
+			r := httptest.NewRequest(
+				http.MethodGet,
+				"/",
+				strings.NewReader(tC.wantBody),
+			)
+
+			v, err := decode[payload](r)
+			if tC.wantErr {
+				require.Error(t, err)
+			}
+			require.NoError(t, err)
+			require.Equal(t, tC.wantResponse, v)
+		})
+	}
+}
 
 func TestHealthCheckHandler(t *testing.T) {
 	t.Parallel()
@@ -53,45 +138,6 @@ func TestHealthCheckHandler(t *testing.T) {
 	}
 }
 
-// FIXME: Make test correction
-// func TestWordService(t *testing.T) {
-// 	t.Parallel()
-
-// 	testCases := []struct {
-// 		desc string
-
-// 		expectedStatusCode int
-// 		mustErr            bool
-// 	}{
-// 		{
-// 			desc: "status_ok",
-
-// 			expectedStatusCode: http.StatusOK,
-// 			mustErr:            false,
-// 		},
-// 	}
-// 	for _, tC := range testCases {
-// 		t.Run(tC.desc, func(t *testing.T) {
-// 			// Init service
-// 			svc := &WordsService{q: mockQueries(mockWords()), logger: getTestLogger()}
-
-// 			handler := http.Handler(handleAllWords(svc, getTestLogger()))
-// 			ts := httptest.NewServer(handler)
-// 			defer ts.Close()
-
-// 			resp, err := ts.Client().Get(ts.URL)
-// 			resp.Body.Close()
-
-// 			if tC.mustErr {
-// 				require.Error(t, err)
-// 			}
-
-// 			require.NoError(t, err)
-// 			require.Equal(t, tC.expectedStatusCode, resp.StatusCode)
-// 		})
-// 	}
-// }
-
 func getTestLogger() *slog.Logger {
 	return slog.New(slog.NewTextHandler(os.Stdout, nil))
 }
@@ -128,7 +174,7 @@ func (wm *WordMock) ToPostgres() *textproc.Word {
 	}
 }
 
-func mockWords() []WordMock {
+func wordsMock() []WordMock {
 	var mocks []WordMock
 
 	date := time.Date(2024, 11, 17, 9, 30, 0, 0, time.UTC)
@@ -255,9 +301,9 @@ type wordQueriesMock struct {
 	wordsRankRows        []textproc.GetWordsRankRow
 }
 
-func mockQueries(words []WordMock) *wordQueriesMock {
+func mockWordQueries(words []WordMock) *wordQueriesMock {
 	if words == nil {
-		words = mockWords()
+		words = wordsMock()
 	}
 	wordsRows := mockWordsRows(words)
 	wordsFrequenciesRows := mockWordsFrequenciesRows(words)

@@ -128,7 +128,7 @@ test-wordcrack-words-add-many: compose-up
 stop-all:
 	docker-compose down
 	./scripts/format.sh
-	go test ./... -count=1 -failfast -coverprofile=coverage.out
+	go test ./... -failfast -coverprofile=coverage.out
 	./scripts/check.sh
 
 # Start development
