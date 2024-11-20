@@ -7,8 +7,6 @@ import (
 	"math"
 	"net/http"
 	"strconv"
-
-	"github.com/kndrad/wordcrack/internal/textproc"
 )
 
 func encode[T any](w http.ResponseWriter, r *http.Request, status int, v T) error {
@@ -80,10 +78,7 @@ func allWordsHandler(svc *WordService, logger *slog.Logger) http.HandlerFunc {
 
 			return
 		}
-		rows, err := svc.q.AllWords(r.Context(), textproc.AllWordsParams{
-			Limit:  int32(limit),
-			Offset: int32(offset),
-		})
+		rows, err := svc.GetAllWords(r.Context(), int32(limit), int32(offset))
 		if err != nil {
 			http.Error(w, "Failed to fetch all words from a database", http.StatusInternalServerError)
 
@@ -91,6 +86,40 @@ func allWordsHandler(svc *WordService, logger *slog.Logger) http.HandlerFunc {
 		}
 		if err := encode(w, r, http.StatusOK, rows); err != nil {
 			http.Error(w, "Failed to encode rows", http.StatusInternalServerError)
+
+			return
+		}
+	}
+}
+
+func insertWordHandler(svc *WordService, logger *slog.Logger) http.HandlerFunc {
+	type Request struct {
+		Value string `json:"value"`
+	}
+
+	return func(w http.ResponseWriter, r *http.Request) {
+		logger.Info("Received request",
+			slog.String("url", r.URL.String()),
+		)
+
+		request, err := decode[Request](r)
+		if err != nil {
+			http.Error(w, "Failed to decode request", http.StatusBadRequest)
+
+			return
+		}
+		row, err := svc.InsertWord(r.Context(), request.Value)
+		if err != nil {
+			http.Error(w, "Failed to insert word", http.StatusInternalServerError)
+
+			return
+		}
+		logger.Info("Word inserted",
+			slog.Int64("id", row.ID),
+			slog.String("value", row.Value),
+		)
+		if err := encode(w, r, http.StatusOK, row); err != nil {
+			http.Error(w, "Failed to encode insert word row", http.StatusInternalServerError)
 
 			return
 		}

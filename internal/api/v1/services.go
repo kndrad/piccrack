@@ -31,3 +31,15 @@ func (svc *WordService) GetAllWords(ctx context.Context, limit, offset int32) ([
 
 	return rows, nil
 }
+
+func (svc *WordService) InsertWord(ctx context.Context, value string) (textproc.InsertWordRow, error) {
+	if value == "" {
+		panic("value cannot be empty")
+	}
+	row, err := svc.q.InsertWord(ctx, value)
+	if err != nil {
+		return row, fmt.Errorf("insert word: %w", err)
+	}
+
+	return row, nil
+}

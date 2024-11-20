@@ -2,6 +2,8 @@ package v1
 
 import (
 	"context"
+	"encoding/json"
+	"io"
 	"log/slog"
 	"net/http"
 	"net/http/httptest"
@@ -21,22 +23,22 @@ import (
 func TestEncodeFunc(t *testing.T) {
 	t.Parallel()
 
-	type payload struct {
+	type Response struct {
 		Value string `json:"value"`
 	}
 
 	testCases := []struct {
 		desc string
 
-		valueToEncode      *payload // value to encode
-		wantBody           string   // what should be written
-		expectedStatusCode int      // which status code should be returned
+		response           *Response // value to encode
+		wantBody           string    // what should be written
+		expectedStatusCode int       // which status code should be returned
 		wantErr            bool
 	}{
 		{
 			desc: "encodes_and_writes_content-type_header",
 
-			valueToEncode:      &payload{Value: "test"},
+			response:           &Response{Value: "test"},
 			wantBody:           `{"value":"test"}` + "\n",
 			expectedStatusCode: http.StatusOK,
 
@@ -48,7 +50,7 @@ func TestEncodeFunc(t *testing.T) {
 			r := httptest.NewRequest(http.MethodGet, "/", nil)
 			w := httptest.NewRecorder()
 
-			err := encode(w, r, tC.expectedStatusCode, tC.valueToEncode)
+			err := encode(w, r, tC.expectedStatusCode, tC.response)
 			if tC.wantErr {
 				require.Error(t, err)
 			}
@@ -134,6 +136,102 @@ func TestHealthCheckHandler(t *testing.T) {
 
 			require.NoError(t, err)
 			require.Equal(t, tC.expectedStatusCode, resp.StatusCode)
+		})
+	}
+}
+
+func TestAllWordsHandler(t *testing.T) {
+	t.Parallel()
+
+	testCases := []struct {
+		desc  string
+		query string
+	}{
+		{
+			desc:  "returns_all_words",
+			query: "?limit=100&offset=0",
+		},
+	}
+
+	for _, tC := range testCases {
+		t.Run(tC.desc, func(t *testing.T) {
+			svc := &WordService{
+				q: mockWordQueries(wordsMock()),
+			}
+			handler := allWordsHandler(svc, newTestLogger(t))
+
+			ctx := context.Background()
+			url := "/" + tC.query
+			req := httptest.NewRequestWithContext(
+				ctx,
+				http.MethodGet,
+				url,
+				nil,
+			)
+
+			w := httptest.NewRecorder()
+			t.Logf("Testing request, url: %s", url)
+			handler(w, req)
+			resp := w.Result()
+
+			data, err := io.ReadAll(resp.Body)
+			require.NoError(t, err)
+			resp.Body.Close()
+
+			var rows []textproc.AllWordsRow
+			if err := json.Unmarshal(data, &rows); err != nil {
+				t.Fatalf("unmarshal json err: %v", err)
+			}
+			t.Logf("Got rows: %v", rows)
+		})
+	}
+}
+
+func TestInsertWordHandler(t *testing.T) {
+	t.Parallel()
+
+	testCases := []struct {
+		desc string
+		data string // data to send
+	}{
+		{
+			desc: "returns_all_words",
+			data: `{"value":"test1"}`,
+		},
+	}
+
+	for _, tC := range testCases {
+		t.Run(tC.desc, func(t *testing.T) {
+			svc := &WordService{
+				q: mockWordQueries(wordsMock()),
+			}
+			handler := insertWordHandler(svc, getTestLogger())
+
+			ctx := context.Background()
+
+			body := strings.NewReader(string(tC.data))
+			url := "/"
+			req := httptest.NewRequestWithContext(
+				ctx,
+				http.MethodGet,
+				url,
+				body,
+			)
+
+			w := httptest.NewRecorder()
+			t.Logf("Testing request, url: %s", url)
+			handler(w, req)
+			resp := w.Result()
+
+			data, err := io.ReadAll(resp.Body)
+			require.NoError(t, err)
+			resp.Body.Close()
+
+			var row textproc.InsertWordRow
+			if err := json.Unmarshal(data, &row); err != nil {
+				t.Fatalf("unmarshal json err: %v", err)
+			}
+			t.Logf("Got rows: %v", row)
 		})
 	}
 }
