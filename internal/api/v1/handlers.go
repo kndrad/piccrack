@@ -6,6 +6,7 @@ import (
 	"log/slog"
 	"math"
 	"net/http"
+	"net/url"
 	"strconv"
 )
 
@@ -39,25 +40,52 @@ func healthCheckHandler(logger *slog.Logger) http.HandlerFunc {
 	}
 }
 
+func getLimit(values url.Values) (int32, error) {
+	var param string
+	const defaultLimitParam = "1000"
+
+	param = values.Get("limit")
+	if param == "" {
+		param = defaultLimitParam
+	}
+	limit, err := strconv.ParseUint(param, 10, 32)
+	if err != nil {
+		return 0, fmt.Errorf("parse uint: %w", err)
+	}
+	if limit > math.MaxInt32 {
+		limit = 1000
+	}
+
+	return int32(limit), nil
+}
+
+func getOffset(values url.Values) (int32, error) {
+	var param string
+	const defaultOffsetParam = "0"
+
+	param = values.Get("offset")
+	if param == "" {
+		param = defaultOffsetParam
+	}
+	offset, err := strconv.ParseUint(param, 10, 32)
+	if err != nil {
+		return 0, fmt.Errorf("parse uint: %w", err)
+	}
+	if offset > math.MaxInt32 {
+		offset = 0
+	}
+
+	return int32(offset), nil
+}
+
 func allWordsHandler(svc *WordService, logger *slog.Logger) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		logger.Info("Received request",
 			slog.String("url", r.URL.String()),
 		)
-		limitParam := r.URL.Query().Get("limit")
-		if limitParam == "" {
-			http.Error(w, "Failed to get limit url query param", http.StatusBadRequest)
-
-			return
-		}
-		limit, err := strconv.ParseUint(limitParam, 10, 32)
+		limit, err := getLimit(r.URL.Query())
 		if err != nil {
-			http.Error(w, "Failed to convert limit path value", http.StatusBadRequest)
-
-			return
-		}
-		if limit > math.MaxInt32 {
-			http.Error(w, "Limit path value exceeds max of int32", http.StatusBadRequest)
+			http.Error(w, "Failed get limit param from query", http.StatusBadRequest)
 
 			return
 		}
@@ -78,7 +106,7 @@ func allWordsHandler(svc *WordService, logger *slog.Logger) http.HandlerFunc {
 
 			return
 		}
-		rows, err := svc.GetAllWords(r.Context(), int32(limit), int32(offset))
+		rows, err := svc.GetAllWords(r.Context(), limit, int32(offset))
 		if err != nil {
 			http.Error(w, "Failed to fetch all words from a database", http.StatusInternalServerError)
 
