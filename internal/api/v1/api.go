@@ -26,15 +26,15 @@ type ServerConfig struct {
 func LoadConfig(path string) (*ServerConfig, error) {
 	viper.SetConfigFile(filepath.Clean(path))
 
-	if err := viper.ReadInConfig(); err != nil {
-		if _, notfound := err.(viper.ConfigFileNotFoundError); notfound {
-			return nil, fmt.Errorf("config file not found: %w", err)
-		} else {
-			return nil, fmt.Errorf("reading in config: %w", err)
-		}
+	f, err := os.Open(path)
+	if err != nil {
+		return nil, fmt.Errorf("open err: %w", err)
 	}
+	defer f.Close()
 
-	viper.AutomaticEnv()
+	if err := viper.ReadConfig(f); err != nil {
+		return nil, fmt.Errorf("reading config: %w", err)
+	}
 
 	cfg := &ServerConfig{
 		Host:       viper.GetString("HTTP_HOST"),

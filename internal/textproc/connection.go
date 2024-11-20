@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net"
+	"os"
 	"path/filepath"
 	"time"
 
@@ -34,15 +35,15 @@ func NewDatabaseConfig(host, port, user, password, dbname string) DatabaseConfig
 func LoadDatabaseConfig(path string) (*DatabaseConfig, error) {
 	viper.SetConfigFile(filepath.Clean(path))
 
-	if err := viper.ReadInConfig(); err != nil {
-		if _, notfound := err.(viper.ConfigFileNotFoundError); notfound {
-			return nil, fmt.Errorf("config file not found: %w", err)
-		} else {
-			return nil, fmt.Errorf("reading in config: %w", err)
-		}
+	f, err := os.Open(path)
+	if err != nil {
+		return nil, fmt.Errorf("open err: %w", err)
 	}
+	defer f.Close()
 
-	viper.AutomaticEnv()
+	if err := viper.ReadConfig(f); err != nil {
+		return nil, fmt.Errorf("reading config: %w", err)
+	}
 
 	cfg := &DatabaseConfig{
 		User:     viper.GetString("DB_USER"),
