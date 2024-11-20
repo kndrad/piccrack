@@ -300,3 +300,5 @@ func TestGetOffsetFromQuery(t *testing.T) {
 		})
 	}
 }
+
+// TODO: Tests for word inserting from a file handler

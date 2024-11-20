@@ -1,12 +1,15 @@
 package v1
 
 import (
+	"bufio"
 	"encoding/json"
 	"fmt"
 	"log/slog"
 	"math"
 	"net/http"
 	"net/url"
+	"os"
+	"path/filepath"
 	"strconv"
 )
 
@@ -143,4 +146,57 @@ func insertWordHandler(svc *WordService, logger *slog.Logger) http.HandlerFunc {
 	}
 }
 
-// TODO: Inserting words from a txt file!
+// TODO: TEST THIS FUNCTION!
+func insertWordsFromFileHandler(svc *WordService, logger *slog.Logger) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		logger.Info("Received request",
+			slog.String("url", r.URL.String()),
+		)
+		// Open file
+		path := r.URL.Query().Get("file")
+		if path == "" {
+			writeJsonErr(w, "Failed to get url file path from query", nil, http.StatusBadRequest)
+
+			return
+		}
+		txtf, err := os.Open(filepath.Clean(path))
+		if err != nil {
+			writeJsonErr(w, "Failed to open file", err, http.StatusInternalServerError)
+
+			return
+		}
+		defer txtf.Close()
+
+		// Read words one by one from txt file
+		scanner := bufio.NewScanner(txtf)
+		scanner.Split(bufio.ScanWords)
+
+		for scanner.Scan() {
+			// Insert
+			row, err := svc.InsertWord(r.Context(), scanner.Text())
+			if err != nil {
+				writeJsonErr(w, "Failed to insert row", err, http.StatusInternalServerError)
+
+				return
+			}
+			logger.Info("Inserted word",
+				slog.Int64("id", row.ID),
+				slog.String("value", row.Value),
+			)
+		}
+		if err := scanner.Err(); err != nil {
+			writeJsonErr(w, "Scanner returned an error", err, http.StatusInternalServerError)
+		}
+		w.WriteHeader(http.StatusOK)
+	}
+}
+
+// TODO: TEST THIS FUNCTION
+func writeJsonErr(w http.ResponseWriter, msg string, err error, code int) {
+	w.Header().Set("Content-Type", "application/json")
+	if err != nil {
+		http.Error(w, fmt.Sprintf("%s | err: %v", msg, err), code)
+	} else {
+		http.Error(w, msg, code)
+	}
+}
