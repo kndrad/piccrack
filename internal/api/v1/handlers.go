@@ -41,7 +41,7 @@ func healthCheckHandler(logger *slog.Logger) http.HandlerFunc {
 	}
 }
 
-func handleAllWords(svc *WordService, logger *slog.Logger) http.HandlerFunc {
+func allWordsHandler(svc *WordService, logger *slog.Logger) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		logger.Info("Received request",
 			slog.String("url", r.URL.String()),
