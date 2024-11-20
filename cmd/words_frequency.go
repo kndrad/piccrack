@@ -35,7 +35,7 @@ import (
 var wordsFrequencyCmd = &cobra.Command{
 	Use:     "frequency",
 	Short:   "Outputs words frequency from a database",
-	Example: "itcrack words frequency",
+	Example: "wordcrack words frequency",
 	RunE: func(cmd *cobra.Command, args []string) error {
 		config, err := textproc.LoadDatabaseConfig(DefaultEnvFilePath)
 		if err != nil {

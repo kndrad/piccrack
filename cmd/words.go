@@ -24,6 +24,7 @@ package cmd
 import (
 	"context"
 	"fmt"
+	"math"
 	"strconv"
 	"time"
 
@@ -36,7 +37,7 @@ import (
 var wordsCmd = &cobra.Command{
 	Use:     "words",
 	Short:   "Lists words from a database",
-	Example: "itcrack words",
+	Example: "wordcrack words [OPTIONAL args: limit[int32]]",
 	RunE: func(cmd *cobra.Command, args []string) error {
 		cfg, err := textproc.LoadDatabaseConfig(DefaultEnvFilePath)
 		if err != nil {
@@ -72,8 +73,17 @@ var wordsCmd = &cobra.Command{
 
 		queries := textproc.New(conn)
 
-		var limit int32 = 30
-		params := textproc.AllWordsParams{Limit: limit}
+		limit := math.MaxInt32
+		if len(args) > 0 {
+			limitArg, err := strconv.ParseInt(args[0], 10, 32)
+			if err != nil {
+				return fmt.Errorf("parse uint: %w", err)
+			}
+			if limitArg < math.MaxInt32 {
+				limit = int(limitArg)
+			}
+		}
+		params := textproc.AllWordsParams{Limit: int32(limit)}
 
 		if len(args) > 0 {
 			limit, err := strconv.ParseInt(args[0], 10, 32)

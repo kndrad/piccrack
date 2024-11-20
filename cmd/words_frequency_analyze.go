@@ -38,7 +38,7 @@ import (
 var wordsFrequencyAnalyzeCmd = &cobra.Command{
 	Use:     "analyze",
 	Short:   "Analyze words frequency in .txt and write output to .json",
-	Example: "itcrack words frequency analyze -v --file=./testdata/words.txt --out=./output",
+	Example: "wordcrack words frequency analyze -v --file=./testdata/words.txt --out=./output",
 	RunE: func(cmd *cobra.Command, args []string) error {
 		var (
 			txtPath = filepath.Clean(InputPath)

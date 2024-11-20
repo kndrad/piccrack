@@ -24,7 +24,6 @@ package cmd
 import (
 	"context"
 	"fmt"
-	"log/slog"
 
 	"github.com/kndrad/wordcrack/internal/textproc"
 	"github.com/kndrad/wordcrack/pkg/retry"
@@ -80,10 +79,7 @@ var rankCmd = &cobra.Command{
 		}
 
 		for _, row := range rows {
-			Logger.Info("Got word rank",
-				slog.String("value", row.Value),
-				slog.Int64("rank", row.Rank),
-			)
+			fmt.Printf("WORD: %s | RANK: %d\n", row.Value, row.Rank)
 		}
 
 		Logger.Info("Program completed successfully.")
