@@ -79,6 +79,7 @@ DB_NAME=%s
 	}
 	require.NoError(t, tmpf.Close())
 
+	t.Logf("Loading db config from: %s", tmpf.Name())
 	cfg, err := textproc.LoadDatabaseConfig(tmpf.Name())
 	require.NoError(t, err)
 	require.Equal(t, user, cfg.User)
