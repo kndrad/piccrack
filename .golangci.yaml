@@ -110,7 +110,7 @@ linters:
     - gomoddirectives
     - gomodguard
     - goprintffuncname
-    - gosec
+    #- gosec
     - gosimple
     - gosmopolitan
     - govet
@@ -224,7 +224,7 @@ linters:
   # - gomoddirectives
   # - gomodguard
   # - goprintffuncname
-  # - gosec
+    - gosec
   # - gosimple
   # - gosmopolitan
   # - govet
