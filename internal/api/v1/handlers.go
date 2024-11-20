@@ -10,7 +10,7 @@ import (
 	"strconv"
 )
 
-func encode[T any](w http.ResponseWriter, r *http.Request, status int, v T) error {
+func encode[T any](w http.ResponseWriter, _ *http.Request, status int, v T) error {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)
 
@@ -89,24 +89,13 @@ func allWordsHandler(svc *WordService, logger *slog.Logger) http.HandlerFunc {
 
 			return
 		}
-		offsetParam := r.URL.Query().Get("offset")
-		if offsetParam == "" {
-			http.Error(w, "Failed to get limit url query param", http.StatusBadRequest)
-
-			return
-		}
-		offset, err := strconv.ParseUint(offsetParam, 10, 32)
+		offset, err := getOffset(r.URL.Query())
 		if err != nil {
-			http.Error(w, "Failed to convert offset path value", http.StatusBadRequest)
+			http.Error(w, "Failed get limit param from query", http.StatusBadRequest)
 
 			return
 		}
-		if offset > math.MaxInt32 {
-			http.Error(w, "Offset path value exceeds max of int32", http.StatusBadRequest)
-
-			return
-		}
-		rows, err := svc.GetAllWords(r.Context(), limit, int32(offset))
+		rows, err := svc.GetAllWords(r.Context(), limit, offset)
 		if err != nil {
 			http.Error(w, "Failed to fetch all words from a database", http.StatusInternalServerError)
 
@@ -153,3 +142,5 @@ func insertWordHandler(svc *WordService, logger *slog.Logger) http.HandlerFunc {
 		}
 	}
 }
+
+// TODO: Inserting words from a txt file!

@@ -227,7 +227,6 @@ func TestInsertWordHandler(t *testing.T) {
 			if err := json.Unmarshal(data, &row); err != nil {
 				t.Fatalf("unmarshal json err: %v", err)
 			}
-			t.Logf("Got rows: %v", row)
 		})
 	}
 }
