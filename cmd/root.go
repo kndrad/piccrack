@@ -43,7 +43,7 @@ var cfgFile string
 
 // rootCmd represents the base command when called without any subcommands.
 var rootCmd = &cobra.Command{
-	Use:   "itcrack",
+	Use:   "wordcrack",
 	Short: "Analyze text from screenshots and performing word frequency analysis.",
 	// Uncomment the following line if your bare application
 	// has an action associated with it:
