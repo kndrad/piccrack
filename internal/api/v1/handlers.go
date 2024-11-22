@@ -146,7 +146,7 @@ func insertWordHandler(svc *WordService, logger *slog.Logger) http.HandlerFunc {
 	}
 }
 
-// TODO: TEST THIS FUNCTION!
+// TODO: TEST THIS FUNCTION with curl!
 func insertWordsFromFileHandler(svc *WordService, logger *slog.Logger) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		logger.Info("Received request",
