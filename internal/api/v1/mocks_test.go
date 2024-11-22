@@ -176,7 +176,7 @@ type wordQueriesMock struct {
 	wordsRankRows        []textproc.GetWordsRankRow
 }
 
-func mockWordQueries(words []WordMock) *wordQueriesMock {
+func mockWordQueries(words ...WordMock) *wordQueriesMock {
 	if words == nil {
 		words = wordsMock()
 	}

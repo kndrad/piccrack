@@ -6,9 +6,11 @@ import (
 	"fmt"
 	"io"
 	"math"
+	"math/rand/v2"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
+	"os"
 	"strings"
 	"testing"
 
@@ -152,9 +154,9 @@ func TestAllWordsHandler(t *testing.T) {
 	for _, tC := range testCases {
 		t.Run(tC.desc, func(t *testing.T) {
 			svc := &WordService{
-				q: mockWordQueries(wordsMock()),
+				q: mockWordQueries(wordsMock()...),
 			}
-			handler := allWordsHandler(svc, newTestLogger(t))
+			handler := allWordsHandler(svc, getTestLogger())
 
 			ctx := context.Background()
 			url := "/" + tC.query
@@ -199,7 +201,7 @@ func TestInsertWordHandler(t *testing.T) {
 	for _, tC := range testCases {
 		t.Run(tC.desc, func(t *testing.T) {
 			svc := &WordService{
-				q: mockWordQueries(wordsMock()),
+				q: mockWordQueries(wordsMock()...),
 			}
 			handler := insertWordHandler(svc, getTestLogger())
 
@@ -301,4 +303,84 @@ func TestGetOffsetFromQuery(t *testing.T) {
 	}
 }
 
+func writeWords(w io.Writer, total int) error {
+	r := rand.New(rand.NewPCG(0, 100))
+
+	// Write values to writer
+	for i := 0; i < total; i++ {
+		ri := r.Int() // Random int
+
+		if _, err := w.Write([]byte(fmt.Sprintf("testword%d\n", ri))); err != nil {
+			return fmt.Errorf("write: %w", err)
+		}
+	}
+
+	return nil
+}
+
 // TODO: Tests for word inserting from a file handler
+func TestInsertWordsFromFileHandler(t *testing.T) {
+	t.Parallel()
+
+	// Create tmp file
+	tmpf, err := os.CreateTemp("testdata", "*.txt")
+	require.NoError(t, err)
+	cleanup := func() {
+		if err := tmpf.Close(); err != nil {
+			t.Fatalf("failed to close file: %v", err)
+		}
+		if err := os.Remove(tmpf.Name()); err != nil {
+			t.Fatalf("failed to remove file: %s, %v", tmpf.Name(), err)
+		}
+	}
+	defer cleanup()
+
+	// Write n words
+	n := 20
+	if err := writeWords(tmpf, n); err != nil {
+		t.Fatalf("failed to write words: %v", err)
+	}
+
+	testCases := []struct {
+		desc string
+
+		path string
+	}{
+		{
+			desc: "should_read_words_from_file_and_insert_them",
+
+			path: tmpf.Name(),
+		},
+	}
+
+	for _, tC := range testCases {
+		t.Run(tC.desc, func(t *testing.T) {
+			// Service which underlying db does not contain any words
+			svc := &WordService{
+				q:      mockWordQueries(),
+				logger: getTestLogger(),
+			}
+			handler := insertWordsFromFileHandler(svc, getTestLogger())
+
+			ctx := context.Background()
+			query := "?file=" + tC.path
+			url := "/" + query
+			req := httptest.NewRequestWithContext(
+				ctx,
+				http.MethodGet,
+				url,
+				nil,
+			)
+			w := httptest.NewRecorder()
+			t.Logf("Testing request, url: %s", url)
+			handler(w, req)
+			resp := w.Result()
+
+			data, err := io.ReadAll(resp.Body)
+			require.NoError(t, err)
+			resp.Body.Close()
+
+			t.Logf("Got data: %s", string(data))
+		})
+	}
+}

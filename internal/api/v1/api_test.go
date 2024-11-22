@@ -2,7 +2,6 @@ package v1
 
 import (
 	"context"
-	"log/slog"
 	"os"
 	"syscall"
 	"testing"
@@ -90,14 +89,6 @@ func newTestCfg(t *testing.T) *ServerConfig {
 	return cfg
 }
 
-func newTestLogger(t *testing.T) *slog.Logger {
-	t.Helper()
-
-	logger := slog.New(slog.NewTextHandler(os.Stdout, nil))
-
-	return logger
-}
-
 func TestServerStart(t *testing.T) {
 	t.Parallel()
 
@@ -119,8 +110,8 @@ func TestServerStart(t *testing.T) {
 		t.Run(tC.desc, func(t *testing.T) {
 			srv, err := NewServer(
 				newTestCfg(t),
-				&WordService{q: mockWordQueries(wordsMock()), logger: getTestLogger()},
-				newTestLogger(t),
+				&WordService{q: mockWordQueries(wordsMock()...), logger: getTestLogger()},
+				getTestLogger(),
 			)
 			require.NoError(t, err)
 

@@ -153,6 +153,7 @@ func insertWordsFromFileHandler(svc *WordService, logger *slog.Logger) http.Hand
 			slog.String("url", r.URL.String()),
 		)
 		// Open file
+		// But should it get path from query?
 		path := r.URL.Query().Get("file")
 		if path == "" {
 			writeJsonErr(w, "Failed to get url file path from query", nil, http.StatusBadRequest)
