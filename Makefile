@@ -96,9 +96,13 @@ test-docker-test-wordcrack-words-frequency-analyze-file: docker-build
 	-v $(OUTPUT_DIR):/output \
 	$(DOCKER_IMAGE) words frequency analyze -v --file=$(TESTDATA_DIR)/words.txt --out=$(OUTPUT_DIR)
 
+.PHONY: compose-up-d
+compose-up-d:
+	docker-compose up --build -d
+
 .PHONY: compose-up
 compose-up:
-	docker-compose up --build -d
+	docker-compose up --build
 
 .PHONY: compose-down
 compose-down:
@@ -141,8 +145,3 @@ start:
 test-wordcrack-words-frequency:
 	go run main.go words frequency
 
-
-.PHONY: docker-start-api
-docker-start-api:
-	docker-compose up --build -d
-	go run main.go api start
