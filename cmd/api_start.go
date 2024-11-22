@@ -35,24 +35,17 @@ var apiStartCmd = &cobra.Command{
 	Use:   "start",
 	Short: "Starts http API server.",
 	RunE: func(cmd *cobra.Command, args []string) error {
-		config, err := v1.LoadConfig(".env")
-		if err != nil {
-			Logger.Error("Failed to load api config", "err", err.Error())
-
-			return fmt.Errorf("loading config err: %w", err)
-		}
-
 		ctx, cancel := context.WithCancel(context.Background())
 		defer cancel()
 
-		dbConfig, err := textproc.LoadDatabaseConfig(".env")
+		dbconf, err := textproc.LoadDatabaseConfig(".env")
 		if err != nil {
 			Logger.Error("Failed to load database config", "err", err.Error())
 
 			return fmt.Errorf("loading config err: %w", err)
 		}
 
-		pool, err := textproc.DatabasePool(ctx, *dbConfig)
+		pool, err := textproc.DatabasePool(ctx, *dbconf)
 		if err != nil {
 			Logger.Error("Loading database pool", "err", err.Error())
 
@@ -73,6 +66,13 @@ var apiStartCmd = &cobra.Command{
 			return fmt.Errorf("database connection: %w", err)
 		}
 		defer db.Close(ctx)
+
+		config, err := v1.LoadConfig(".env")
+		if err != nil {
+			Logger.Error("Failed to load api config", "err", err.Error())
+
+			return fmt.Errorf("loading config err: %w", err)
+		}
 
 		q := textproc.New(db)
 		wordsService := v1.NewWordsService(q, Logger)
