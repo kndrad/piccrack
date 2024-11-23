@@ -21,8 +21,9 @@
 go.work
 go.work.sum
 
-# env file
+# env files
 .env
+**/*.env
 
 # .txt
 llm_input.txt
@@ -41,6 +42,7 @@ words_dictionary.json
 
 #tmp
 tmp/
+testtmp*/
 
 # changing testdata
 testdata/*.txt
@@ -52,3 +54,5 @@ coverage.html
 
 # output
 output/*.txt
+
+
