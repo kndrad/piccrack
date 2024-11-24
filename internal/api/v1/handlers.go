@@ -4,12 +4,11 @@ import (
 	"bufio"
 	"encoding/json"
 	"fmt"
+	"io"
 	"log/slog"
 	"math"
 	"net/http"
 	"net/url"
-	"os"
-	"path/filepath"
 	"strconv"
 )
 
@@ -146,30 +145,68 @@ func insertWordHandler(svc *WordService, logger *slog.Logger) http.HandlerFunc {
 	}
 }
 
-// TODO: TEST THIS FUNCTION with curl!
-func insertWordsFromFileHandler(svc *WordService, logger *slog.Logger) http.HandlerFunc {
+func insertWordsFileHandler(svc *WordService, logger *slog.Logger) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		logger.Info("Received request",
 			slog.String("url", r.URL.String()),
 		)
-		// Open file
-		// But should it get path from query?
-		path := r.URL.Query().Get("file")
-		if path == "" {
-			writeJsonErr(w, "Failed to get url file path from query", nil, http.StatusBadRequest)
+
+		// Parse file from form
+		const MaxSize = 1024 * 1024 * 20 // 20 MB
+		r.Body = http.MaxBytesReader(w, r.Body, MaxSize)
+
+		if err := r.ParseMultipartForm(MaxSize); err != nil {
+			writeJsonErr(w, "File too big", err, http.StatusBadRequest)
 
 			return
 		}
-		txtf, err := os.Open(filepath.Clean(path))
+		f, fheader, err := r.FormFile("file")
 		if err != nil {
-			writeJsonErr(w, "Failed to open file", err, http.StatusInternalServerError)
+			writeJsonErr(w, "Failed to get file", err, http.StatusBadRequest)
 
 			return
 		}
-		defer txtf.Close()
+		defer f.Close()
 
-		// Read words one by one from txt file
-		scanner := bufio.NewScanner(txtf)
+		// Detect content type of file and check if it's a text
+		data := make([]byte, 1024)
+		if _, err := f.Read(data); err != nil {
+			writeJsonErr(w, "Failed to read file into buffer", err, http.StatusInternalServerError)
+
+			return
+		}
+		ct := http.DetectContentType(data)
+		allowed := func() bool {
+			types := map[string]bool{
+				"text/plain":               true,
+				"text/plain; charset=utf-8": true,
+				"application/txt":          true,
+				"text/x-plain":             true,
+			}
+
+			return types[ct]
+		}
+		if !allowed() {
+			writeJsonErr(w,
+				fmt.Sprintf("Content type %s not allowed. Upload text file", ct),
+				nil,
+				http.StatusBadRequest,
+			)
+
+			return
+		}
+		// Return pointer back to the start of the file after content type detection
+		if _, err := f.Seek(0, io.SeekStart); err != nil {
+			writeJsonErr(w, "Failed to seek to start of the file", err, http.StatusInternalServerError)
+
+			return
+		}
+		logger.Info("Received form",
+			slog.String("filename", fheader.Filename),
+		)
+
+		// Read many words one by one from file
+		scanner := bufio.NewScanner(f)
 		scanner.Split(bufio.ScanWords)
 
 		for scanner.Scan() {
@@ -188,6 +225,7 @@ func insertWordsFromFileHandler(svc *WordService, logger *slog.Logger) http.Hand
 		if err := scanner.Err(); err != nil {
 			writeJsonErr(w, "Scanner returned an error", err, http.StatusInternalServerError)
 		}
+
 		w.WriteHeader(http.StatusOK)
 	}
 }

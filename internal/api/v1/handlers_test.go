@@ -1,12 +1,14 @@
 package v1
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
 	"io"
 	"math"
 	"math/rand/v2"
+	"mime/multipart"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -318,8 +320,7 @@ func writeWords(w io.Writer, total int) error {
 	return nil
 }
 
-// TODO: Tests for word inserting from a file handler
-func TestInsertWordsFromFileHandler(t *testing.T) {
+func TestInsertWordsFileHandler(t *testing.T) {
 	t.Parallel()
 
 	// Create tmp file
@@ -344,37 +345,58 @@ func TestInsertWordsFromFileHandler(t *testing.T) {
 	testCases := []struct {
 		desc string
 
-		path string
+		svc *WordService
 	}{
 		{
-			desc: "should_read_words_from_file_and_insert_them",
+			desc: "should_file_from_request_form_and_insert_them",
 
-			path: tmpf.Name(),
+			// Underlying db of this service does not contain any words
+			svc: &WordService{
+				q:      mockWordQueries(),
+				logger: getTestLogger(),
+			},
 		},
 	}
 
 	for _, tC := range testCases {
 		t.Run(tC.desc, func(t *testing.T) {
-			// Service which underlying db does not contain any words
-			svc := &WordService{
-				q:      mockWordQueries(),
-				logger: getTestLogger(),
-			}
-			handler := insertWordsFromFileHandler(svc, getTestLogger())
+			// Buffer to write multipart form
+			body := new(bytes.Buffer)
+			w := multipart.NewWriter(body)
 
+			// Open tmpf
+			f, err := os.Open(tmpf.Name())
+			require.NoError(t, err)
+			defer f.Close()
+
+			// Create the form part
+			part, err := w.CreateFormFile("file", f.Name())
+			require.NoError(t, err)
+
+			// Cp content to form file field
+			if _, err := io.Copy(part, f); err != nil {
+				t.Fatalf("Failed to copy file content to form part: %v", err)
+			}
+			// Close multipart writer
+			if err := w.Close(); err != nil {
+				t.Fatalf("Failed to close multipart writer: %v", err)
+			}
+
+			// Create request with buffer (multipart form) as body
 			ctx := context.Background()
-			query := "?file=" + tC.path
-			url := "/" + query
 			req := httptest.NewRequestWithContext(
 				ctx,
 				http.MethodGet,
-				url,
-				nil,
+				"/",
+				body,
 			)
-			w := httptest.NewRecorder()
-			t.Logf("Testing request, url: %s", url)
-			handler(w, req)
-			resp := w.Result()
+			req.Header.Set("Content-Type", w.FormDataContentType())
+
+			// Record request using handler
+			rr := httptest.NewRecorder()
+			handler := insertWordsFileHandler(tC.svc, getTestLogger())
+			handler(rr, req)
+			resp := rr.Result()
 
 			data, err := io.ReadAll(resp.Body)
 			require.NoError(t, err)
