@@ -23,7 +23,7 @@ type AllWordsParams struct {
 type AllWordsRow struct {
 	ID        int64              `json:"id"`
 	Value     string             `json:"value"`
-	CreatedAt pgtype.Timestamptz `json:"createdAt"`
+	CreatedAt pgtype.Timestamptz `json:"created_at"`
 }
 
 func (q *Queries) AllWords(ctx context.Context, arg AllWordsParams) ([]AllWordsRow, error) {
@@ -138,7 +138,7 @@ RETURNING id, value, created_at
 type InsertWordRow struct {
 	ID        int64              `json:"id"`
 	Value     string             `json:"value"`
-	CreatedAt pgtype.Timestamptz `json:"createdAt"`
+	CreatedAt pgtype.Timestamptz `json:"created_at"`
 }
 
 func (q *Queries) InsertWord(ctx context.Context, value string) (InsertWordRow, error) {
@@ -146,5 +146,5 @@ func (q *Queries) InsertWord(ctx context.Context, value string) (InsertWordRow, 
 	var i InsertWordRow
 	err := row.Scan(&i.ID, &i.Value, &i.CreatedAt)
 
-	return i, fmt.Errorf("scan db: %w", err)
+	return i, err
 }

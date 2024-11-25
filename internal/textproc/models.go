@@ -7,6 +7,6 @@ import (
 type Word struct {
 	ID        int64              `json:"id"`
 	Value     string             `json:"value"`
-	CreatedAt pgtype.Timestamptz `json:"createdAt"`
-	DeletedAt pgtype.Timestamptz `json:"deletedAt"`
+	CreatedAt pgtype.Timestamptz `json:"created_at"`
+	DeletedAt pgtype.Timestamptz `json:"deleted_at"`
 }

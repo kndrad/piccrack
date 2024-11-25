@@ -36,11 +36,11 @@ func TestPostgresDatabase(t *testing.T) {
 
 	tmpFile, err := os.CreateTemp("testdata", "*.env")
 	require.NoError(t, err)
-	content := `DB_USER=postgres
+	content := `DB_USER=testuser
 DB_PASSWORD=testpassword
 DB_HOST=localhost
-DB_PORT=5433
-DB_NAME=itcrack`
+DB_PORT=5436
+DB_NAME=wordcrack`
 	if _, err := tmpFile.WriteString(content); err != nil {
 		t.Fatalf("Failed to write content, err: %v", err)
 	}
