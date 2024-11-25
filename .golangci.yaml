@@ -163,7 +163,7 @@ linters:
     - typecheck
     - unconvert
     - unparam
-    - unused
+    #- unused
     - usestdlibvars
     #- varnamelen
     - wastedassign
@@ -277,7 +277,7 @@ linters:
   # - typecheck
   # - unconvert
   # - unparam
-  # - unused
+    - unused
   # - usestdlibvars
     - varnamelen
   # - wastedassign
