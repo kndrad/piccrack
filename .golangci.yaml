@@ -153,7 +153,7 @@ linters:
     - staticcheck
     - stylecheck
     - tagalign
-    - tagliatelle
+    #- tagliatelle
     - tenv
     - testableexamples
     - testifylint
@@ -168,7 +168,7 @@ linters:
     #- varnamelen
     - wastedassign
     - whitespace
-    - wrapcheck
+    #- wrapcheck
     #- wsl
     - zerologlint
   # Enable all available linters.
@@ -267,7 +267,7 @@ linters:
   # - staticcheck
   # - stylecheck
   # - tagalign
-  # - tagliatelle
+    - tagliatelle
   # - tenv
   # - testableexamples
   # - testifylint
@@ -282,7 +282,7 @@ linters:
     - varnamelen
   # - wastedassign
   # - whitespace
-  # - wrapcheck
+    - wrapcheck
     - wsl
   # - zerologlint
   # - deadcode # Deprecated
