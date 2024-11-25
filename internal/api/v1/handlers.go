@@ -156,13 +156,13 @@ func insertWordsFileHandler(svc *WordService, logger *slog.Logger) http.HandlerF
 		r.Body = http.MaxBytesReader(w, r.Body, MaxSize)
 
 		if err := r.ParseMultipartForm(MaxSize); err != nil {
-			writeJsonErr(w, "File too big", err, http.StatusBadRequest)
+			WriteJSONErr(w, "File too big", err, http.StatusBadRequest)
 
 			return
 		}
 		f, fheader, err := r.FormFile("file")
 		if err != nil {
-			writeJsonErr(w, "Failed to get file", err, http.StatusBadRequest)
+			WriteJSONErr(w, "Failed to get file", err, http.StatusBadRequest)
 
 			return
 		}
@@ -171,7 +171,7 @@ func insertWordsFileHandler(svc *WordService, logger *slog.Logger) http.HandlerF
 		// Detect content type of file and check if it's a text
 		data := make([]byte, 1024)
 		if _, err := f.Read(data); err != nil {
-			writeJsonErr(w, "Failed to read file into buffer", err, http.StatusInternalServerError)
+			WriteJSONErr(w, "Failed to read file into buffer", err, http.StatusInternalServerError)
 
 			return
 		}
@@ -187,7 +187,7 @@ func insertWordsFileHandler(svc *WordService, logger *slog.Logger) http.HandlerF
 			return types[ct]
 		}
 		if !allowed() {
-			writeJsonErr(w,
+			WriteJSONErr(w,
 				fmt.Sprintf("Content type %s not allowed. Upload text file", ct),
 				nil,
 				http.StatusBadRequest,
@@ -197,7 +197,7 @@ func insertWordsFileHandler(svc *WordService, logger *slog.Logger) http.HandlerF
 		}
 		// Return pointer back to the start of the file after content type detection
 		if _, err := f.Seek(0, io.SeekStart); err != nil {
-			writeJsonErr(w, "Failed to seek to start of the file", err, http.StatusInternalServerError)
+			WriteJSONErr(w, "Failed to seek to start of the file", err, http.StatusInternalServerError)
 
 			return
 		}
@@ -213,7 +213,7 @@ func insertWordsFileHandler(svc *WordService, logger *slog.Logger) http.HandlerF
 			// Insert
 			row, err := svc.InsertWord(r.Context(), scanner.Text())
 			if err != nil {
-				writeJsonErr(w, "Failed to insert row", err, http.StatusInternalServerError)
+				WriteJSONErr(w, "Failed to insert row", err, http.StatusInternalServerError)
 
 				return
 			}
@@ -223,19 +223,28 @@ func insertWordsFileHandler(svc *WordService, logger *slog.Logger) http.HandlerF
 			)
 		}
 		if err := scanner.Err(); err != nil {
-			writeJsonErr(w, "Scanner returned an error", err, http.StatusInternalServerError)
+			WriteJSONErr(w, "Scanner returned an error", err, http.StatusInternalServerError)
 		}
 
 		w.WriteHeader(http.StatusOK)
 	}
 }
 
-// TODO: TEST THIS FUNCTION
-func writeJsonErr(w http.ResponseWriter, msg string, err error, code int) {
+func WriteJSONErr(w http.ResponseWriter, msg string, err error, code int) {
 	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(code)
+
+	response := struct {
+		Message string `json:"message"`
+		Error   string `json:"error,omitempty"`
+	}{
+		Message: msg,
+	}
 	if err != nil {
-		http.Error(w, fmt.Sprintf("%s | err: %v", msg, err), code)
-	} else {
-		http.Error(w, msg, code)
+		response.Error = err.Error()
+	}
+
+	if err := json.NewEncoder(w).Encode(response); err != nil {
+		fmt.Fprintf(w, "Internal Server Error: failed to marshal error response")
 	}
 }
