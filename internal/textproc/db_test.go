@@ -21,16 +21,6 @@ import (
 	"github.com/testcontainers/testcontainers-go/modules/postgres"
 )
 
-// FIXME:
-// --- FAIL: TestPostgresDatabase (0.99s)
-//
-//	db_test.go:53:
-//	           Error Trace:    internal/textproc/db_test.go:53
-//	            Error:          Received unexpected error:
-//	                            generic container: start container: started hook: wait until ready: container exited with code 1
-//	            Test:           TestPostgresDatabase
-//
-// FAIL
 func TestPostgresDatabase(t *testing.T) {
 	t.Parallel()
 
