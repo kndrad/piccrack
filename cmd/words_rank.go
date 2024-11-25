@@ -66,7 +66,7 @@ var rankCmd = &cobra.Command{
 		}
 		defer conn.Close(ctx)
 
-		queries := textproc.New(conn)
+		queries := textproc.NewQueries(conn)
 
 		params := textproc.GetWordsRankParams{
 			Limit: 100,

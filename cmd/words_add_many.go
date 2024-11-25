@@ -125,7 +125,7 @@ var addManyWordsCmd = &cobra.Command{
 		}
 
 		// Query db to insert each word
-		queries := textproc.New(conn)
+		queries := textproc.NewQueries(conn)
 		for word := range textAnalysis.WordFrequency {
 			row, err := queries.InsertWord(ctx, word)
 			if err != nil {

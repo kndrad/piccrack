@@ -70,7 +70,7 @@ var wordsFrequencyCmd = &cobra.Command{
 		defer conn.Close(ctx)
 
 		// Query db to get word frequency count.
-		queries := textproc.New(conn)
+		queries := textproc.NewQueries(conn)
 
 		var limit int32 = 30
 		params := textproc.GetWordsFrequenciesParams{Limit: limit}

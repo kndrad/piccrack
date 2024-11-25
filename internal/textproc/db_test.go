@@ -21,6 +21,16 @@ import (
 	"github.com/testcontainers/testcontainers-go/modules/postgres"
 )
 
+// FIXME:
+// --- FAIL: TestPostgresDatabase (0.99s)
+//
+//	db_test.go:53:
+//	           Error Trace:    internal/textproc/db_test.go:53
+//	            Error:          Received unexpected error:
+//	                            generic container: start container: started hook: wait until ready: container exited with code 1
+//	            Test:           TestPostgresDatabase
+//
+// FAIL
 func TestPostgresDatabase(t *testing.T) {
 	t.Parallel()
 
@@ -114,7 +124,7 @@ DB_NAME=itcrack`
 		require.NoError(t, err)
 		defer conn.Close(ctx)
 
-		q := textproc.New(conn)
+		q := textproc.NewQueries(conn)
 		for _, w := range words {
 			row, err := q.InsertWord(ctx, w)
 			require.NoError(t, err)
@@ -127,7 +137,7 @@ DB_NAME=itcrack`
 		require.NoError(t, err)
 		defer conn.Close(ctx)
 
-		q := textproc.New(conn)
+		q := textproc.NewQueries(conn)
 		params := textproc.AllWordsParams{Limit: DefaultQueryLimit}
 		rows, err := q.AllWords(ctx, params)
 		require.NoError(t, err)
@@ -139,7 +149,7 @@ DB_NAME=itcrack`
 		require.NoError(t, err)
 		defer conn.Close(ctx)
 
-		q := textproc.New(conn)
+		q := textproc.NewQueries(conn)
 		row, err := q.InsertWord(ctx, "test1")
 		require.NoError(t, err)
 		require.Equal(t, "test1", row.Value)
@@ -150,7 +160,7 @@ DB_NAME=itcrack`
 		require.NoError(t, err)
 		defer conn.Close(ctx)
 
-		q := textproc.New(conn)
+		q := textproc.NewQueries(conn)
 		params := textproc.GetWordsFrequenciesParams{Limit: DefaultQueryLimit}
 		rows, err := q.GetWordsFrequencies(ctx, params)
 		require.NoError(t, err)
@@ -173,7 +183,7 @@ DB_NAME=itcrack`
 		require.NoError(t, err)
 		defer conn.Close(ctx)
 
-		q := textproc.New(conn)
+		q := textproc.NewQueries(conn)
 		params := textproc.GetWordsRankParams{Limit: DefaultQueryLimit}
 		rows, err := q.GetWordsRank(ctx, params)
 		require.NoError(t, err)

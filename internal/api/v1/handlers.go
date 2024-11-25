@@ -178,10 +178,10 @@ func insertWordsFileHandler(svc *WordService, logger *slog.Logger) http.HandlerF
 		ct := http.DetectContentType(data)
 		allowed := func() bool {
 			types := map[string]bool{
-				"text/plain":               true,
+				"text/plain":                true,
 				"text/plain; charset=utf-8": true,
-				"application/txt":          true,
-				"text/x-plain":             true,
+				"application/txt":           true,
+				"text/x-plain":              true,
 			}
 
 			return types[ct]

@@ -71,7 +71,7 @@ var wordsCmd = &cobra.Command{
 		}
 		defer conn.Close(ctx)
 
-		queries := textproc.New(conn)
+		queries := textproc.NewQueries(conn)
 
 		limit := math.MaxInt32
 		if len(args) > 0 {

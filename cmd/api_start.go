@@ -74,7 +74,7 @@ var apiStartCmd = &cobra.Command{
 			return fmt.Errorf("loading config err: %w", err)
 		}
 
-		q := textproc.New(db)
+		q := textproc.NewQueries(db)
 		wordsService := v1.NewWordsService(q, Logger)
 		srv, err := v1.NewServer(
 			config,

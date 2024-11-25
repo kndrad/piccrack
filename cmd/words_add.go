@@ -70,7 +70,7 @@ var addWordCmd = &cobra.Command{
 		}
 		defer conn.Close(ctx)
 
-		queries := textproc.New(conn)
+		queries := textproc.NewQueries(conn)
 
 		value := args[0]
 		word, err := queries.InsertWord(ctx, value)
