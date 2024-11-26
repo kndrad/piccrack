@@ -28,7 +28,6 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/kndrad/wordcrack/internal/screenshot"
 	"github.com/kndrad/wordcrack/internal/textproc"
 	"github.com/kndrad/wordcrack/pkg/openf"
 	"github.com/spf13/cobra"
@@ -77,7 +76,7 @@ var textCmd = &cobra.Command{
 			}
 			// Append image files only
 			for _, e := range entries {
-				if !e.IsDir() && screenshot.IsImageFile(e.Name()) {
+				if !e.IsDir() && textproc.IsImageFile(e.Name()) {
 					filePaths = append(filePaths, filepath.Join(inputPath, "/", e.Name()))
 				}
 			}
@@ -132,7 +131,7 @@ var textCmd = &cobra.Command{
 
 				return fmt.Errorf("reading file: %w", err)
 			}
-			words, err := screenshot.RecognizeWords(content)
+			words, err := textproc.RecognizeWords(content)
 			if err != nil {
 				Logger.Error("Failed to recognize words in a screenshot content", "err", err)
 
