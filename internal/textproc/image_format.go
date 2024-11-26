@@ -3,7 +3,7 @@
 //
 //go:generate stringer -type=Format -output=format_string.gen.go
 
-package screenshot
+package textproc
 
 type Format int
 

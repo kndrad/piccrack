@@ -1,4 +1,4 @@
-package screenshot
+package textproc
 
 import (
 	"bytes"
@@ -25,14 +25,14 @@ var (
 	// ErrEmptyContent is returned when the buffer is empty.
 	ErrEmptyContent = errors.New("buffer is empty")
 
-	// ErrTooSmall is returned when the buffer is too small.
-	ErrTooSmall = errors.New("buffer is too small")
+	// ErrImageTooSmall is returned when the buffer is too small.
+	ErrImageTooSmall = errors.New("buffer is too small")
 
-	// ErrTooLarge is returned when the buffer exceeds the maximum allowed size.
-	ErrTooLarge = errors.New("buffer is too large")
+	// ErrImageTooLarge is returned when the buffer exceeds the maximum allowed size.
+	ErrImageTooLarge = errors.New("buffer is too large")
 
-	// ErrUnknownFormat is returned when the image format is unknown.
-	ErrUnknownFormat = errors.New("unknown image format")
+	// ErrUnknownImageFormat is returned when the image format is unknown.
+	ErrUnknownImageFormat = errors.New("unknown image format")
 
 	// ErrUnknownLanguage is returned when language could not be detected.
 	ErrUnknownLanguage = errors.New("unknown language")
@@ -47,7 +47,7 @@ var (
 // Content must be an image. Any other format will result in an error.
 // Content size must be within allowed range. See MaxSize and MinSize.
 func RecognizeWords(content []byte) ([]byte, error) {
-	if err := ValidateSize(content); err != nil {
+	if err := ValidateImageSize(content); err != nil {
 		return nil, fmt.Errorf("decode: %w", err)
 	}
 
@@ -96,20 +96,20 @@ func RecognizeWords(content []byte) ([]byte, error) {
 }
 
 const (
-	MaxSize int = 3 * 1024 * 1024 // 3MB
-	MinSize     = 1 * 16          // 16B
+	MaxImageSize int = 10 * 1024 * 1024 // 10MB
+	MinImageSize     = 1 * 16           // 16B
 )
 
-// ValidateSize checks if the content buffer size is within the allowed size range.
-func ValidateSize(content []byte) error {
+// ValidateImageSize checks if the content buffer size is within the allowed size range.
+func ValidateImageSize(content []byte) error {
 	if len(content) == 0 {
 		return errors.Wrap(ErrEmptyContent, "content is empty")
 	}
-	if len(content) < MinSize {
-		return errors.Wrapf(ErrTooSmall, "less than %d", MinSize)
+	if len(content) < MinImageSize {
+		return errors.Wrapf(ErrImageTooSmall, "less than %d", MinImageSize)
 	}
-	if len(content) > MaxSize {
-		return errors.Wrapf(ErrTooLarge, "exceeds %d", MaxSize)
+	if len(content) > MaxImageSize {
+		return errors.Wrapf(ErrImageTooLarge, "exceeds %d", MaxImageSize)
 	}
 
 	return nil

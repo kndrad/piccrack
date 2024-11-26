@@ -1,10 +1,10 @@
-package screenshot_test
+package textproc_test
 
 import (
 	"strings"
 	"testing"
 
-	"github.com/kndrad/wordcrack/internal/screenshot"
+	"github.com/kndrad/wordcrack/internal/textproc"
 	"github.com/kndrad/wordcrack/pkg/filetest"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -12,10 +12,9 @@ import (
 
 const (
 	TestPNGFile = "golang_0.png"
-	TestDataDir = "testdata"
 )
 
-func Test_RecognizeContent(t *testing.T) {
+func TestRecognizeWords(t *testing.T) {
 	t.Parallel()
 
 	type input struct {
@@ -40,14 +39,14 @@ func Test_RecognizeContent(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 
-			result, err := screenshot.RecognizeWords(testcase.input.content)
+			result, err := textproc.RecognizeWords(testcase.input.content)
 			require.ErrorIsf(t, err, testcase.expected.err, "expected %q but got '%q'", testcase.expected.err, err)
 			require.NotNil(t, result, "expected not nil result")
 		})
 	}
 }
 
-func Test_ValidateSize(t *testing.T) {
+func TestValidateImageSize(t *testing.T) {
 	t.Parallel()
 
 	type input struct {
@@ -62,24 +61,24 @@ func Test_ValidateSize(t *testing.T) {
 		expected *expected
 	}{
 		"allowed_size_ok": {
-			input:    &input{content: []byte(strings.Repeat("1", screenshot.MinSize))},
+			input:    &input{content: []byte(strings.Repeat("1", textproc.MinImageSize))},
 			expected: &expected{err: nil},
 		},
 		"empty_err": {
 			input:    &input{content: []byte{}},
-			expected: &expected{err: screenshot.ErrEmptyContent},
+			expected: &expected{err: textproc.ErrEmptyContent},
 		},
 		"too_small_err": {
-			input:    &input{content: []byte(strings.Repeat("1", screenshot.MinSize-1))},
-			expected: &expected{err: screenshot.ErrTooSmall},
+			input:    &input{content: []byte(strings.Repeat("1", textproc.MinImageSize-1))},
+			expected: &expected{err: textproc.ErrImageTooSmall},
 		},
 		"nil_empty_err": {
 			input:    &input{content: nil},
-			expected: &expected{err: screenshot.ErrEmptyContent},
+			expected: &expected{err: textproc.ErrEmptyContent},
 		},
 		"too_large_err": {
-			input:    &input{content: []byte(strings.Repeat("DATA", screenshot.MaxSize+1))},
-			expected: &expected{err: screenshot.ErrTooLarge},
+			input:    &input{content: []byte(strings.Repeat("DATA", textproc.MaxImageSize+1))},
+			expected: &expected{err: textproc.ErrImageTooLarge},
 		},
 	}
 
@@ -87,17 +86,17 @@ func Test_ValidateSize(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 
-			err := screenshot.ValidateSize(testcase.input.content)
+			err := textproc.ValidateImageSize(testcase.input.content)
 			assert.ErrorIsf(t, err, testcase.expected.err, "expected %q but got '%q'", testcase.expected.err, err)
 		})
 	}
 }
 
-func Test_ScreenshotFormat_String(t *testing.T) {
+func TestImageFormatString(t *testing.T) {
 	t.Parallel()
 
 	type input struct {
-		format screenshot.Format
+		format textproc.Format
 	}
 	type expected struct {
 		s string
@@ -107,19 +106,19 @@ func Test_ScreenshotFormat_String(t *testing.T) {
 		expected *expected
 	}{
 		"png": {
-			input:    &input{format: screenshot.PNG},
+			input:    &input{format: textproc.PNG},
 			expected: &expected{s: "PNG"},
 		},
 		"unknown": {
-			input:    &input{format: screenshot.UNKNOWN},
+			input:    &input{format: textproc.UNKNOWN},
 			expected: &expected{s: "UNKNOWN"},
 		},
 		"invalid_negative": {
-			input:    &input{format: screenshot.Format(-1)},
+			input:    &input{format: textproc.Format(-1)},
 			expected: &expected{s: "Format(-1)"},
 		},
 		"invalid_out_of_range": {
-			input: &input{format: screenshot.Format(100)}, expected: &expected{s: "Format(100)"},
+			input: &input{format: textproc.Format(100)}, expected: &expected{s: "Format(100)"},
 		},
 	}
 	for name, testcase := range testcases {
@@ -132,7 +131,7 @@ func Test_ScreenshotFormat_String(t *testing.T) {
 	}
 }
 
-func Test_IsPNG(t *testing.T) {
+func TestIsPNG(t *testing.T) {
 	t.Parallel()
 
 	type input struct {
@@ -162,7 +161,7 @@ func Test_IsPNG(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 
-			ok := screenshot.IsPNG(tc.input.content)
+			ok := textproc.IsPNG(tc.input.content)
 			assert.Equal(t, tc.expected.ok, ok)
 		})
 	}
@@ -171,8 +170,8 @@ func Test_IsPNG(t *testing.T) {
 func TestIsImageFile(t *testing.T) {
 	t.Parallel()
 
-	assert.True(t, screenshot.IsImageFile("image.png"))
-	assert.True(t, screenshot.IsImageFile("photo.jpg"))
-	assert.True(t, screenshot.IsImageFile("picture.jpeg"))
-	assert.False(t, screenshot.IsImageFile("document.txt"))
+	assert.True(t, textproc.IsImageFile("image.png"))
+	assert.True(t, textproc.IsImageFile("photo.jpg"))
+	assert.True(t, textproc.IsImageFile("picture.jpeg"))
+	assert.False(t, textproc.IsImageFile("document.txt"))
 }
