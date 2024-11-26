@@ -74,7 +74,7 @@ type Server struct {
 	srv *http.Server
 }
 
-func NewServer(config *ServerConfig, wordsService *WordService, logger *slog.Logger) (*Server, error) {
+func NewServer(config *ServerConfig, wordService *WordService, logger *slog.Logger) (*Server, error) {
 	if config == nil {
 		panic("config cannot be nil")
 	}
@@ -85,8 +85,9 @@ func NewServer(config *ServerConfig, wordsService *WordService, logger *slog.Log
 	mux := http.NewServeMux()
 	const prefix = "/api/" + Version
 	mux.Handle("GET "+prefix+"/healthz", healthCheckHandler(logger))
-	mux.Handle("GET "+prefix+"/words", allWordsHandler(wordsService, logger))
-	mux.Handle("POST "+prefix+"/words", insertWordHandler(wordsService, logger))
+	mux.Handle("GET "+prefix+"/words", allWordsHandler(wordService, logger))
+	mux.Handle("POST "+prefix+"/words", insertWordHandler(wordService, logger))
+	mux.Handle("POST "+prefix+"/words/file", insertWordsFileHandler(wordService, logger))
 
 	var handler http.Handler = mux
 

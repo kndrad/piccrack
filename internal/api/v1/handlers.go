@@ -209,23 +209,25 @@ func insertWordsFileHandler(svc *WordService, logger *slog.Logger) http.HandlerF
 		scanner := bufio.NewScanner(f)
 		scanner.Split(bufio.ScanWords)
 
+		var words []string
 		for scanner.Scan() {
-			// Insert
-			row, err := svc.InsertWord(r.Context(), scanner.Text())
+			words = append(words, scanner.Text())
+		}
+		if err := scanner.Err(); err != nil {
+			WriteJSONErr(w, "Scanner returned an error", err, http.StatusInternalServerError)
+		}
+		count := 0
+		for _, word := range words {
+			_, err := svc.InsertWord(r.Context(), word)
 			if err != nil {
 				WriteJSONErr(w, "Failed to insert row", err, http.StatusInternalServerError)
 
 				return
 			}
-			logger.Info("Inserted word",
-				slog.Int64("id", row.ID),
-				slog.String("value", row.Value),
-			)
-		}
-		if err := scanner.Err(); err != nil {
-			WriteJSONErr(w, "Scanner returned an error", err, http.StatusInternalServerError)
+			count++
 		}
 
+		logger.Info("Inserted words", slog.Int("count", count))
 		w.WriteHeader(http.StatusOK)
 	}
 }
