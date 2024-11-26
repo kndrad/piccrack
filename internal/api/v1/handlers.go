@@ -33,6 +33,25 @@ func decode[T any](r *http.Request) (T, error) {
 	return v, nil
 }
 
+func WriteJSONErr(w http.ResponseWriter, msg string, err error, code int) {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(code)
+
+	response := struct {
+		Message string `json:"message"`
+		Error   string `json:"error,omitempty"`
+	}{
+		Message: msg,
+	}
+	if err != nil {
+		response.Error = err.Error()
+	}
+
+	if err := json.NewEncoder(w).Encode(response); err != nil {
+		fmt.Fprintf(w, "Internal Server Error: failed to marshal error response")
+	}
+}
+
 func healthCheckHandler(logger *slog.Logger) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		logger.Info("Received health check request",
@@ -229,24 +248,5 @@ func insertWordsFileHandler(svc *WordService, logger *slog.Logger) http.HandlerF
 
 		logger.Info("Inserted words", slog.Int("count", count))
 		w.WriteHeader(http.StatusOK)
-	}
-}
-
-func WriteJSONErr(w http.ResponseWriter, msg string, err error, code int) {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(code)
-
-	response := struct {
-		Message string `json:"message"`
-		Error   string `json:"error,omitempty"`
-	}{
-		Message: msg,
-	}
-	if err != nil {
-		response.Error = err.Error()
-	}
-
-	if err := json.NewEncoder(w).Encode(response); err != nil {
-		fmt.Fprintf(w, "Internal Server Error: failed to marshal error response")
 	}
 }
