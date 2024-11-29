@@ -27,6 +27,7 @@ import (
 
 	v1 "github.com/kndrad/wordcrack/internal/api/v1"
 	"github.com/kndrad/wordcrack/internal/textproc"
+	"github.com/kndrad/wordcrack/internal/textproc/database"
 	"github.com/kndrad/wordcrack/pkg/retry"
 	"github.com/spf13/cobra"
 )
@@ -74,8 +75,8 @@ var apiStartCmd = &cobra.Command{
 			return fmt.Errorf("loading config err: %w", err)
 		}
 
-		q := textproc.NewQueries(db)
-		wordsService := v1.NewWordsService(q, Logger)
+		q := database.New(db)
+		wordsService := v1.NewWordService(q, Logger)
 		srv, err := v1.NewServer(
 			config,
 			wordsService,

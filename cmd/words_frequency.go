@@ -28,6 +28,7 @@ import (
 	"strconv"
 
 	"github.com/kndrad/wordcrack/internal/textproc"
+	"github.com/kndrad/wordcrack/internal/textproc/database"
 	"github.com/kndrad/wordcrack/pkg/retry"
 	"github.com/spf13/cobra"
 )
@@ -70,10 +71,10 @@ var wordsFrequencyCmd = &cobra.Command{
 		defer conn.Close(ctx)
 
 		// Query db to get word frequency count.
-		queries := textproc.NewQueries(conn)
+		q := database.New(conn)
 
 		var limit int32 = 30
-		params := textproc.GetWordsFrequenciesParams{Limit: limit}
+		params := database.ListWordFrequenciesParams{Limit: limit}
 
 		if len(args) > 0 {
 			limit, err := strconv.ParseInt(args[0], 10, 32)
@@ -82,7 +83,7 @@ var wordsFrequencyCmd = &cobra.Command{
 			}
 			params.Limit = int32(limit)
 		}
-		rows, err := queries.GetWordsFrequencies(ctx, params)
+		rows, err := q.ListWordFrequencies(ctx, params)
 		if err != nil {
 			Logger.Error("Failed to analyze word frequency count", "err", err.Error())
 
@@ -94,7 +95,7 @@ var wordsFrequencyCmd = &cobra.Command{
 
 		if verbose {
 			for i, row := range rows {
-				fmt.Printf("%v: ROW: [%v, %v] \n", i, row.Value, row.Frequency)
+				fmt.Printf("%v: ROW: [%v, %v] \n", i, row.Value, row.Total)
 			}
 		}
 

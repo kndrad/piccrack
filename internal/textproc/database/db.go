@@ -2,7 +2,7 @@
 // versions:
 //   sqlc v1.27.0
 
-package textproc
+package database
 
 import (
 	"context"
@@ -17,7 +17,7 @@ type DBTX interface {
 	QueryRow(context.Context, string, ...interface{}) pgx.Row
 }
 
-func NewQueries(db DBTX) *Queries {
+func New(db DBTX) *Queries {
 	return &Queries{db: db}
 }
 

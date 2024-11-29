@@ -35,6 +35,7 @@ import (
 	"time"
 
 	"github.com/kndrad/wordcrack/internal/textproc"
+	"github.com/kndrad/wordcrack/internal/textproc/database"
 	"github.com/kndrad/wordcrack/pkg/retry"
 	"github.com/spf13/cobra"
 )
@@ -125,9 +126,9 @@ var addManyWordsCmd = &cobra.Command{
 		}
 
 		// Query db to insert each word
-		queries := textproc.NewQueries(conn)
+		q := database.New(conn)
 		for word := range textAnalysis.WordFrequency {
-			row, err := queries.InsertWord(ctx, word)
+			row, err := q.CreateWord(ctx, word)
 			if err != nil {
 				Logger.Error("Failed to insert word",
 					slog.String("word", word),

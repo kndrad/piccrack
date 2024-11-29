@@ -5,23 +5,23 @@ import (
 	"fmt"
 	"log/slog"
 
-	"github.com/kndrad/wordcrack/internal/textproc"
+	"github.com/kndrad/wordcrack/internal/textproc/database"
 )
 
 type WordService struct {
-	q      textproc.Querier
+	q      database.Querier
 	logger *slog.Logger
 }
 
-func NewWordsService(queries textproc.Querier, logger *slog.Logger) *WordService {
+func NewWordService(q database.Querier, logger *slog.Logger) *WordService {
 	return &WordService{
-		q:      queries,
+		q:      q,
 		logger: logger,
 	}
 }
 
-func (svc *WordService) GetAllWords(ctx context.Context, limit, offset int32) ([]textproc.AllWordsRow, error) {
-	rows, err := svc.q.AllWords(ctx, textproc.AllWordsParams{
+func (svc *WordService) GetAllWords(ctx context.Context, limit, offset int32) ([]database.ListWordsRow, error) {
+	rows, err := svc.q.ListWords(ctx, database.ListWordsParams{
 		Limit:  limit,
 		Offset: offset,
 	})
@@ -32,11 +32,11 @@ func (svc *WordService) GetAllWords(ctx context.Context, limit, offset int32) ([
 	return rows, nil
 }
 
-func (svc *WordService) InsertWord(ctx context.Context, value string) (textproc.InsertWordRow, error) {
+func (svc *WordService) InsertWord(ctx context.Context, value string) (database.CreateWordRow, error) {
 	if value == "" {
 		panic("value cannot be empty")
 	}
-	row, err := svc.q.InsertWord(ctx, value)
+	row, err := svc.q.CreateWord(ctx, value)
 	if err != nil {
 		return row, fmt.Errorf("insert word: %w", err)
 	}

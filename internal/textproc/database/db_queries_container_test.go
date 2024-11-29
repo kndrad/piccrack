@@ -1,4 +1,4 @@
-package textproc_test
+package database
 
 import (
 	"bufio"
@@ -21,7 +21,7 @@ import (
 	"github.com/testcontainers/testcontainers-go/modules/postgres"
 )
 
-func TestPostgresDatabase(t *testing.T) {
+func TestDatabaseQueries(t *testing.T) {
 	t.Parallel()
 
 	tmpFile, err := os.CreateTemp("testdata", "*.env")
@@ -62,7 +62,7 @@ DB_NAME=wordcrack`
 	wd, err := os.Getwd()
 	require.NoError(t, err)
 	t.Logf("Current wd: %s", wd)
-	if strings.HasSuffix(wd, "internal/textproc") {
+	if strings.HasSuffix(wd, "internal/textproc/database") {
 		// Remove last element from wd
 		cut := func(s, dir string) string {
 			path, ok := strings.CutSuffix(s, dir)
@@ -73,7 +73,7 @@ DB_NAME=wordcrack`
 
 			return s
 		}
-		root = cut(wd, "internal/textproc")
+		root = cut(wd, "internal/textproc/database")
 		t.Logf("Cut dir, got root: %s", root)
 		if err := os.Chdir(root); err != nil {
 			t.Fatalf("Failed to change dir, err: %v", err)
@@ -109,85 +109,100 @@ DB_NAME=wordcrack`
 	}
 	const DefaultQueryLimit int32 = 857
 
-	t.Run("insert_words", func(t *testing.T) {
+	t.Run("", func(t *testing.T) {
 		conn, err := pgx.Connect(ctx, connStr)
 		require.NoError(t, err)
 		defer conn.Close(ctx)
 
-		q := textproc.NewQueries(conn)
+		q := New(conn)
 		for _, w := range words {
-			row, err := q.InsertWord(ctx, w)
+			row, err := q.CreateWord(ctx, w)
 			require.NoError(t, err)
 			assert.Equal(t, w, row.Value)
 		}
 	})
 
-	t.Run("all_words", func(t *testing.T) {
+	t.Run("list_words", func(t *testing.T) {
 		conn, err := pgx.Connect(ctx, connStr)
 		require.NoError(t, err)
 		defer conn.Close(ctx)
 
-		q := textproc.NewQueries(conn)
-		params := textproc.AllWordsParams{Limit: DefaultQueryLimit}
-		rows, err := q.AllWords(ctx, params)
+		query := New(conn)
+		params := ListWordsParams{Limit: DefaultQueryLimit}
+		rows, err := query.ListWords(ctx, params)
 		require.NoError(t, err)
 		require.Equal(t, len(words), len(rows))
 	})
 
-	t.Run("add_word", func(t *testing.T) {
+	t.Run("create_word", func(t *testing.T) {
 		conn, err := pgx.Connect(ctx, connStr)
 		require.NoError(t, err)
 		defer conn.Close(ctx)
 
-		q := textproc.NewQueries(conn)
-		row, err := q.InsertWord(ctx, "test1")
+		q := New(conn)
+		row, err := q.CreateWord(ctx, "test1")
 		require.NoError(t, err)
 		require.Equal(t, "test1", row.Value)
 	})
 
-	t.Run("words_frequency_count", func(t *testing.T) {
+	t.Run("list_word_frequencies", func(t *testing.T) {
 		conn, err := pgx.Connect(ctx, connStr)
 		require.NoError(t, err)
 		defer conn.Close(ctx)
 
-		q := textproc.NewQueries(conn)
-		params := textproc.GetWordsFrequenciesParams{Limit: DefaultQueryLimit}
-		rows, err := q.GetWordsFrequencies(ctx, params)
+		q := New(conn)
+		params := ListWordFrequenciesParams{Limit: DefaultQueryLimit}
+		rows, err := q.ListWordFrequencies(ctx, params)
 		require.NoError(t, err)
 
 		for _, row := range rows {
 			// Pick some random words
 			switch row.Value {
 			case "leading":
-				require.Equal(t, int64(2), row.Frequency)
+				require.Equal(t, int64(2), row.Total)
 			case "development":
-				require.Equal(t, int64(10), row.Frequency)
+				require.Equal(t, int64(10), row.Total)
 			case "experience":
-				require.Equal(t, int64(28), row.Frequency)
+				require.Equal(t, int64(28), row.Total)
 			}
 		}
 	})
 
-	t.Run("words_rank", func(t *testing.T) {
+	t.Run("list_word_rankings", func(t *testing.T) {
 		conn, err := pgx.Connect(ctx, connStr)
 		require.NoError(t, err)
 		defer conn.Close(ctx)
 
-		q := textproc.NewQueries(conn)
-		params := textproc.GetWordsRankParams{Limit: DefaultQueryLimit}
-		rows, err := q.GetWordsRank(ctx, params)
+		q := New(conn)
+		params := ListWordRankingsParams{Limit: DefaultQueryLimit}
+		rows, err := q.ListWordRankings(ctx, params)
 		require.NoError(t, err)
 
 		for _, row := range rows {
 			// Pick some random words
 			switch row.Value {
 			case "experience":
-				require.Equal(t, int64(1), row.Rank)
+				require.Equal(t, int64(1), row.Ranking)
 			case "team":
-				require.Equal(t, int64(2), row.Rank)
+				require.Equal(t, int64(2), row.Ranking)
 			case "software":
-				require.Equal(t, int64(3), row.Rank)
+				require.Equal(t, int64(3), row.Ranking)
 			}
+		}
+	})
+
+	t.Run("list_word_batches", func(t *testing.T) {
+		conn, err := pgx.Connect(ctx, connStr)
+		require.NoError(t, err)
+		defer conn.Close(ctx)
+
+		q := New(conn)
+		params := ListWordBatchesParams{Limit: DefaultQueryLimit}
+		batchRows, err := q.ListWordBatches(ctx, params)
+		require.NoError(t, err)
+
+		for _, row := range batchRows {
+			t.Logf("Got batch: %v", row)
 		}
 	})
 }

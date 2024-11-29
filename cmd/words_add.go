@@ -28,6 +28,7 @@ import (
 	"time"
 
 	"github.com/kndrad/wordcrack/internal/textproc"
+	"github.com/kndrad/wordcrack/internal/textproc/database"
 	"github.com/kndrad/wordcrack/pkg/retry"
 	"github.com/spf13/cobra"
 )
@@ -70,10 +71,10 @@ var addWordCmd = &cobra.Command{
 		}
 		defer conn.Close(ctx)
 
-		queries := textproc.NewQueries(conn)
+		q := database.New(conn)
 
 		value := args[0]
-		word, err := queries.InsertWord(ctx, value)
+		word, err := q.CreateWord(ctx, value)
 		if err != nil {
 			Logger.Error("Inserting word failed", "err", err.Error())
 

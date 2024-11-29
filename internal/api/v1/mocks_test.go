@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"github.com/jackc/pgx/v5/pgtype"
-	"github.com/kndrad/wordcrack/internal/textproc"
+	"github.com/kndrad/wordcrack/internal/textproc/database"
 	"golang.org/x/exp/rand"
 )
 
@@ -28,7 +28,7 @@ func mockDate() time.Time {
 	return time.Date(2024, 11, 17, 9, 30, 0, 0, time.UTC)
 }
 
-func (wm *WordMock) ToPostgres() *textproc.Word {
+func (wm *WordMock) ToPostgres() *database.Word {
 	// Assign random id if word mock id is zero
 	if wm.id == 0 {
 		r := rand.New(rand.NewSource(99))
@@ -41,7 +41,7 @@ func (wm *WordMock) ToPostgres() *textproc.Word {
 		wm.createdAt = mockDate()
 	}
 
-	return &textproc.Word{
+	return &database.Word{
 		ID:        wm.id,
 		Value:     wm.value,
 		CreatedAt: pgtype.Timestamptz{Time: wm.createdAt},
@@ -49,7 +49,7 @@ func (wm *WordMock) ToPostgres() *textproc.Word {
 	}
 }
 
-func wordsMock() []WordMock {
+func NewWordsMock() []WordMock {
 	var mocks []WordMock
 
 	date := time.Date(2024, 11, 17, 9, 30, 0, 0, time.UTC)
@@ -80,16 +80,16 @@ func wordsMock() []WordMock {
 	return mocks
 }
 
-func mockWordsRows(wordMocks []WordMock) []textproc.AllWordsRow {
+func mockWordsRows(wordMocks []WordMock) []database.ListWordsRow {
 	if wordMocks == nil {
 		panic("words mock cannot be nil")
 	}
 
-	var rows []textproc.AllWordsRow
+	var rows []database.ListWordsRow
 
 	for _, wm := range wordMocks {
 		w := wm.ToPostgres()
-		rows = append(rows, textproc.AllWordsRow{
+		rows = append(rows, database.ListWordsRow{
 			ID:        w.ID,
 			Value:     w.Value,
 			CreatedAt: w.CreatedAt,
@@ -99,7 +99,7 @@ func mockWordsRows(wordMocks []WordMock) []textproc.AllWordsRow {
 	return rows
 }
 
-func mockWordsFrequenciesRows(wordMocks []WordMock) []textproc.GetWordsFrequenciesRow {
+func mockWordsFrequenciesRows(wordMocks []WordMock) []database.ListWordFrequenciesRow {
 	if wordMocks == nil {
 		panic("words mock cannot be nil")
 	}
@@ -110,12 +110,12 @@ func mockWordsFrequenciesRows(wordMocks []WordMock) []textproc.GetWordsFrequenci
 		m[wm.value]++
 	}
 
-	rows := make([]textproc.GetWordsFrequenciesRow, 0)
+	rows := make([]database.ListWordFrequenciesRow, 0)
 
 	for value, frequency := range m {
-		row := textproc.GetWordsFrequenciesRow{
-			Value:     value,
-			Frequency: frequency,
+		row := database.ListWordFrequenciesRow{
+			Value: value,
+			Total: frequency,
 		}
 		rows = append(rows, row)
 	}
@@ -123,7 +123,7 @@ func mockWordsFrequenciesRows(wordMocks []WordMock) []textproc.GetWordsFrequenci
 	return rows
 }
 
-func mockWordsRankRows(wordMocks []WordMock) []textproc.GetWordsRankRow {
+func mockWordsRankRows(wordMocks []WordMock) []database.ListWordRankingsRow {
 	if wordMocks == nil {
 		panic("words mock cannot be nil")
 	}
@@ -160,25 +160,25 @@ func mockWordsRankRows(wordMocks []WordMock) []textproc.GetWordsRankRow {
 	}
 
 	// append to rows
-	rows := make([]textproc.GetWordsRankRow, 0)
+	rows := make([]database.ListWordRankingsRow, 0)
 	for i, pair := range wvrPairs {
-		rows = append(rows, textproc.GetWordsRankRow{
-			Value: pair.Value,
-			Rank:  int64(i),
+		rows = append(rows, database.ListWordRankingsRow{
+			Value:   pair.Value,
+			Ranking: int64(i),
 		})
 	}
 	return rows
 }
 
 type wordQueriesMock struct {
-	wordsRows            []textproc.AllWordsRow
-	wordsFrequenciesRows []textproc.GetWordsFrequenciesRow
-	wordsRankRows        []textproc.GetWordsRankRow
+	wordsRows            []database.ListWordsRow
+	wordsFrequenciesRows []database.ListWordFrequenciesRow
+	wordsRankRows        []database.ListWordRankingsRow
 }
 
-func mockWordQueries(words ...WordMock) *wordQueriesMock {
+func NewWordQueriesMock(words ...WordMock) *wordQueriesMock {
 	if words == nil {
-		words = wordsMock()
+		words = NewWordsMock()
 	}
 	wordsRows := mockWordsRows(words)
 	wordsFrequenciesRows := mockWordsFrequenciesRows(words)
@@ -191,29 +191,45 @@ func mockWordQueries(words ...WordMock) *wordQueriesMock {
 	}
 }
 
-func (q *wordQueriesMock) AllWords(ctx context.Context, arg textproc.AllWordsParams) ([]textproc.AllWordsRow, error) {
-	return q.wordsRows, nil
-}
-
-func (q *wordQueriesMock) GetWordsFrequencies(ctx context.Context, arg textproc.GetWordsFrequenciesParams) ([]textproc.GetWordsFrequenciesRow, error) {
-	return q.wordsFrequenciesRows, nil
-}
-
-func (q *wordQueriesMock) GetWordsRank(ctx context.Context, arg textproc.GetWordsRankParams) ([]textproc.GetWordsRankRow, error) {
-	return q.wordsRankRows, nil
-}
-
-func (q *wordQueriesMock) InsertWord(ctx context.Context, value string) (textproc.InsertWordRow, error) {
+func (q *wordQueriesMock) CreateWord(ctx context.Context, value string) (database.CreateWordRow, error) {
 	wm := &WordMock{
 		id:        int64(len(q.wordsRows)) + 1,
 		value:     value,
 		createdAt: time.Now().UTC(),
 	}
 	pgw := wm.ToPostgres()
-	row := textproc.InsertWordRow{
+	row := database.CreateWordRow{
 		ID:        pgw.ID,
 		Value:     pgw.Value,
 		CreatedAt: pgw.CreatedAt,
 	}
 	return row, nil
+}
+
+// TODO
+func (q *wordQueriesMock) CreateWordBatch(ctx context.Context, name string) (database.CreateWordBatchRow, error) {
+	return database.CreateWordBatchRow{}, nil
+}
+
+func (q *wordQueriesMock) ListWords(ctx context.Context, arg database.ListWordsParams) ([]database.ListWordsRow, error) {
+	return q.wordsRows, nil
+}
+
+// TODO
+func (q *wordQueriesMock) ListWordBatches(ctx context.Context, arg database.ListWordBatchesParams) ([]database.ListWordBatchesRow, error) {
+	return []database.ListWordBatchesRow{}, nil
+}
+
+func (q *wordQueriesMock) ListWordFrequencies(ctx context.Context, arg database.ListWordFrequenciesParams) ([]database.ListWordFrequenciesRow, error) {
+	return q.wordsFrequenciesRows, nil
+}
+
+func (q *wordQueriesMock) ListWordRankings(ctx context.Context, arg database.ListWordRankingsParams) ([]database.ListWordRankingsRow, error) {
+	return q.wordsRankRows, nil
+}
+
+type WordBatchMock struct {
+	id        int64
+	name      string
+	createdAt time.Time
 }

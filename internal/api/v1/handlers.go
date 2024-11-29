@@ -10,6 +10,8 @@ import (
 	"net/http"
 	"net/url"
 	"strconv"
+
+	"github.com/kndrad/wordcrack/internal/textproc"
 )
 
 func encode[T any](w http.ResponseWriter, _ *http.Request, status int, v T) error {
@@ -33,7 +35,7 @@ func decode[T any](r *http.Request) (T, error) {
 	return v, nil
 }
 
-func WriteJSONErr(w http.ResponseWriter, msg string, err error, code int) {
+func writeJSONErr(w http.ResponseWriter, msg string, err error, code int) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(code)
 
@@ -99,7 +101,7 @@ func getOffset(values url.Values) (int32, error) {
 	return int32(offset), nil
 }
 
-func allWordsHandler(svc *WordService, logger *slog.Logger) http.HandlerFunc {
+func listWordsHandler(svc *WordService, logger *slog.Logger) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		logger.Info("Received request",
 			slog.String("url", r.URL.String()),
@@ -130,7 +132,7 @@ func allWordsHandler(svc *WordService, logger *slog.Logger) http.HandlerFunc {
 	}
 }
 
-func insertWordHandler(svc *WordService, logger *slog.Logger) http.HandlerFunc {
+func createWordHandler(svc *WordService, logger *slog.Logger) http.HandlerFunc {
 	type Request struct {
 		Value string `json:"value"`
 	}
@@ -164,7 +166,7 @@ func insertWordHandler(svc *WordService, logger *slog.Logger) http.HandlerFunc {
 	}
 }
 
-func insertWordsFileHandler(svc *WordService, logger *slog.Logger) http.HandlerFunc {
+func uploadWordsHandler(svc *WordService, logger *slog.Logger) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		logger.Info("Received request",
 			slog.String("url", r.URL.String()),
@@ -175,26 +177,20 @@ func insertWordsFileHandler(svc *WordService, logger *slog.Logger) http.HandlerF
 		r.Body = http.MaxBytesReader(w, r.Body, MaxSize)
 
 		if err := r.ParseMultipartForm(MaxSize); err != nil {
-			WriteJSONErr(w, "File too big", err, http.StatusBadRequest)
-
-			return
+			writeJSONErr(w, "File too big", err, http.StatusBadRequest)
 		}
 		f, fheader, err := r.FormFile("file")
 		if err != nil {
-			WriteJSONErr(w, "Failed to get file", err, http.StatusBadRequest)
-
-			return
+			writeJSONErr(w, "Failed to get file", err, http.StatusBadRequest)
 		}
 		defer f.Close()
 
 		// Detect content type of file and check if it's a text
-		data := make([]byte, 1024)
+		data := make([]byte, 512)
 		if _, err := f.Read(data); err != nil {
-			WriteJSONErr(w, "Failed to read file into buffer", err, http.StatusInternalServerError)
-
-			return
+			writeJSONErr(w, "Failed to read file into buffer", err, http.StatusInternalServerError)
 		}
-		ct := http.DetectContentType(data)
+		contentType := http.DetectContentType(data)
 		allowed := func() bool {
 			types := map[string]bool{
 				"text/plain":                true,
@@ -203,22 +199,18 @@ func insertWordsFileHandler(svc *WordService, logger *slog.Logger) http.HandlerF
 				"text/x-plain":              true,
 			}
 
-			return types[ct]
+			return types[contentType]
 		}
 		if !allowed() {
-			WriteJSONErr(w,
-				fmt.Sprintf("Content type %s not allowed. Upload text file", ct),
+			writeJSONErr(w,
+				fmt.Sprintf("Content type %s not allowed. Upload text file", contentType),
 				nil,
 				http.StatusBadRequest,
 			)
-
-			return
 		}
 		// Return pointer back to the start of the file after content type detection
 		if _, err := f.Seek(0, io.SeekStart); err != nil {
-			WriteJSONErr(w, "Failed to seek to start of the file", err, http.StatusInternalServerError)
-
-			return
+			writeJSONErr(w, "Failed to seek to start of the file", err, http.StatusInternalServerError)
 		}
 		logger.Info("Received form",
 			slog.String("filename", fheader.Filename),
@@ -233,20 +225,103 @@ func insertWordsFileHandler(svc *WordService, logger *slog.Logger) http.HandlerF
 			words = append(words, scanner.Text())
 		}
 		if err := scanner.Err(); err != nil {
-			WriteJSONErr(w, "Scanner returned an error", err, http.StatusInternalServerError)
+			writeJSONErr(w, "Scanner returned an error", err, http.StatusInternalServerError)
 		}
 		count := 0
 		for _, word := range words {
 			_, err := svc.InsertWord(r.Context(), word)
 			if err != nil {
-				WriteJSONErr(w, "Failed to insert row", err, http.StatusInternalServerError)
-
-				return
+				writeJSONErr(w, "Failed to insert row", err, http.StatusInternalServerError)
 			}
 			count++
 		}
-
+		type Response struct {
+			Count int `json:"count"`
+		}
+		resp := Response{
+			Count: count,
+		}
+		if err := encode(w, r, http.StatusOK, resp); err != nil {
+			writeJSONErr(w, "Failed to insert row", err, http.StatusInternalServerError)
+		}
 		logger.Info("Inserted words", slog.Int("count", count))
+	}
+}
+
+func uploadImageWordsHandler(svc *WordService, logger *slog.Logger) http.HandlerFunc {
+	var maxSize int64 = 1024 * 1024 * 50 // 50 MB
+
+	type Response struct {
+		Words []string `json:"words"`
+	}
+
+	return func(w http.ResponseWriter, r *http.Request) {
+		r.Body = http.MaxBytesReader(w, r.Body, maxSize)
+
+		if err := r.ParseMultipartForm(maxSize); err != nil {
+			writeJSONErr(w, "Image file too big", err, http.StatusBadRequest)
+		}
+		f, fh, err := r.FormFile("image")
+		if err != nil {
+			writeJSONErr(w, "Failed to get image file", err, http.StatusBadRequest)
+		}
+		defer f.Close()
+
+		// Detect content type of file and check if it's a text
+		data := make([]byte, 512)
+		if _, err := f.Read(data); err != nil {
+			writeJSONErr(w, "Failed to read image file into buffer", err, http.StatusInternalServerError)
+		}
+		contentType := http.DetectContentType(data)
+
+		var allowed bool
+
+		switch contentType {
+		case "image/jpeg", "image/png":
+			allowed = true
+		default:
+			allowed = false
+		}
+		// Return pointer back to the start of the file after content type detection
+		if _, err := f.Seek(0, io.SeekStart); err != nil {
+			writeJSONErr(w, "Failed to seek to start of the file", err, http.StatusInternalServerError)
+		}
+		if !allowed {
+			writeJSONErr(w,
+				fmt.Sprintf("Content type %s not allowed. Upload text file", contentType),
+				nil,
+				http.StatusBadRequest,
+			)
+		}
+		logger.Info("Received form", slog.String("header_filename", fh.Filename))
+
+		// Get OCR result from uploaded image
+		img := make([]byte, textproc.MaxImageSize)
+		if _, err := f.Read(img); err != nil {
+			writeJSONErr(w,
+				"Failed to read file content for image words recognition.",
+				err,
+				http.StatusInternalServerError,
+			)
+		}
+		result, err := textproc.OCR(img)
+		if err != nil {
+			writeJSONErr(w,
+				"Failed to recognize words from an image",
+				err,
+				http.StatusInternalServerError,
+			)
+		}
+		// Insert as batch with current date as a mark (?)
+
+		// Write status
 		w.WriteHeader(http.StatusOK)
+		if _, err := w.Write(result); err != nil {
+			writeJSONErr(w,
+				"Failed to write ",
+				err,
+				http.StatusInternalServerError,
+			)
+		}
 	}
 }

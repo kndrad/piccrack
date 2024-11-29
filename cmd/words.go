@@ -29,6 +29,7 @@ import (
 	"time"
 
 	"github.com/kndrad/wordcrack/internal/textproc"
+	"github.com/kndrad/wordcrack/internal/textproc/database"
 	"github.com/kndrad/wordcrack/pkg/retry"
 	"github.com/spf13/cobra"
 )
@@ -71,7 +72,7 @@ var wordsCmd = &cobra.Command{
 		}
 		defer conn.Close(ctx)
 
-		queries := textproc.NewQueries(conn)
+		q := database.New(conn)
 
 		limit := math.MaxInt32
 		if len(args) > 0 {
@@ -83,7 +84,7 @@ var wordsCmd = &cobra.Command{
 				limit = int(limitArg)
 			}
 		}
-		params := textproc.AllWordsParams{Limit: int32(limit)}
+		params := database.ListWordsParams{Limit: int32(limit)}
 
 		if len(args) > 0 {
 			limit, err := strconv.ParseInt(args[0], 10, 32)
@@ -92,7 +93,7 @@ var wordsCmd = &cobra.Command{
 			}
 			params.Limit = int32(limit)
 		}
-		words, err := queries.AllWords(ctx, params)
+		words, err := q.ListWords(ctx, params)
 		if err != nil {
 			Logger.Error("Connecting to database", "err", err.Error())
 

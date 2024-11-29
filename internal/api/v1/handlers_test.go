@@ -16,7 +16,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/kndrad/wordcrack/internal/textproc"
+	"github.com/kndrad/wordcrack/internal/textproc/database"
 	"github.com/stretchr/testify/require"
 )
 
@@ -156,9 +156,9 @@ func TestAllWordsHandler(t *testing.T) {
 	for _, tC := range testCases {
 		t.Run(tC.desc, func(t *testing.T) {
 			svc := &WordService{
-				q: mockWordQueries(wordsMock()...),
+				q: NewWordQueriesMock(NewWordsMock()...),
 			}
-			handler := allWordsHandler(svc, getTestLogger())
+			handler := listWordsHandler(svc, getTestLogger())
 
 			ctx := context.Background()
 			url := "/" + tC.query
@@ -178,7 +178,7 @@ func TestAllWordsHandler(t *testing.T) {
 			require.NoError(t, err)
 			resp.Body.Close()
 
-			var rows []textproc.AllWordsRow
+			var rows []database.ListWordsRow
 			if err := json.Unmarshal(data, &rows); err != nil {
 				t.Fatalf("unmarshal json err: %v", err)
 			}
@@ -203,9 +203,9 @@ func TestInsertWordHandler(t *testing.T) {
 	for _, tC := range testCases {
 		t.Run(tC.desc, func(t *testing.T) {
 			svc := &WordService{
-				q: mockWordQueries(wordsMock()...),
+				q: NewWordQueriesMock(NewWordsMock()...),
 			}
-			handler := insertWordHandler(svc, getTestLogger())
+			handler := createWordHandler(svc, getTestLogger())
 
 			ctx := context.Background()
 
@@ -227,7 +227,7 @@ func TestInsertWordHandler(t *testing.T) {
 			require.NoError(t, err)
 			resp.Body.Close()
 
-			var row textproc.InsertWordRow
+			var row database.CreateWordRow
 			if err := json.Unmarshal(data, &row); err != nil {
 				t.Fatalf("unmarshal json err: %v", err)
 			}
@@ -320,7 +320,7 @@ func writeWords(w io.Writer, total int) error {
 	return nil
 }
 
-func TestInsertWordsFileHandler(t *testing.T) {
+func TestUploadWordsHandler(t *testing.T) {
 	t.Parallel()
 
 	// Create tmp file
@@ -352,7 +352,7 @@ func TestInsertWordsFileHandler(t *testing.T) {
 
 			// Underlying db of this service does not contain any words
 			svc: &WordService{
-				q:      mockWordQueries(),
+				q:      NewWordQueriesMock(),
 				logger: getTestLogger(),
 			},
 		},
@@ -394,7 +394,7 @@ func TestInsertWordsFileHandler(t *testing.T) {
 
 			// Record request using handler
 			rr := httptest.NewRecorder()
-			handler := insertWordsFileHandler(tC.svc, getTestLogger())
+			handler := uploadWordsHandler(tC.svc, getTestLogger())
 			handler(rr, req)
 			resp := rr.Result()
 
@@ -406,4 +406,3 @@ func TestInsertWordsFileHandler(t *testing.T) {
 		})
 	}
 }
-

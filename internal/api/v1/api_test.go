@@ -114,7 +114,7 @@ func TestServerStart(t *testing.T) {
 		t.Run(tC.desc, func(t *testing.T) {
 			srv, err := NewServer(
 				newTestCfg(t),
-				&WordService{q: mockWordQueries(wordsMock()...), logger: getTestLogger()},
+				&WordService{q: NewWordQueriesMock(NewWordsMock()...), logger: getTestLogger()},
 				getTestLogger(),
 			)
 			require.NoError(t, err)
@@ -161,7 +161,7 @@ func TestWriteJSONErr(t *testing.T) {
 			rr := httptest.NewRecorder()
 
 			// Write
-			WriteJSONErr(rr, tC.msg, tC.err, tC.code)
+			writeJSONErr(rr, tC.msg, tC.err, tC.code)
 
 			// Get result
 			resp := rr.Result()

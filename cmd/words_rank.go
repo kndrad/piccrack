@@ -24,8 +24,10 @@ package cmd
 import (
 	"context"
 	"fmt"
+	"strconv"
 
 	"github.com/kndrad/wordcrack/internal/textproc"
+	"github.com/kndrad/wordcrack/internal/textproc/database"
 	"github.com/kndrad/wordcrack/pkg/retry"
 	"github.com/spf13/cobra"
 )
@@ -66,12 +68,22 @@ var rankCmd = &cobra.Command{
 		}
 		defer conn.Close(ctx)
 
-		queries := textproc.NewQueries(conn)
+		q := database.New(conn)
 
-		params := textproc.GetWordsRankParams{
-			Limit: 100,
+		var limit int32 = 30
+		params := database.ListWordRankingsParams{
+			Limit: limit,
 		}
-		rows, err := queries.GetWordsRank(ctx, params)
+
+		if len(args) > 0 {
+			limit, err := strconv.ParseInt(args[0], 10, 32)
+			if err != nil {
+				Logger.Error("Failed to strconv", "err", err.Error())
+			}
+			params.Limit = int32(limit)
+		}
+
+		rows, err := q.ListWordRankings(ctx, params)
 		if err != nil {
 			Logger.Error("Failed to get words rank", "err", err.Error())
 
@@ -79,7 +91,7 @@ var rankCmd = &cobra.Command{
 		}
 
 		for _, row := range rows {
-			fmt.Printf("WORD: %s | RANK: %d\n", row.Value, row.Rank)
+			fmt.Printf("WORD: %s | RANK: %d\n", row.Value, row.Ranking)
 		}
 
 		Logger.Info("Program completed successfully.")

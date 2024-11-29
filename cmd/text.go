@@ -76,7 +76,7 @@ var textCmd = &cobra.Command{
 			}
 			// Append image files only
 			for _, e := range entries {
-				if !e.IsDir() && textproc.IsImageFile(e.Name()) {
+				if !e.IsDir() && textproc.IsImage(e.Name()) {
 					filePaths = append(filePaths, filepath.Join(inputPath, "/", e.Name()))
 				}
 			}
@@ -131,7 +131,7 @@ var textCmd = &cobra.Command{
 
 				return fmt.Errorf("reading file: %w", err)
 			}
-			words, err := textproc.RecognizeWords(content)
+			words, err := textproc.OCR(content)
 			if err != nil {
 				Logger.Error("Failed to recognize words in a screenshot content", "err", err)
 

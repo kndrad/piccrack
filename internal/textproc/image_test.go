@@ -14,7 +14,7 @@ const (
 	TestPNGFile = "golang_0.png"
 )
 
-func TestRecognizeWords(t *testing.T) {
+func TestOCR(t *testing.T) {
 	t.Parallel()
 
 	type input struct {
@@ -39,7 +39,7 @@ func TestRecognizeWords(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 
-			result, err := textproc.RecognizeWords(testcase.input.content)
+			result, err := textproc.OCR(testcase.input.content)
 			require.ErrorIsf(t, err, testcase.expected.err, "expected %q but got '%q'", testcase.expected.err, err)
 			require.NotNil(t, result, "expected not nil result")
 		})
@@ -170,8 +170,8 @@ func TestIsPNG(t *testing.T) {
 func TestIsImageFile(t *testing.T) {
 	t.Parallel()
 
-	assert.True(t, textproc.IsImageFile("image.png"))
-	assert.True(t, textproc.IsImageFile("photo.jpg"))
-	assert.True(t, textproc.IsImageFile("picture.jpeg"))
-	assert.False(t, textproc.IsImageFile("document.txt"))
+	assert.True(t, textproc.IsImage("image.png"))
+	assert.True(t, textproc.IsImage("photo.jpg"))
+	assert.True(t, textproc.IsImage("picture.jpeg"))
+	assert.False(t, textproc.IsImage("document.txt"))
 }

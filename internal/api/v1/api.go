@@ -85,9 +85,10 @@ func NewServer(config *ServerConfig, wordService *WordService, logger *slog.Logg
 	mux := http.NewServeMux()
 	const prefix = "/api/" + Version
 	mux.Handle("GET "+prefix+"/healthz", healthCheckHandler(logger))
-	mux.Handle("GET "+prefix+"/words", allWordsHandler(wordService, logger))
-	mux.Handle("POST "+prefix+"/words", insertWordHandler(wordService, logger))
-	mux.Handle("POST "+prefix+"/words/file", insertWordsFileHandler(wordService, logger))
+	mux.Handle("GET "+prefix+"/words", listWordsHandler(wordService, logger))
+	mux.Handle("POST "+prefix+"/words", createWordHandler(wordService, logger))
+	mux.Handle("POST "+prefix+"/words/file", uploadWordsHandler(wordService, logger))
+	mux.Handle("POST "+prefix+"/words/image", uploadImageWordsHandler(wordService, logger))
 
 	var handler http.Handler = mux
 

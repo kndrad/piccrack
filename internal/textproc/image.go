@@ -38,7 +38,7 @@ var (
 	ErrUnknownLanguage = errors.New("unknown language")
 )
 
-// RecognizeWords runs OCR on the provided image content using Tesseract and returns cleaned from stop words
+// OCR runs Tesseract on image content and returns cleaned from stop words
 // text as a slice of bytes.
 //
 // Accepts options to configure the Tesseract client.
@@ -46,8 +46,8 @@ var (
 //
 // Content must be an image. Any other format will result in an error.
 // Content size must be within allowed range. See MaxSize and MinSize.
-func RecognizeWords(content []byte) ([]byte, error) {
-	if err := ValidateImageSize(content); err != nil {
+func OCR(img []byte) ([]byte, error) {
+	if err := ValidateImageSize(img); err != nil {
 		return nil, fmt.Errorf("decode: %w", err)
 	}
 
@@ -59,7 +59,7 @@ func RecognizeWords(content []byte) ([]byte, error) {
 	if err := client.SetWhitelist(Alphanumeric); err != nil {
 		return nil, fmt.Errorf("decode: %w", err)
 	}
-	if err := client.SetImageFromBytes(content); err != nil {
+	if err := client.SetImageFromBytes(img); err != nil {
 		return nil, fmt.Errorf("decode: %w", err)
 	}
 	text, err := client.Text()
@@ -121,8 +121,8 @@ func IsPNG(content []byte) bool {
 	return bytes.Contains(content[:4], PNG.Bytes())
 }
 
-func IsImageFile(name string) bool {
-	ext := strings.ToLower(filepath.Ext(name))
+func IsImage(filename string) bool {
+	ext := strings.ToLower(filepath.Ext(filename))
 
 	return ext == ".png" || ext == ".jpg" || ext == ".jpeg"
 }
