@@ -26,7 +26,6 @@ go.work.sum
 **/*.env
 
 # .txt
-llm_input.txt
 internal/screenshot/testdata/words.txt
 analysis_*_*_*_*.txt
 
@@ -55,4 +54,6 @@ coverage.html
 # output
 output/*.txt
 
-
+# mergo output
+llm_input.txt
+llm_*_*.txt
