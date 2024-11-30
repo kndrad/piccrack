@@ -16,7 +16,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/kndrad/wordcrack/internal/textproc/database"
+	"github.com/kndrad/wcrack/internal/textproc/database"
 	"github.com/stretchr/testify/require"
 )
 

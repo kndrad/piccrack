@@ -7,8 +7,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/kndrad/wordcrack/internal/textproc"
-	"github.com/kndrad/wordcrack/pkg/filetest"
+	"github.com/kndrad/wcrack/internal/textproc"
+	"github.com/kndrad/wcrack/pkg/filetest"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )

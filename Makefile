@@ -1,5 +1,5 @@
-BINARY_NAME=wordcrack
-DOCKER_IMAGE=wordcrack:latest
+BINARY_NAME=wcrack
+DOCKER_IMAGE=wcrack:latest
 DOCKER_COMPOSE_IMAGE=wordcrack-app:latest
 DOCKER_IMAGE_PATH=.
 
@@ -53,24 +53,24 @@ api-tests-v:
 api-tests:
 	go test $(API_PKG_PATH) -failfast -coverprofile=coverage.out
 
-.PHONY: test-wordcrack-text-file
-test-wordcrack-text-file:
+.PHONY: test-wcrack-text-file
+test-wcrack-text-file:
 	go run main.go text $(SCREENSHOT_FILEPATH) -o $(TXT_FILEPATH)
 
-.PHONY: test-wordcrack-text-dir
-test-wordcrack-text-dir:
+.PHONY: test-wcrack-text-dir
+test-wcrack-text-dir:
 	go run main.go text -f $(TESTDATA_DIR) -o $(TXT_FILEPATH)
 
-.PHONY: test-wordcrack-frequency
-test-wordcrack-frequency:
+.PHONY: test-wcrack-frequency
+test-wcrack-frequency:
 	go run main.go words frequency --file=$(TESTDATA_DIR)/words.txt
 
 .PHONY: docker-build
 docker-build:
 	docker build --tag=$(DOCKER_IMAGE) $(DOCKER_IMAGE_PATH)
 
-.PHONY: test-docker-wordcrack-text-1
-test-docker-wordcrack-text-1: docker-build
+.PHONY: test-docker-wcrack-text-1
+test-docker-wcrack-text-1: docker-build
 	docker run \
 	-u $(shell id -u):$(shell id -g) \
 	-e $(ENV_FILEPATH) \
@@ -78,8 +78,8 @@ test-docker-wordcrack-text-1: docker-build
 	-v $(OUTPUT_DIR):/output \
 	$(DOCKER_IMAGE) text $(TESTDATA_DIR)/golang_0.png --out=$(OUTPUT_DIR) -v
 
-.PHONY: test-docker-wordcrack-text-2
-test-docker-wordcrack-text-2: docker-build
+.PHONY: test-docker-wcrack-text-2
+test-docker-wcrack-text-2: docker-build
 	docker run \
 	-u $(shell id -u):$(shell id -g) \
 	-e $(ENV_FILEPATH) \
@@ -87,8 +87,8 @@ test-docker-wordcrack-text-2: docker-build
 	-v $(OUTPUT_DIR):/output \
 	$(DOCKER_IMAGE) text -v --file=$(TESTDATA_DIR) --out=$(OUTPUT_DIR)
 
-.PHONY: test-docker-test-wordcrack-words-frequency-analyze-file
-test-docker-test-wordcrack-words-frequency-analyze-file: docker-build
+.PHONY: test-docker-test-wcrack-words-frequency-analyze-file
+test-docker-test-wcrack-words-frequency-analyze-file: docker-build
 	docker run \
 	-u $(shell id -u):$(shell id -g) \
 	-e $(ENV_FILEPATH) \
@@ -108,22 +108,22 @@ compose-up:
 compose-down:
 	docker-compose down
 
-.PHONY: test-wordcrack-words
-test-wordcrack-words:
+.PHONY: test-wcrack-words
+test-wcrack-words:
 	go run main.go words
 
 .PHONY: clear-output-dir
 clear-output-dir:
 	rm -rf ./output/*
 
-.PHONY: test-wordcrack-ping
-test-wordcrack-ping: compose-up
+.PHONY: test-wcrack-ping
+test-wcrack-ping: compose-up
 	go run main.go ping
 
 ANALYSIS_JSON_TEST_FILE=analysis_07_11_2024_07_47_1691.json
 
-.PHONY: test-wordcrack-words-add-many
-test-wordcrack-words-add-many: compose-up
+.PHONY: test-wcrack-words-add-many
+test-wcrack-words-add-many: compose-up
 	go run main.go words add many '$(TESTDATA_DIR)/$(ANALYSIS_JSON_TEST_FILE)'
 
 
@@ -141,7 +141,7 @@ start:
 	docker-compose up --build -d
 	go run main.go ping
 
-.PHONY: test-wordcrack-words-frequency
-test-wordcrack-words-frequency:
+.PHONY: test-wcrack-words-frequency
+test-wcrack-words-frequency:
 	go run main.go words frequency
 

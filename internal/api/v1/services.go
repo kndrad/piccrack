@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"log/slog"
 
-	"github.com/kndrad/wordcrack/internal/textproc/database"
+	"github.com/kndrad/wcrack/internal/textproc/database"
 )
 
 type WordService struct {

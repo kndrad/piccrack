@@ -30,8 +30,8 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/kndrad/wordcrack/internal/textproc"
-	"github.com/kndrad/wordcrack/pkg/openf"
+	"github.com/kndrad/wcrack/internal/textproc"
+	"github.com/kndrad/wcrack/pkg/openf"
 	"github.com/spf13/cobra"
 )
 

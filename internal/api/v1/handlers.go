@@ -11,7 +11,7 @@ import (
 	"net/url"
 	"strconv"
 
-	"github.com/kndrad/wordcrack/internal/textproc"
+	"github.com/kndrad/wcrack/internal/textproc"
 )
 
 func encode[T any](w http.ResponseWriter, _ *http.Request, status int, v T) error {

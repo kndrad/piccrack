@@ -28,8 +28,8 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/kndrad/wordcrack/internal/textproc"
-	"github.com/kndrad/wordcrack/pkg/openf"
+	"github.com/kndrad/wcrack/internal/textproc"
+	"github.com/kndrad/wcrack/pkg/openf"
 	"github.com/spf13/cobra"
 )
 
@@ -49,8 +49,6 @@ var textCmd = &cobra.Command{
 			outPath   = filepath.Clean(outputPath)
 		)
 
-		var filePaths []string
-
 		stat, err := os.Stat(inputPath)
 		if err != nil {
 			Logger.Error("getting stat of screenshot", "err", err)
@@ -61,6 +59,7 @@ var textCmd = &cobra.Command{
 		// Switched to true if inputPath points to a directory.
 		addDirSuffix := false
 
+		var filePaths []string
 		if stat.IsDir() {
 			addDirSuffix = true
 

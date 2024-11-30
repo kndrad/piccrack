@@ -1,4 +1,4 @@
-module github.com/kndrad/wordcrack
+module github.com/kndrad/wcrack
 
 go 1.23.2
 

@@ -25,10 +25,10 @@ import (
 	"context"
 	"fmt"
 
-	v1 "github.com/kndrad/wordcrack/internal/api/v1"
-	"github.com/kndrad/wordcrack/internal/textproc"
-	"github.com/kndrad/wordcrack/internal/textproc/database"
-	"github.com/kndrad/wordcrack/pkg/retry"
+	v1 "github.com/kndrad/wcrack/internal/api/v1"
+	"github.com/kndrad/wcrack/internal/textproc"
+	"github.com/kndrad/wcrack/internal/textproc/database"
+	"github.com/kndrad/wcrack/pkg/retry"
 	"github.com/spf13/cobra"
 )
 

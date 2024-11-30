@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/kndrad/wordcrack/pkg/retry"
+	"github.com/kndrad/wcrack/pkg/retry"
 	"github.com/stretchr/testify/require"
 )
 

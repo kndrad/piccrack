@@ -26,9 +26,9 @@ import (
 	"fmt"
 	"strconv"
 
-	"github.com/kndrad/wordcrack/internal/textproc"
-	"github.com/kndrad/wordcrack/internal/textproc/database"
-	"github.com/kndrad/wordcrack/pkg/retry"
+	"github.com/kndrad/wcrack/internal/textproc"
+	"github.com/kndrad/wcrack/internal/textproc/database"
+	"github.com/kndrad/wcrack/pkg/retry"
 	"github.com/spf13/cobra"
 )
 
