@@ -55,5 +55,4 @@ coverage.html
 output/*.txt
 
 # mergo output
-llm_input.txt
-llm_*_*.txt
+llminput/
