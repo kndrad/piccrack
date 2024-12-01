@@ -15,11 +15,21 @@ import (
 )
 
 func healthCheckHandler(logger *slog.Logger) http.HandlerFunc {
+	type Response struct {
+		Status int `json:"status"`
+	}
+
 	return func(w http.ResponseWriter, r *http.Request) {
 		logger.Info("Received health check request",
 			slog.String("url", r.URL.String()),
 		)
-		w.WriteHeader(http.StatusOK)
+
+		resp := Response{
+			Status: http.StatusOK,
+		}
+		if err := encode(w, r, http.StatusOK, &resp); err != nil {
+			writeJSONErr(w, "Failed to check health", err, http.StatusInternalServerError)
+		}
 	}
 }
 
