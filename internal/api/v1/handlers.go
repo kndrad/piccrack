@@ -14,46 +14,6 @@ import (
 	"github.com/kndrad/wcrack/internal/textproc"
 )
 
-func encode[T any](w http.ResponseWriter, _ *http.Request, status int, v T) error {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(status)
-
-	if err := json.NewEncoder(w).Encode(v); err != nil {
-		return fmt.Errorf("encode json: %w", err)
-	}
-
-	return nil
-}
-
-func decode[T any](r *http.Request) (T, error) {
-	var v T
-
-	if err := json.NewDecoder(r.Body).Decode(&v); err != nil {
-		return v, fmt.Errorf("decode json: %w", err)
-	}
-
-	return v, nil
-}
-
-func writeJSONErr(w http.ResponseWriter, msg string, err error, code int) {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(code)
-
-	response := struct {
-		Message string `json:"message"`
-		Error   string `json:"error,omitempty"`
-	}{
-		Message: msg,
-	}
-	if err != nil {
-		response.Error = err.Error()
-	}
-
-	if err := json.NewEncoder(w).Encode(response); err != nil {
-		fmt.Fprintf(w, "Internal Server Error: failed to marshal error response")
-	}
-}
-
 func healthCheckHandler(logger *slog.Logger) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		logger.Info("Received health check request",
@@ -61,44 +21,6 @@ func healthCheckHandler(logger *slog.Logger) http.HandlerFunc {
 		)
 		w.WriteHeader(http.StatusOK)
 	}
-}
-
-func limitValue(values url.Values) (int32, error) {
-	var param string
-	const defaultLimitParam = "1000"
-
-	param = values.Get("limit")
-	if param == "" {
-		param = defaultLimitParam
-	}
-	limit, err := strconv.ParseUint(param, 10, 32)
-	if err != nil {
-		return 0, fmt.Errorf("parse uint: %w", err)
-	}
-	if limit > math.MaxInt32 {
-		limit = 1000
-	}
-
-	return int32(limit), nil
-}
-
-func offsetValue(values url.Values) (int32, error) {
-	var param string
-	const defaultOffsetParam = "0"
-
-	param = values.Get("offset")
-	if param == "" {
-		param = defaultOffsetParam
-	}
-	offset, err := strconv.ParseUint(param, 10, 32)
-	if err != nil {
-		return 0, fmt.Errorf("parse uint: %w", err)
-	}
-	if offset > math.MaxInt32 {
-		offset = 0
-	}
-
-	return int32(offset), nil
 }
 
 func listWordsHandler(svc WordService, logger *slog.Logger) http.HandlerFunc {
@@ -323,5 +245,83 @@ func uploadImageWordsHandler(svc WordService, logger *slog.Logger) http.HandlerF
 				http.StatusInternalServerError,
 			)
 		}
+	}
+}
+
+func limitValue(values url.Values) (int32, error) {
+	var param string
+	const defaultLimitParam = "1000"
+
+	param = values.Get("limit")
+	if param == "" {
+		param = defaultLimitParam
+	}
+	limit, err := strconv.ParseUint(param, 10, 32)
+	if err != nil {
+		return 0, fmt.Errorf("parse uint: %w", err)
+	}
+	if limit > math.MaxInt32 {
+		limit = 1000
+	}
+
+	return int32(limit), nil
+}
+
+func offsetValue(values url.Values) (int32, error) {
+	var param string
+	const defaultOffsetParam = "0"
+
+	param = values.Get("offset")
+	if param == "" {
+		param = defaultOffsetParam
+	}
+	offset, err := strconv.ParseUint(param, 10, 32)
+	if err != nil {
+		return 0, fmt.Errorf("parse uint: %w", err)
+	}
+	if offset > math.MaxInt32 {
+		offset = 0
+	}
+
+	return int32(offset), nil
+}
+
+func encode[T any](w http.ResponseWriter, _ *http.Request, status int, v T) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(status)
+
+	if err := json.NewEncoder(w).Encode(v); err != nil {
+		return fmt.Errorf("encode json: %w", err)
+	}
+
+	return nil
+}
+
+func decode[T any](r *http.Request) (T, error) {
+	var v T
+
+	if err := json.NewDecoder(r.Body).Decode(&v); err != nil {
+		return v, fmt.Errorf("decode json: %w", err)
+	}
+
+	return v, nil
+}
+
+func writeJSONErr(w http.ResponseWriter, msg string, err error, code int) {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(code)
+
+	response := struct {
+		Message string `json:"message"`
+		Error   string `json:"error,omitempty"`
+	}{
+		Message: msg,
+	}
+	if err != nil {
+		response.Error = err.Error()
+	}
+
+	if err := json.NewEncoder(w).Encode(response); err != nil {
+		fmt.Fprintf(w, "Internal Server Error: failed to marshal error response")
 	}
 }
