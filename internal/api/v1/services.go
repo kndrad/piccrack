@@ -8,19 +8,26 @@ import (
 	"github.com/kndrad/wcrack/internal/textproc/database"
 )
 
-type WordService struct {
+type WordService interface {
+	ListWords(ctx context.Context, limit, offset int32) ([]database.ListWordsRow, error)
+	CreateWord(ctx context.Context, value string) (database.CreateWordRow, error)
+}
+
+type wordService struct {
 	q      database.Querier
 	logger *slog.Logger
 }
 
-func NewWordService(q database.Querier, logger *slog.Logger) *WordService {
-	return &WordService{
+var _ WordService = (*wordService)(nil)
+
+func NewWordService(q database.Querier, l *slog.Logger) WordService {
+	return &wordService{
 		q:      q,
-		logger: logger,
+		logger: l,
 	}
 }
 
-func (svc *WordService) GetAllWords(ctx context.Context, limit, offset int32) ([]database.ListWordsRow, error) {
+func (svc *wordService) ListWords(ctx context.Context, limit, offset int32) ([]database.ListWordsRow, error) {
 	rows, err := svc.q.ListWords(ctx, database.ListWordsParams{
 		Limit:  limit,
 		Offset: offset,
@@ -32,7 +39,7 @@ func (svc *WordService) GetAllWords(ctx context.Context, limit, offset int32) ([
 	return rows, nil
 }
 
-func (svc *WordService) InsertWord(ctx context.Context, value string) (database.CreateWordRow, error) {
+func (svc *wordService) CreateWord(ctx context.Context, value string) (database.CreateWordRow, error) {
 	if value == "" {
 		panic("value cannot be empty")
 	}

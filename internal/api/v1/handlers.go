@@ -63,7 +63,7 @@ func healthCheckHandler(logger *slog.Logger) http.HandlerFunc {
 	}
 }
 
-func getLimit(values url.Values) (int32, error) {
+func limitValue(values url.Values) (int32, error) {
 	var param string
 	const defaultLimitParam = "1000"
 
@@ -82,7 +82,7 @@ func getLimit(values url.Values) (int32, error) {
 	return int32(limit), nil
 }
 
-func getOffset(values url.Values) (int32, error) {
+func offsetValue(values url.Values) (int32, error) {
 	var param string
 	const defaultOffsetParam = "0"
 
@@ -101,24 +101,24 @@ func getOffset(values url.Values) (int32, error) {
 	return int32(offset), nil
 }
 
-func listWordsHandler(svc *WordService, logger *slog.Logger) http.HandlerFunc {
+func listWordsHandler(svc WordService, logger *slog.Logger) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		logger.Info("Received request",
 			slog.String("url", r.URL.String()),
 		)
-		limit, err := getLimit(r.URL.Query())
+		limit, err := limitValue(r.URL.Query())
 		if err != nil {
 			http.Error(w, "Failed get limit param from query", http.StatusBadRequest)
 
 			return
 		}
-		offset, err := getOffset(r.URL.Query())
+		offset, err := offsetValue(r.URL.Query())
 		if err != nil {
 			http.Error(w, "Failed get limit param from query", http.StatusBadRequest)
 
 			return
 		}
-		rows, err := svc.GetAllWords(r.Context(), limit, offset)
+		rows, err := svc.ListWords(r.Context(), limit, offset)
 		if err != nil {
 			http.Error(w, "Failed to fetch all words from a database", http.StatusInternalServerError)
 
@@ -132,7 +132,7 @@ func listWordsHandler(svc *WordService, logger *slog.Logger) http.HandlerFunc {
 	}
 }
 
-func createWordHandler(svc *WordService, logger *slog.Logger) http.HandlerFunc {
+func createWordHandler(svc WordService, logger *slog.Logger) http.HandlerFunc {
 	type Request struct {
 		Value string `json:"value"`
 	}
@@ -148,13 +148,13 @@ func createWordHandler(svc *WordService, logger *slog.Logger) http.HandlerFunc {
 
 			return
 		}
-		row, err := svc.InsertWord(r.Context(), request.Value)
+		row, err := svc.CreateWord(r.Context(), request.Value)
 		if err != nil {
 			http.Error(w, "Failed to insert word", http.StatusInternalServerError)
 
 			return
 		}
-		logger.Info("Word inserted",
+		logger.Info("Inserted word",
 			slog.Int64("id", row.ID),
 			slog.String("value", row.Value),
 		)
@@ -166,7 +166,7 @@ func createWordHandler(svc *WordService, logger *slog.Logger) http.HandlerFunc {
 	}
 }
 
-func uploadWordsHandler(svc *WordService, logger *slog.Logger) http.HandlerFunc {
+func uploadWordsHandler(svc WordService, logger *slog.Logger) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		logger.Info("Received request",
 			slog.String("url", r.URL.String()),
@@ -229,7 +229,7 @@ func uploadWordsHandler(svc *WordService, logger *slog.Logger) http.HandlerFunc 
 		}
 		count := 0
 		for _, word := range words {
-			_, err := svc.InsertWord(r.Context(), word)
+			_, err := svc.CreateWord(r.Context(), word)
 			if err != nil {
 				writeJSONErr(w, "Failed to insert row", err, http.StatusInternalServerError)
 			}
@@ -248,7 +248,7 @@ func uploadWordsHandler(svc *WordService, logger *slog.Logger) http.HandlerFunc 
 	}
 }
 
-func uploadImageWordsHandler(svc *WordService, logger *slog.Logger) http.HandlerFunc {
+func uploadImageWordsHandler(svc WordService, logger *slog.Logger) http.HandlerFunc {
 	var maxSize int64 = 1024 * 1024 * 50 // 50 MB
 
 	type Response struct {

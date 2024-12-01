@@ -81,10 +81,8 @@ TLS_ENABLED=false`),
 	}
 }
 
-func newTestCfg(t *testing.T) *ServerConfig {
-	t.Helper()
-
-	cfg := &ServerConfig{
+func newConfigMock() Config {
+	cfg := Config{
 		Host:       "localhost",
 		Port:       "8080",
 		TLSEnabled: false,
@@ -113,9 +111,9 @@ func TestServerStart(t *testing.T) {
 	for _, tC := range testCases {
 		t.Run(tC.desc, func(t *testing.T) {
 			srv, err := NewServer(
-				newTestCfg(t),
-				&WordService{q: NewWordQueriesMock(NewWordsMock()...), logger: getTestLogger()},
-				getTestLogger(),
+				newConfigMock(),
+				&wordService{q: NewWordQueriesMock(NewWordsMock()...), logger: loggerMock()},
+				loggerMock(),
 			)
 			require.NoError(t, err)
 

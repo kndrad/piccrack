@@ -13,7 +13,7 @@ import (
 	"golang.org/x/exp/rand"
 )
 
-func getTestLogger() *slog.Logger {
+func loggerMock() *slog.Logger {
 	return slog.New(slog.NewTextHandler(os.Stdout, nil))
 }
 

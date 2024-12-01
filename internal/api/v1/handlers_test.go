@@ -123,7 +123,7 @@ func TestHealthCheckHandler(t *testing.T) {
 	for _, tC := range testCases {
 		t.Run(tC.desc, func(t *testing.T) {
 			// Init server
-			handler := http.Handler(healthCheckHandler(getTestLogger()))
+			handler := http.Handler(healthCheckHandler(loggerMock()))
 			ts := httptest.NewServer(handler)
 			defer ts.Close()
 
@@ -155,10 +155,10 @@ func TestAllWordsHandler(t *testing.T) {
 
 	for _, tC := range testCases {
 		t.Run(tC.desc, func(t *testing.T) {
-			svc := &WordService{
+			svc := &wordService{
 				q: NewWordQueriesMock(NewWordsMock()...),
 			}
-			handler := listWordsHandler(svc, getTestLogger())
+			handler := listWordsHandler(svc, loggerMock())
 
 			ctx := context.Background()
 			url := "/" + tC.query
@@ -202,10 +202,10 @@ func TestInsertWordHandler(t *testing.T) {
 
 	for _, tC := range testCases {
 		t.Run(tC.desc, func(t *testing.T) {
-			svc := &WordService{
+			svc := &wordService{
 				q: NewWordQueriesMock(NewWordsMock()...),
 			}
-			handler := createWordHandler(svc, getTestLogger())
+			handler := createWordHandler(svc, loggerMock())
 
 			ctx := context.Background()
 
@@ -262,7 +262,7 @@ func TestGetLimitFromQuery(t *testing.T) {
 			require.NoError(t, err)
 			t.Logf("parsed query: %v", values)
 
-			limit, err := getLimit(values)
+			limit, err := limitValue(values)
 
 			require.NoError(t, err)
 			require.Equal(t, tC.wantLimit, limit)
@@ -297,7 +297,7 @@ func TestGetOffsetFromQuery(t *testing.T) {
 			require.NoError(t, err)
 			t.Logf("parsed query: %v", values)
 
-			ofsset, err := getOffset(values)
+			ofsset, err := offsetValue(values)
 
 			require.NoError(t, err)
 			require.Equal(t, tC.wantOffset, ofsset)
@@ -345,15 +345,15 @@ func TestUploadWordsHandler(t *testing.T) {
 	testCases := []struct {
 		desc string
 
-		svc *WordService
+		svc *wordService
 	}{
 		{
 			desc: "should_file_from_request_form_and_insert_them",
 
 			// Underlying db of this service does not contain any words
-			svc: &WordService{
+			svc: &wordService{
 				q:      NewWordQueriesMock(),
-				logger: getTestLogger(),
+				logger: loggerMock(),
 			},
 		},
 	}
@@ -394,7 +394,7 @@ func TestUploadWordsHandler(t *testing.T) {
 
 			// Record request using handler
 			rr := httptest.NewRecorder()
-			handler := uploadWordsHandler(tC.svc, getTestLogger())
+			handler := uploadWordsHandler(tC.svc, loggerMock())
 			handler(rr, req)
 			resp := rr.Result()
 
