@@ -33,8 +33,6 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var InputPath string
-
 // textCmd represents the words command.
 var textCmd = &cobra.Command{
 	Use:   "text",
@@ -42,16 +40,21 @@ var textCmd = &cobra.Command{
 	SuggestFor: []string{
 		"txt",
 	},
-	Example: "itcrack text <path/to/file.png> -o <path/to/out/dir>",
+	Example: "itcrack text --path <path/to/file.png> -o <path/to/out/dir>",
 	RunE: func(cmd *cobra.Command, args []string) error {
-		var (
-			inputPath = filepath.Clean(args[0])
-			outPath   = filepath.Clean(outputPath)
-		)
+		logger := DefaultLogger(Verbose)
 
-		stat, err := os.Stat(inputPath)
+		path, err := cmd.Flags().GetString("path")
 		if err != nil {
-			Logger.Error("getting stat of screenshot", "err", err)
+			logger.Error("Failed to get path string flag value", "err", err)
+
+			return fmt.Errorf("get string: %w", err)
+		}
+		path = filepath.Clean(path)
+
+		stat, err := os.Stat(path)
+		if err != nil {
+			logger.Error("getting stat of screenshot", "err", err)
 
 			return fmt.Errorf("stat: %w", err)
 		}
@@ -63,30 +66,30 @@ var textCmd = &cobra.Command{
 		if stat.IsDir() {
 			addDirSuffix = true
 
-			Logger.Info("Processing directory",
-				slog.String("input_path", inputPath),
+			logger.Info("Processing directory",
+				slog.String("input_path", path),
 			)
 
-			entries, err := os.ReadDir(inputPath)
+			entries, err := os.ReadDir(path)
 			if err != nil {
-				Logger.Error("reading dir", "err", err)
+				logger.Error("reading dir", "err", err)
 
 				return fmt.Errorf("reading dir: %w", err)
 			}
 			// Append image files only
 			for _, e := range entries {
 				if !e.IsDir() && textproc.IsImage(e.Name()) {
-					filePaths = append(filePaths, filepath.Join(inputPath, "/", e.Name()))
+					filePaths = append(filePaths, filepath.Join(path, "/", e.Name()))
 				}
 			}
-			Logger.Info(
+			logger.Info(
 				"Number of image files in a directory",
-				slog.String("input_path", inputPath),
+				slog.String("input_path", path),
 				slog.Int("files_total", len(filePaths)),
 			)
 		} else {
 			// Only add input path if path was not a directory.
-			filePaths = append(filePaths, inputPath)
+			filePaths = append(filePaths, path)
 		}
 
 		// Add the suffix if addDirSuffix was changed to true.
@@ -94,16 +97,17 @@ var textCmd = &cobra.Command{
 			suffix := "dir"
 			id, err := textproc.NewAnalysisIDWithSuffix(suffix)
 			if err != nil {
-				Logger.Error("Failed to add suffix to an out path",
+				logger.Error("Failed to add suffix to an out path",
 					slog.String("suffix", suffix),
 					slog.String("id", id),
 				)
 			}
 		}
 
+		outPath := filepath.Clean(OutPath)
 		ppath, err := openf.PreparePath(outPath, time.Now())
 		if err != nil {
-			Logger.Error("Failed to prepare out path",
+			logger.Error("Failed to prepare out path",
 				slog.String("outPath", outPath),
 				slog.String("err", err.Error()),
 			)
@@ -117,7 +121,7 @@ var textCmd = &cobra.Command{
 			openf.DefaultFileMode,
 		)
 		if err != nil {
-			Logger.Error("Failed to open cleaned file", "err", err)
+			logger.Error("Failed to open cleaned file", "err", err)
 
 			return fmt.Errorf("open file cleaned: %w", err)
 		}
@@ -126,25 +130,25 @@ var textCmd = &cobra.Command{
 		for _, path := range filePaths {
 			content, err := os.ReadFile(path)
 			if err != nil {
-				Logger.Error("reading file", "err", err)
+				logger.Error("reading file", "err", err)
 
 				return fmt.Errorf("reading file: %w", err)
 			}
 			words, err := textproc.OCR(content)
 			if err != nil {
-				Logger.Error("Failed to recognize words in a screenshot content", "err", err)
+				logger.Error("Failed to recognize words in a screenshot content", "err", err)
 
 				return fmt.Errorf("screenshot words recognition: %w", err)
 			}
 			w := textproc.NewWordsTextFileWriter(txtFile)
 			if err := textproc.WriteWords(words, w); err != nil {
-				Logger.Error("Failed to write words to a txt file", "err", err)
+				logger.Error("Failed to write words to a txt file", "err", err)
 
 				return fmt.Errorf("writing words: %w", err)
 			}
 		}
 
-		Logger.Info("Program completed successfully.")
+		logger.Info("Program completed successfully.")
 
 		return nil
 	},
@@ -153,6 +157,9 @@ var textCmd = &cobra.Command{
 func init() {
 	rootCmd.AddCommand(textCmd)
 
-	textCmd.Flags().StringVarP(&outputPath, "out", "o", "", "output path")
+	textCmd.Flags().String("path", "", "Path to image")
+	textCmd.MarkFlagRequired("path")
+
+	textCmd.Flags().StringVarP(&OutPath, "out", "o", ".", "output path")
 	textCmd.MarkFlagRequired("out")
 }

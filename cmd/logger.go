@@ -5,14 +5,13 @@ import (
 	"os"
 )
 
-var Logger *slog.Logger
+func DefaultLogger(verbose bool) *slog.Logger {
+	l := slog.New(slog.NewTextHandler(os.Stdout, nil))
 
-func initLogger() {
-	Logger = slog.New(slog.NewTextHandler(os.Stdout, nil))
-
+	slog.SetLogLoggerLevel(slog.LevelError)
 	if verbose {
 		slog.SetLogLoggerLevel(slog.LevelInfo)
-	} else {
-		slog.SetLogLoggerLevel(slog.LevelError)
 	}
+
+	return l
 }

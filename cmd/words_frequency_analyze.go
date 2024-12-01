@@ -38,16 +38,20 @@ import (
 var wordsFrequencyAnalyzeCmd = &cobra.Command{
 	Use:     "analyze",
 	Short:   "Analyze words frequency in .txt and write output to .json",
-	Example: "wordcrack words frequency analyze -v --file=./testdata/words.txt --out=./output",
+	Example: "wcrack words frequency analyze --path=./testdata/words.txt --out=./output",
 	RunE: func(cmd *cobra.Command, args []string) error {
-		var (
-			txtPath = filepath.Clean(InputPath)
-			outPath = filepath.Clean(outputPath)
-		)
+		logger := DefaultLogger(Verbose)
 
-		content, err := os.ReadFile(txtPath)
+		path, err := cmd.Flags().GetString("path")
 		if err != nil {
-			Logger.Error("Failed to read txt file", "err", err)
+			logger.Error("Failed to read path string flag value", "err", err)
+
+			return fmt.Errorf("get string: %w", err)
+		}
+
+		content, err := os.ReadFile(filepath.Clean(path))
+		if err != nil {
+			logger.Error("Failed to read txt file", "err", err)
 
 			return fmt.Errorf("read file: %w", err)
 		}
@@ -60,28 +64,29 @@ var wordsFrequencyAnalyzeCmd = &cobra.Command{
 			words = append(words, word)
 		}
 		if err := scanner.Err(); err != nil {
-			Logger.Error("Scanning failed", "err", err)
+			logger.Error("Scanning failed", "err", err)
 
 			return fmt.Errorf("scanner: %w", err)
 		}
 
 		analysis, err := textproc.AnalyzeFrequency(words)
 		if err != nil {
-			Logger.Error("Analyzing words frequency failed", "err", err)
+			logger.Error("Analyzing words frequency failed", "err", err)
 
 			return fmt.Errorf("frequency analysis: %w", err)
 		}
 
+		outPath := filepath.Clean(OutPath)
 		// Join outPath, id and json extension to create new out file path with an extension.
 		jsonPath := openf.Join(outPath, analysis.ID, "json")
-		Logger.Info("Opening file",
+		logger.Info("Opening file",
 			slog.String("json_path", jsonPath),
 		)
 		flags := os.O_APPEND | openf.DefaultFlags
 
 		jsonFile, err := openf.Open(jsonPath, flags, 0o600)
 		if err != nil {
-			Logger.Error("Failed to open cleaned json file", "err", err)
+			logger.Error("Failed to open cleaned json file", "err", err)
 
 			return fmt.Errorf("open cleaned: %w", err)
 		}
@@ -89,20 +94,20 @@ var wordsFrequencyAnalyzeCmd = &cobra.Command{
 
 		data, err := json.MarshalIndent(analysis, "", " ")
 		if err != nil {
-			Logger.Error("Failed to marshal json analysis", "err", err)
+			logger.Error("Failed to marshal json analysis", "err", err)
 
 			return fmt.Errorf("json marshal: %w", err)
 		}
-		Logger.Info("Writing analysis to json file",
+		logger.Info("Writing analysis to json file",
 			slog.String("json_path", jsonPath),
 		)
 		if _, err := jsonFile.Write(data); err != nil {
-			Logger.Error("Failed to write json analysis", "err", err)
+			logger.Error("Failed to write json analysis", "err", err)
 
 			return fmt.Errorf("json write: %w", err)
 		}
 
-		Logger.Info("Program completed successfully.")
+		logger.Info("Program completed successfully.")
 
 		return nil
 	},
@@ -111,12 +116,7 @@ var wordsFrequencyAnalyzeCmd = &cobra.Command{
 func init() {
 	wordsFrequencyCmd.AddCommand(wordsFrequencyAnalyzeCmd)
 
-	wordsFrequencyAnalyzeCmd.Flags().StringVarP(
-		&InputPath, "file", "f", "", ".txt file path to analyze words frequency.",
-	)
-	if err := wordsFrequencyAnalyzeCmd.MarkFlagRequired("file"); err != nil {
-		Logger.Error("Marking flag required failed", "err", err.Error())
-	}
-
-	wordsFrequencyAnalyzeCmd.Flags().StringVarP(&outputPath, "out", "o", DefaultOutputPath, "JSON file output path")
+	wordsFrequencyAnalyzeCmd.Flags().String("path", "", "Path of txt input file")
+	wordsFrequencyAnalyzeCmd.MarkFlagRequired("path")
+	wordsFrequencyAnalyzeCmd.Flags().StringVarP(&OutPath, "out", "o", ".", "JSON file output path")
 }

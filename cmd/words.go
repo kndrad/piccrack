@@ -38,11 +38,13 @@ import (
 var wordsCmd = &cobra.Command{
 	Use:     "words",
 	Short:   "Lists words from a database",
-	Example: "wordcrack words [OPTIONAL args: limit[int32]]",
+	Example: "wcrack words [OPTIONAL args: limit[int32]]",
 	RunE: func(cmd *cobra.Command, args []string) error {
+		logger := DefaultLogger(Verbose)
+
 		cfg, err := textproc.LoadDatabaseConfig(DefaultEnvFilePath)
 		if err != nil {
-			Logger.Error("Loading database config", "err", err.Error())
+			logger.Error("Loading database config", "err", err.Error())
 
 			return fmt.Errorf("loading database config failed: %w", err)
 		}
@@ -52,21 +54,21 @@ var wordsCmd = &cobra.Command{
 
 		pool, err := textproc.DatabasePool(ctx, *cfg)
 		if err != nil {
-			Logger.Error("Loading database pool", "err", err.Error())
+			logger.Error("Loading database pool", "err", err.Error())
 
 			return fmt.Errorf("database pool: %w", err)
 		}
 		defer pool.Close()
 
 		if err := retry.Ping(ctx, pool, retry.MaxRetries); err != nil {
-			Logger.Error("Pinging database", "err", err.Error())
+			logger.Error("Pinging database", "err", err.Error())
 
 			return fmt.Errorf("database ping: %w", err)
 		}
 
 		conn, err := textproc.DatabaseConnection(ctx, pool)
 		if err != nil {
-			Logger.Error("Connecting to database", "err", err.Error())
+			logger.Error("Connecting to database", "err", err.Error())
 
 			return fmt.Errorf("database connection: %w", err)
 		}
@@ -89,19 +91,19 @@ var wordsCmd = &cobra.Command{
 		if len(args) > 0 {
 			limit, err := strconv.ParseInt(args[0], 10, 32)
 			if err != nil {
-				Logger.Error("Failed to strconv", "err", err.Error())
+				logger.Error("Failed to strconv", "err", err.Error())
 			}
 			params.Limit = int32(limit)
 		}
 		words, err := q.ListWords(ctx, params)
 		if err != nil {
-			Logger.Error("Connecting to database", "err", err.Error())
+			logger.Error("Connecting to database", "err", err.Error())
 
 			return fmt.Errorf("database connection: %w", err)
 		}
-		Logger.Info("Listing words from a database", "len_words", len(words))
+		logger.Info("Listing words from a database", "len_words", len(words))
 		for _, word := range words {
-			fmt.Println(word)
+			fmt.Printf("%v\n", word)
 		}
 
 		return nil

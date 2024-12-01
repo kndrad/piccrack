@@ -36,9 +36,11 @@ var apiHealthzCmd = &cobra.Command{
 	Use:   "healthz",
 	Short: "Checks health http API server",
 	RunE: func(cmd *cobra.Command, args []string) error {
+		logger := DefaultLogger(Verbose)
+
 		config, err := v1.LoadConfig(".env")
 		if err != nil {
-			Logger.Error("Failed to load config", "err", err)
+			logger.Error("Failed to load config", "err", err)
 
 			return fmt.Errorf("loading config err: %w", err)
 		}
@@ -51,11 +53,11 @@ var apiHealthzCmd = &cobra.Command{
 			buf,
 		)
 		if err != nil {
-			Logger.Error("Failed to create request", "err", err)
+			logger.Error("Failed to create request", "err", err)
 
 			return fmt.Errorf("new request err: %w", err)
 		}
-		Logger.Info("Sending request",
+		logger.Info("Sending request",
 			slog.String("url", url),
 		)
 
@@ -64,7 +66,7 @@ var apiHealthzCmd = &cobra.Command{
 
 		resp, err := c.Do(req)
 		if err != nil {
-			Logger.Error("Failed to do request with a client", "err", err)
+			logger.Error("Failed to do request with a client", "err", err)
 
 			return fmt.Errorf("client do request err: %w", err)
 		}
@@ -72,16 +74,16 @@ var apiHealthzCmd = &cobra.Command{
 
 		switch resp.StatusCode {
 		case http.StatusOK:
-			Logger.Info("Received response and server OK", "statusCode", resp.StatusCode)
+			logger.Info("Received response and server OK", "statusCode", resp.StatusCode)
 
 			return nil
 		case http.StatusNotFound:
-			Logger.Info("Received not found", "statusCode", resp.StatusCode)
+			logger.Info("Received not found", "statusCode", resp.StatusCode)
 		default:
-			Logger.Info("Received response", "statusCode", resp.StatusCode)
+			logger.Info("Received response", "statusCode", resp.StatusCode)
 		}
 
-		Logger.Info("Program completed successfully.")
+		logger.Info("Program completed successfully.")
 
 		return nil
 	},

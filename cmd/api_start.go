@@ -36,33 +36,35 @@ var apiStartCmd = &cobra.Command{
 	Use:   "start",
 	Short: "Starts http API server.",
 	RunE: func(cmd *cobra.Command, args []string) error {
+		logger := DefaultLogger(Verbose)
+
 		ctx, cancel := context.WithCancel(context.Background())
 		defer cancel()
 
 		dbconf, err := textproc.LoadDatabaseConfig(".env")
 		if err != nil {
-			Logger.Error("Failed to load database config", "err", err.Error())
+			logger.Error("Failed to load database config", "err", err.Error())
 
 			return fmt.Errorf("loading config err: %w", err)
 		}
 
 		pool, err := textproc.DatabasePool(ctx, *dbconf)
 		if err != nil {
-			Logger.Error("Loading database pool", "err", err.Error())
+			logger.Error("Loading database pool", "err", err.Error())
 
 			return fmt.Errorf("database pool: %w", err)
 		}
 		defer pool.Close()
 
 		if err := retry.Ping(ctx, pool, retry.MaxRetries); err != nil {
-			Logger.Error("Pinging database", "err", err.Error())
+			logger.Error("Pinging database", "err", err.Error())
 
 			return fmt.Errorf("database ping: %w", err)
 		}
 
 		db, err := textproc.DatabaseConnection(ctx, pool)
 		if err != nil {
-			Logger.Error("Connecting to database", "err", err.Error())
+			logger.Error("Connecting to database", "err", err.Error())
 
 			return fmt.Errorf("database connection: %w", err)
 		}
@@ -70,30 +72,30 @@ var apiStartCmd = &cobra.Command{
 
 		config, err := v1.LoadConfig(".env")
 		if err != nil {
-			Logger.Error("Failed to load api config", "err", err.Error())
+			logger.Error("Failed to load api config", "err", err.Error())
 
 			return fmt.Errorf("loading config err: %w", err)
 		}
 
 		q := database.New(db)
-		wordsService := v1.NewWordService(q, Logger)
+		wordsService := v1.NewWordService(q, logger)
 		srv, err := v1.NewServer(
 			config,
 			wordsService,
-			Logger,
+			logger,
 		)
 		if err != nil {
-			Logger.Error("Failed to init new http server", "err", err)
+			logger.Error("Failed to init new http server", "err", err)
 
 			return fmt.Errorf("new http server err: %w", err)
 		}
 
 		if err := srv.Start(ctx); err != nil {
-			Logger.Error("Failed to listen and serve", "err", err)
+			logger.Error("Failed to listen and serve", "err", err)
 
 			return fmt.Errorf("listen and serve err: %w", err)
 		}
-		Logger.Info("Program completed successfully.")
+		logger.Info("Program completed successfully.")
 
 		return nil
 	},

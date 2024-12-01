@@ -30,7 +30,7 @@ func TestDatabaseQueries(t *testing.T) {
 DB_PASSWORD=testpassword
 DB_HOST=localhost
 DB_PORT=5436
-DB_NAME=wordcrack`
+DB_NAME=wcrack`
 	if _, err := tmpFile.WriteString(content); err != nil {
 		t.Fatalf("Failed to write content, err: %v", err)
 	}

@@ -35,15 +35,15 @@ const (
 )
 
 var (
-	outputPath string
-	verbose    bool
+	OutPath string
+	Verbose bool
 )
 
 var cfgFile string
 
 // rootCmd represents the base command when called without any subcommands.
 var rootCmd = &cobra.Command{
-	Use:   "wordcrack",
+	Use:   "wcrack",
 	Short: "Analyze text from screenshots and performing word frequency analysis.",
 	// Uncomment the following line if your bare application
 	// has an action associated with it:
@@ -67,10 +67,9 @@ func Execute() {
 
 func init() {
 	cobra.OnInitialize(initConfig)
-	cobra.OnInitialize(initLogger)
 
 	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.itcrack.yaml)")
-	rootCmd.PersistentFlags().BoolVarP(&verbose, "verbose", "v", false, "print verbose actions")
+	rootCmd.PersistentFlags().BoolVarP(&Verbose, "verbose", "v", false, "print verbose actions")
 
 	rootCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 }

@@ -37,11 +37,13 @@ import (
 var addWordCmd = &cobra.Command{
 	Use:     "add",
 	Short:   "Add word to a database.",
-	Example: "wordcrack words add [WORD]",
+	Example: "wcrack words add [WORD]",
 	RunE: func(cmd *cobra.Command, args []string) error {
+		logger := DefaultLogger(Verbose)
+
 		config, err := textproc.LoadDatabaseConfig(DefaultEnvFilePath)
 		if err != nil {
-			Logger.Error("Loading database config", "err", err.Error())
+			logger.Error("Loading database config", "err", err.Error())
 
 			return fmt.Errorf("loading database config failed: %w", err)
 		}
@@ -51,21 +53,21 @@ var addWordCmd = &cobra.Command{
 
 		pool, err := textproc.DatabasePool(ctx, *config)
 		if err != nil {
-			Logger.Error("Loading database pool", "err", err.Error())
+			logger.Error("Loading database pool", "err", err.Error())
 
 			return fmt.Errorf("database pool: %w", err)
 		}
 		defer pool.Close()
 
 		if err := retry.Ping(ctx, pool, retry.MaxRetries); err != nil {
-			Logger.Error("Pinging database", "err", err.Error())
+			logger.Error("Pinging database", "err", err.Error())
 
 			return fmt.Errorf("database ping: %w", err)
 		}
 
 		conn, err := textproc.DatabaseConnection(ctx, pool)
 		if err != nil {
-			Logger.Error("Connecting to database", "err", err.Error())
+			logger.Error("Connecting to database", "err", err.Error())
 
 			return fmt.Errorf("database connection: %w", err)
 		}
@@ -76,17 +78,17 @@ var addWordCmd = &cobra.Command{
 		value := args[0]
 		word, err := q.CreateWord(ctx, value)
 		if err != nil {
-			Logger.Error("Inserting word failed", "err", err.Error())
+			logger.Error("Inserting word failed", "err", err.Error())
 
 			return fmt.Errorf("word insert: %w", err)
 		}
-		Logger.Info("Inserted word",
+		logger.Info("Inserted word",
 			slog.Int64("word", word.ID),
 			slog.String("value", word.Value),
 			slog.Time("created_at_time", word.CreatedAt.Time),
 		)
 
-		Logger.Info("Program completed successfully.")
+		logger.Info("Program completed successfully.")
 
 		return nil
 	},
