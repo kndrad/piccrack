@@ -28,6 +28,7 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/kndrad/wcrack/config"
 	"github.com/kndrad/wcrack/internal/textproc"
 	"github.com/kndrad/wcrack/internal/textproc/database"
 	"github.com/kndrad/wcrack/pkg/retry"
@@ -42,17 +43,17 @@ var wordsCmd = &cobra.Command{
 	RunE: func(cmd *cobra.Command, args []string) error {
 		logger := DefaultLogger(Verbose)
 
-		cfg, err := textproc.LoadDatabaseConfig(DefaultEnvFilePath)
+		cfg, err := config.Load("config/development.yaml")
 		if err != nil {
-			logger.Error("Loading database config", "err", err.Error())
+			logger.Error("Loading onfig", "err", err.Error())
 
-			return fmt.Errorf("loading database config failed: %w", err)
+			return fmt.Errorf("load config: %w", err)
 		}
 
 		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 		defer cancel()
 
-		pool, err := textproc.DatabasePool(ctx, *cfg)
+		pool, err := textproc.DatabasePool(ctx, cfg.Database)
 		if err != nil {
 			logger.Error("Loading database pool", "err", err.Error())
 

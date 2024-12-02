@@ -26,6 +26,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/kndrad/wcrack/config"
 	"github.com/kndrad/wcrack/internal/textproc"
 	"github.com/kndrad/wcrack/pkg/retry"
 	"github.com/spf13/cobra"
@@ -41,7 +42,7 @@ var pingCmd = &cobra.Command{
 
 		logger.Info("Loading database config.")
 
-		cfg, err := textproc.LoadDatabaseConfig(DefaultEnvFilePath)
+		cfg, err := config.Load("config/development.yaml")
 		if err != nil {
 			logger.Error("Failed to load db config", "err", err.Error())
 
@@ -53,7 +54,7 @@ var pingCmd = &cobra.Command{
 		ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
 		defer cancel()
 
-		pool, err := textproc.DatabasePool(ctx, *cfg)
+		pool, err := textproc.DatabasePool(ctx, cfg.Database)
 		if err != nil {
 			logger.Error("Failed to get db pool", "err", err.Error())
 

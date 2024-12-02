@@ -16,7 +16,7 @@ import (
 	_ "github.com/golang-migrate/migrate/v4/database/postgres"
 	_ "github.com/golang-migrate/migrate/v4/source/file"
 	"github.com/jackc/pgx/v5"
-	"github.com/kndrad/wcrack/internal/textproc"
+	"github.com/kndrad/wcrack/config"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/testcontainers/testcontainers-go"
@@ -26,29 +26,47 @@ import (
 func TestDatabaseQueries(t *testing.T) {
 	t.Parallel()
 
-	tmpFile, err := os.CreateTemp("testdata", "*.env")
+	tmpf, err := os.CreateTemp(t.TempDir(), "*.env")
 	require.NoError(t, err)
-	content := `DB_USER=testuser
-DB_PASSWORD=testpassword
-DB_HOST=localhost
-DB_PORT=5436
-DB_NAME=wcrack`
-	if _, err := tmpFile.WriteString(content); err != nil {
-		t.Fatalf("Failed to write content, err: %v", err)
+	// Write
+	content := []byte(`app:
+  environment: "testing"
+
+http:
+  host: "0.0.0.0"
+  port: "8080"
+  tls_enabled: false
+
+database:
+  user: testuser
+  password: testpassword
+  host: localhost
+  port: 5433
+  name: wcrack
+  pool:
+    max_conns: 25
+    min_conns: 5
+    max_conn_lifetime: 1h
+    max_conn_idle_time: 30m
+    connect_timeout: 10s
+    dialer_keep_alive: 5s
+`)
+	if _, err := tmpf.Write(content); err != nil {
+		t.Fatalf("Failed to write data: %v", err)
 	}
 
-	config, err := textproc.LoadDatabaseConfig(tmpFile.Name())
+	config, err := config.Load(tmpf.Name())
 	require.NoError(t, err)
-	if err := os.RemoveAll(tmpFile.Name()); err != nil {
+	if err := os.RemoveAll(tmpf.Name()); err != nil {
 		t.Fatalf("Failed to remove tmp file, err: %v", err)
 	}
 
 	ctx := context.Background()
 	dbContainer, err := postgres.Run(ctx,
 		"postgres:17",
-		postgres.WithUsername(config.User),
-		postgres.WithPassword(config.Password),
-		postgres.WithDatabase(config.DBName),
+		postgres.WithUsername(config.Database.User),
+		postgres.WithPassword(config.Database.Password),
+		postgres.WithDatabase(config.Database.Name),
 		postgres.BasicWaitStrategies(),
 		postgres.WithSQLDriver("pgx"),
 	)

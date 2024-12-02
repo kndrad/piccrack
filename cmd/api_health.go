@@ -26,9 +26,11 @@ import (
 	"context"
 	"fmt"
 	"log/slog"
+	"net"
 	"net/http"
+	"os"
 
-	v1 "github.com/kndrad/wcrack/internal/api/v1"
+	"github.com/kndrad/wcrack/config"
 	"github.com/spf13/cobra"
 )
 
@@ -38,13 +40,13 @@ var apiHealthzCmd = &cobra.Command{
 	RunE: func(cmd *cobra.Command, args []string) error {
 		logger := DefaultLogger(Verbose)
 
-		config, err := v1.LoadConfig(".env")
+		cfg, err := config.Load(os.Getenv("CONFIG_PATH"))
 		if err != nil {
 			logger.Error("Failed to load config", "err", err)
 
 			return fmt.Errorf("loading config err: %w", err)
 		}
-		url := config.BaseURL() + "/api/v1/healthz"
+		url := net.JoinHostPort(cfg.HTTP.Host, cfg.HTTP.Port) + "/api/v1/healthz"
 		buf := new(bytes.Buffer)
 		req, err := http.NewRequestWithContext(
 			context.TODO(),

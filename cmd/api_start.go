@@ -25,6 +25,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/kndrad/wcrack/config"
 	v1 "github.com/kndrad/wcrack/internal/api/v1"
 	"github.com/kndrad/wcrack/internal/textproc"
 	"github.com/kndrad/wcrack/internal/textproc/database"
@@ -41,14 +42,16 @@ var apiStartCmd = &cobra.Command{
 		ctx, cancel := context.WithCancel(context.Background())
 		defer cancel()
 
-		dbCfg, err := textproc.LoadDatabaseConfig(".env")
+		cfg, err := config.Load("config/development.yaml")
 		if err != nil {
-			logger.Error("Failed to load database config", "err", err.Error())
+			logger.Error("Loading database config", "err", err.Error())
 
-			return fmt.Errorf("loading config err: %w", err)
+			return fmt.Errorf("config load: %w", err)
 		}
 
-		pool, err := textproc.DatabasePool(ctx, *dbCfg)
+		fmt.Printf("CONFIG: %#v\n", cfg)
+
+		pool, err := textproc.DatabasePool(ctx, cfg.Database)
 		if err != nil {
 			logger.Error("Loading database pool", "err", err.Error())
 
@@ -70,19 +73,12 @@ var apiStartCmd = &cobra.Command{
 		}
 		defer db.Close(ctx)
 
-		cfg, err := v1.LoadConfig(".env")
-		if err != nil {
-			logger.Error("Failed to load api config", "err", err.Error())
-
-			return fmt.Errorf("loading config err: %w", err)
-		}
-
 		q := database.New(db)
 		wordsService := v1.NewWordService(q, logger)
 
 		// Create server instance
 		srv, err := v1.NewServer(
-			cfg,
+			cfg.HTTP,
 			wordsService,
 			logger,
 		)

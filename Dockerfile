@@ -20,19 +20,10 @@ RUN apk add --no-cache \
 
 # Build Go binary in /app
 WORKDIR /app
-
 COPY go.mod go.sum ./
-RUN go mod download
+RUN go mod download && go mod verify && go mod tidy
 COPY . .
-RUN go build -o main ./
-
-# Test stage - run cover task from Makefile
-FROM build-stage AS test-stage
-WORKDIR /app
-
-RUN apk add --no-cache make
-COPY --from=build-stage . .
-RUN make cover
+RUN go test ./... && go build -o main ./
 
 # Run Go binary
 FROM alpine:3.20.3
@@ -45,7 +36,7 @@ RUN apk add --no-cache \
     leptonica
 
 COPY --from=build-stage /app/main /main
-COPY --from=build-stage /app/.env /.env
+COPY config/ /app/config
 
 ENTRYPOINT [ "./main" ]
 CMD [ "api", "start" ]

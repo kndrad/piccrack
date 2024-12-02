@@ -56,3 +56,10 @@ output/*.txt
 
 # mergo output
 llminput/
+
+
+# secrets
+.secrets/
+
+# prod config
+config/production.yaml

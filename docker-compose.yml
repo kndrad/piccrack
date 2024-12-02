@@ -2,65 +2,81 @@ services:
   app:
     build:
       context: .
+    environment:
+      CONFIG_PATH: ${CONFIG_PATH}
     depends_on:
       db:
         condition: service_healthy
         restart: true
-      migrate:
+      db-migrate:
         condition: service_completed_successfully
-    env_file:
-      - .env
     networks:
-      db_network:
+      postgres_network:
     ports:
       - 80:8080
     volumes:
       - ./output:/output
-    deploy:
-      restart_policy:
-        condition: on-failure
+      - ./config:/config
+    secrets:
+      - postgres_user
+      - postgres_pswd
+      - postgres_db
 
   db:
     image: postgres:17
     restart: always
     environment:
-      POSTGRES_USER: ${DB_USER:?database user not set}
-      POSTGRES_PASSWORD: ${DB_PASSWORD:?database password not set}
-      POSTGRES_DB: ${DB_NAME:?database name not set}
+      POSTGRES_USER_FILE: /run/secrets/postgres_user
+      POSTGRES_PASSWORD_FILE: /run/secrets/postgres_pswd
+      POSTGRES_DB_FILE: /run/secrets/postgres_db
       PGDATA: /var/lib/postgresql/data
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./db/docker-entrypoint-initdb.d/:/docker-entrypoint-initdb.d/
     healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}" ]
+      test: [ "CMD-SHELL", "pg_isready -U $$(cat /run/secrets/postgres_user) -d $$(cat /run/secrets/postgres_db)" ]
       interval: 5s
       timeout: 5s
       retries: 5
       start_period: 1s
     ports:
-      - ${DB_PORT:-5432}:${DB_PORT:-5432}
-      - 8080:8080
-    env_file:
-      - .env
+      - 5432:5432
     networks:
-      db_network:
+      postgres_network:
+    secrets:
+      - postgres_user
+      - postgres_pswd
+      - postgres_db
 
-
-  migrate:
+  db-migrate:
     image: migrate/migrate
     depends_on:
       db:
         condition: service_healthy
     volumes:
       - ./db/migrations:/db/migrations
-    command: [ "-path", "/db/migrations", "-database", "postgres://${DB_USER}:${DB_PASSWORD}@db:${DB_PORT}/${DB_NAME}?sslmode=disable", "up" ]
+      - ./db/migrate-entrypoint.sh:/migrate-entrypoint.sh
+    entrypoint: [ "/bin/sh" ]
+    command: [ "/migrate-entrypoint.sh" ]
     networks:
-      db_network:
-
+      postgres_network:
+    secrets:
+      - postgres_user
+      - postgres_pswd
+      - postgres_db
 
 volumes:
   postgres_data:
 
 
 networks:
-  db_network:
+  postgres_network:
+
+
+secrets:
+  postgres_pswd:
+    file: .secrets/postgres_pswd.txt
+  postgres_user:
+    file: .secrets/postgres_user.txt
+  postgres_db:
+    file: .secrets/postgres_db.txt

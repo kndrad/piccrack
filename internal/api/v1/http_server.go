@@ -4,22 +4,25 @@ import (
 	"context"
 	"fmt"
 	"log/slog"
+	"net"
 	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
 	"time"
+
+	"github.com/kndrad/wcrack/config"
 )
 
 const Version = "v1"
 
 type server struct {
 	srv *http.Server
-	cfg Config
+	cfg config.HTTPConfig
 	l   *slog.Logger
 }
 
-func NewServer(cfg Config, wordService WordService, logger *slog.Logger) (*server, error) {
+func NewServer(cfg config.HTTPConfig, wordService WordService, logger *slog.Logger) (*server, error) {
 	if logger == nil {
 		panic("logger cannot be nil")
 	}
@@ -35,7 +38,7 @@ func NewServer(cfg Config, wordService WordService, logger *slog.Logger) (*serve
 	var handler http.Handler = mux
 
 	srv := &http.Server{
-		Addr:           cfg.Addr(),
+		Addr:           net.JoinHostPort(cfg.Host, cfg.Port),
 		Handler:        handler,
 		ReadTimeout:    20 * time.Second,
 		WriteTimeout:   20 * time.Second,

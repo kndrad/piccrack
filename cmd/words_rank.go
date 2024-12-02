@@ -27,6 +27,7 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/kndrad/wcrack/config"
 	"github.com/kndrad/wcrack/internal/textproc"
 	"github.com/kndrad/wcrack/internal/textproc/database"
 	"github.com/kndrad/wcrack/pkg/retry"
@@ -39,7 +40,7 @@ var rankCmd = &cobra.Command{
 	RunE: func(cmd *cobra.Command, args []string) error {
 		logger := DefaultLogger(Verbose)
 
-		config, err := textproc.LoadDatabaseConfig(DefaultEnvFilePath)
+		cfg, err := config.Load("config/development.yaml")
 		if err != nil {
 			logger.Error("Loading database config", "err", err.Error())
 
@@ -49,7 +50,7 @@ var rankCmd = &cobra.Command{
 		ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
 		defer cancel()
 
-		pool, err := textproc.DatabasePool(ctx, *config)
+		pool, err := textproc.DatabasePool(ctx, cfg.Database)
 		if err != nil {
 			logger.Error("Loading database pool", "err", err.Error())
 

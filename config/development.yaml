@@ -1,0 +1,22 @@
+app:
+  environment: "development"
+  log_level: "info"
+
+http:
+  host: "0.0.0.0"
+  port: "8080"
+  tls_enabled: false
+
+database:
+  user: postgres
+  password: 20112015
+  host: db
+  port: 5432
+  name: wcrack
+  pool:
+    max_conns: 25
+    min_conns: 5
+    max_conn_lifetime: 1h
+    max_conn_idle_time: 30m
+    connect_timeout: 60s
+    dialer_keep_alive: 30s
