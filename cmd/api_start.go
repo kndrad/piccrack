@@ -41,14 +41,14 @@ var apiStartCmd = &cobra.Command{
 		ctx, cancel := context.WithCancel(context.Background())
 		defer cancel()
 
-		dbconf, err := textproc.LoadDatabaseConfig(".env")
+		dbCfg, err := textproc.LoadDatabaseConfig(".env")
 		if err != nil {
 			logger.Error("Failed to load database config", "err", err.Error())
 
 			return fmt.Errorf("loading config err: %w", err)
 		}
 
-		pool, err := textproc.DatabasePool(ctx, *dbconf)
+		pool, err := textproc.DatabasePool(ctx, *dbCfg)
 		if err != nil {
 			logger.Error("Loading database pool", "err", err.Error())
 
@@ -70,7 +70,7 @@ var apiStartCmd = &cobra.Command{
 		}
 		defer db.Close(ctx)
 
-		config, err := v1.LoadConfig(".env")
+		cfg, err := v1.LoadConfig(".env")
 		if err != nil {
 			logger.Error("Failed to load api config", "err", err.Error())
 
@@ -79,8 +79,10 @@ var apiStartCmd = &cobra.Command{
 
 		q := database.New(db)
 		wordsService := v1.NewWordService(q, logger)
+
+		// Create server instance
 		srv, err := v1.NewServer(
-			config,
+			cfg,
 			wordsService,
 			logger,
 		)
