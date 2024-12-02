@@ -20,27 +20,19 @@ format:
 .PHONY: review
 review:
 	./scripts/format.sh
-	go test ./... -failfast -coverprofile=coverage.out
+	go clean -testcache
+	go test ./... -cover -coverprofile=coverage.out
 	./scripts/check.sh
 
 .PHONY: cover-html
 cover-html:
-	go test ./... -failfast -coverprofile=coverage.out
+	go test ./... -cover -coverprofile=coverage.out
 	go tool cover -html=coverage.out -o coverage.html
 	xdg-open coverage.html
 
 .PHONY: cover
 cover:
-	go test ./... -failfast -coverprofile=coverage.out
-
-# verbose
-.PHONY: cover-v
-cover-v:
-	go test ./... -v -failfast -coverprofile=coverage.out
-
-.PHONY: tests
-tests:
-	go test ./... -failfast
+	go test ./... -cover -coverprofile=coverage.out
 
 API_PKG_PATH=./internal/api/v1
 

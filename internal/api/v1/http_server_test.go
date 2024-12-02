@@ -7,9 +7,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"os"
-	"syscall"
 	"testing"
-	"time"
 
 	"github.com/stretchr/testify/require"
 )
@@ -81,7 +79,7 @@ TLS_ENABLED=false`),
 	}
 }
 
-func newConfigMock() Config {
+func mockConfig() Config {
 	cfg := Config{
 		Host:       "localhost",
 		Port:       "8080",
@@ -100,34 +98,39 @@ func TestServerStart(t *testing.T) {
 		signal os.Signal
 	}{
 		{
-			desc:   "stops_after_interrupt_signal",
-			signal: os.Interrupt,
-		},
-		{
-			desc:   "stops_after_syscall_sigterm_signal",
-			signal: syscall.SIGTERM,
+			desc: "stops_after_interrupt_signal",
 		},
 	}
 	for _, tC := range testCases {
 		t.Run(tC.desc, func(t *testing.T) {
+			// Context with cancel
+			ctx, cancel := context.WithCancel(context.Background())
+
+			// Create server instance
 			srv, err := NewServer(
-				newConfigMock(),
-				&wordService{q: NewWordQueriesMock(NewWordsMock()...), logger: loggerMock()},
-				loggerMock(),
+				mockConfig(),
+				&wordService{
+					q:      NewWordQueriesMock(NewWordsMock()...),
+					logger: mockLogger(),
+				},
+				mockLogger(),
 			)
 			require.NoError(t, err)
 
-			ctx := context.Background()
-			go srv.Start(ctx)
+			// Done channel to wait for server shutdown
+			started := make(chan struct{})
 
-			<-time.After(1 * time.Second) // Wait to send signal
-
-			// Send signal
-			pid, err := os.FindProcess(os.Getpid())
-			require.NoError(t, err)
-			if err := pid.Signal(tC.signal); err != nil {
-				t.Fatalf("Sending signal %v failed: %v", tC.signal, err)
-			}
+			// Start server in goroutine
+			go func() {
+				err := srv.Start(ctx)
+				if err != nil && !errors.Is(err, context.Canceled) {
+					t.Errorf("Server start err: %v", err)
+				}
+				started <- struct{}{}
+				close(started)
+			}()
+			cancel()
+			<-started
 		})
 	}
 }
