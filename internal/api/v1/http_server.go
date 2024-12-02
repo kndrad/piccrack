@@ -49,23 +49,23 @@ func NewServer(cfg Config, wordService WordService, logger *slog.Logger) (*serve
 	}, nil
 }
 
-func (srv *server) Start(ctx context.Context) error {
-	if srv == nil {
+func (s *server) Start(ctx context.Context) error {
+	if s == nil {
 		panic("server cannot be nil")
 	}
 
-	srv.l.Info("Starting to listen and serve",
-		slog.String("addr", srv.srv.Addr),
-		slog.Bool("https_enabled", srv.cfg.TLSEnabled),
+	s.l.Info("Starting to listen and serve",
+		slog.String("addr", s.srv.Addr),
+		slog.Bool("https_enabled", s.cfg.TLSEnabled),
 	)
 
 	errs := make(chan error, 1)
 
 	// Start
 	go func() {
-		err := srv.srv.ListenAndServe()
+		err := s.srv.ListenAndServe()
 		if err != nil && err != http.ErrServerClosed {
-			srv.l.Error("Failed to listen and serve", "err", err)
+			s.l.Error("Failed to listen and serve", "err", err)
 		}
 		errs <- fmt.Errorf("listen and serve err: %w", err)
 	}()
@@ -79,10 +79,9 @@ func (srv *server) Start(ctx context.Context) error {
 		if err := ctx.Err(); err != nil {
 			switch err {
 			case context.Canceled:
-				srv.l.Info("Operation cancelled")
-				stop() // Stop Receiving singla notifications as soon as possible
+				stop() // Stop receiving incoming signal
 			case context.DeadlineExceeded:
-				srv.l.Info("Operation timed out")
+				s.l.Info("Starting server timed out")
 			}
 		}
 	case err := <-errs:
@@ -92,10 +91,10 @@ func (srv *server) Start(ctx context.Context) error {
 	}
 
 	// Shutdown
-	if err := srv.srv.Shutdown(ctx); err != nil {
-		srv.l.Error("Failed to shutdown http server", "err", err)
+	if err := s.srv.Shutdown(ctx); err != nil {
+		s.l.Error("Failed to shutdown http server", "err", err)
 
-		return fmt.Errorf("shutdown err: %w", err)
+		return fmt.Errorf("shutdown: %w", err)
 	}
 
 	return nil

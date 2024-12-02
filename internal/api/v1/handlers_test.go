@@ -123,7 +123,7 @@ func TestHealthCheckHandler(t *testing.T) {
 	for _, tC := range testCases {
 		t.Run(tC.desc, func(t *testing.T) {
 			// Init server
-			handler := http.Handler(healthCheckHandler(loggerMock()))
+			handler := http.Handler(healthCheckHandler(mockLogger()))
 			ts := httptest.NewServer(handler)
 			defer ts.Close()
 
@@ -158,7 +158,7 @@ func TestAllWordsHandler(t *testing.T) {
 			svc := &wordService{
 				q: NewWordQueriesMock(NewWordsMock()...),
 			}
-			handler := listWordsHandler(svc, loggerMock())
+			handler := listWordsHandler(svc, mockLogger())
 
 			ctx := context.Background()
 			url := "/" + tC.query
@@ -205,7 +205,7 @@ func TestInsertWordHandler(t *testing.T) {
 			svc := &wordService{
 				q: NewWordQueriesMock(NewWordsMock()...),
 			}
-			handler := createWordHandler(svc, loggerMock())
+			handler := createWordHandler(svc, mockLogger())
 
 			ctx := context.Background()
 
@@ -353,7 +353,7 @@ func TestUploadWordsHandler(t *testing.T) {
 			// Underlying db of this service does not contain any words
 			svc: &wordService{
 				q:      NewWordQueriesMock(),
-				logger: loggerMock(),
+				logger: mockLogger(),
 			},
 		},
 	}
@@ -394,7 +394,7 @@ func TestUploadWordsHandler(t *testing.T) {
 
 			// Record request using handler
 			rr := httptest.NewRecorder()
-			handler := uploadWordsHandler(tC.svc, loggerMock())
+			handler := uploadWordsHandler(tC.svc, mockLogger())
 			handler(rr, req)
 			resp := rr.Result()
 
