@@ -56,7 +56,7 @@ output/*.txt
 
 # mergo output
 llminput/
-
+llm*.txt
 
 # secrets
 .secrets/
