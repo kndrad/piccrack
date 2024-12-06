@@ -13,6 +13,7 @@ type WordService interface {
 	CreateWord(ctx context.Context, value string) (database.CreateWordRow, error)
 	ListWordBatches(ctx context.Context, limit, offset int32) ([]database.ListWordBatchesRow, error)
 	CreateWordsBatch(ctx context.Context, name string, values []string) (database.CreateWordsBatchRow, error)
+	ListWordsByBatchName(ctx context.Context, name string) ([]database.ListWordsByBatchNameRow, error)
 }
 
 type wordService struct {
@@ -75,4 +76,13 @@ func (svc *wordService) CreateWordsBatch(ctx context.Context, name string, value
 	}
 
 	return row, nil
+}
+
+func (svc *wordService) ListWordsByBatchName(ctx context.Context, name string) ([]database.ListWordsByBatchNameRow, error) {
+	rows, err := svc.q.ListWordsByBatchName(ctx, name)
+	if err != nil {
+		return rows, fmt.Errorf("create word batch: %w", err)
+	}
+
+	return rows, nil
 }

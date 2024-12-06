@@ -15,6 +15,7 @@ type Querier interface {
 	ListWordFrequencies(ctx context.Context, arg ListWordFrequenciesParams) ([]ListWordFrequenciesRow, error)
 	ListWordRankings(ctx context.Context, arg ListWordRankingsParams) ([]ListWordRankingsRow, error)
 	ListWords(ctx context.Context, arg ListWordsParams) ([]ListWordsRow, error)
+	ListWordsByBatchName(ctx context.Context, name string) ([]ListWordsByBatchNameRow, error)
 }
 
 var _ Querier = (*Queries)(nil)

@@ -228,3 +228,38 @@ func (q *Queries) ListWords(ctx context.Context, arg ListWordsParams) ([]ListWor
 	}
 	return items, nil
 }
+
+const listWordsByBatchName = `-- name: ListWordsByBatchName :many
+SELECT
+    wb.name AS batch_name,
+    w.value AS word_value
+FROM word_batches AS wb
+INNER JOIN words AS w ON wb.id = w.id
+WHERE wb.name = $1 AND wb.deleted_at IS NULL
+ORDER BY wb.created_at DESC
+`
+
+type ListWordsByBatchNameRow struct {
+	BatchName string `json:"batch_name"`
+	WordValue string `json:"word_value"`
+}
+
+func (q *Queries) ListWordsByBatchName(ctx context.Context, name string) ([]ListWordsByBatchNameRow, error) {
+	rows, err := q.db.Query(ctx, listWordsByBatchName, name)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []ListWordsByBatchNameRow
+	for rows.Next() {
+		var i ListWordsByBatchNameRow
+		if err := rows.Scan(&i.BatchName, &i.WordValue); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}

@@ -302,6 +302,29 @@ func listWordBatchesHandler(svc WordService, logger *slog.Logger) http.HandlerFu
 	}
 }
 
+func listWordsByBatchNameHandler(svc WordService, logger *slog.Logger) http.HandlerFunc {
+	type response struct {
+		Rows []database.ListWordsByBatchNameRow `json:"rows"`
+	}
+
+	return func(w http.ResponseWriter, r *http.Request) {
+		name := r.URL.Query().Get("name")
+
+		logger.Info("Searching words batch", "name", name)
+
+		rows, err := svc.ListWordsByBatchName(r.Context(), name)
+		if err != nil {
+			writeJSONErr(w, "Failed to list words by batch name with word service", err, http.StatusInternalServerError)
+		}
+		resp := response{
+			Rows: rows,
+		}
+		if err := encode(w, r, http.StatusOK, resp); err != nil {
+			writeJSONErr(w, "Failed to serve response", err, http.StatusInternalServerError)
+		}
+	}
+}
+
 func limitValue(values url.Values) (int32, error) {
 	var param string
 	const defaultLimitParam = "1000"

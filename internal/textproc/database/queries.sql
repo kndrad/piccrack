@@ -56,3 +56,12 @@ SELECT
     (SELECT id FROM new_batch)
 FROM UNNEST($2::text []) AS word_value
 RETURNING id, value, batch_id;
+
+-- name: ListWordsByBatchName :many
+SELECT
+    wb.name AS batch_name,
+    w.value AS word_value
+FROM word_batches AS wb
+INNER JOIN words AS w ON wb.id = w.id
+WHERE wb.name = $1 AND wb.deleted_at IS NULL
+ORDER BY wb.created_at DESC;

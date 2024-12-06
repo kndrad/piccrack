@@ -226,6 +226,10 @@ func (q *wordQueriesMock) ListWordRankings(ctx context.Context, arg database.Lis
 	return q.wordsRankRows, nil
 }
 
+func (q *wordQueriesMock) ListWordsByBatchName(ctx context.Context, name string) ([]database.ListWordsByBatchNameRow, error) {
+	return []database.ListWordsByBatchNameRow{}, nil
+}
+
 type WordBatchMock struct {
 	id        int64
 	name      string
