@@ -29,6 +29,7 @@ import (
 	"time"
 
 	"github.com/kndrad/wcrack/internal/textproc"
+	"github.com/kndrad/wcrack/pkg/ocr"
 	"github.com/kndrad/wcrack/pkg/openf"
 	"github.com/spf13/cobra"
 )
@@ -78,7 +79,7 @@ var textCmd = &cobra.Command{
 			}
 			// Append image files only
 			for _, e := range entries {
-				if !e.IsDir() && textproc.IsImage(e.Name()) {
+				if !e.IsDir() {
 					filePaths = append(filePaths, filepath.Join(path, "/", e.Name()))
 				}
 			}
@@ -126,6 +127,13 @@ var textCmd = &cobra.Command{
 			return fmt.Errorf("open file cleaned: %w", err)
 		}
 
+		c, err := ocr.NewClient()
+		if err != nil {
+			logger.Error("Failed to init tesseract client", "err", err)
+
+			return fmt.Errorf("new client: %w", err)
+		}
+
 		// Process each screenshot and write output to .txt file.
 		for _, path := range filePaths {
 			content, err := os.ReadFile(path)
@@ -134,14 +142,14 @@ var textCmd = &cobra.Command{
 
 				return fmt.Errorf("reading file: %w", err)
 			}
-			words, err := textproc.OCR(content)
+			result, err := ocr.Run(c, ocr.NewImage(content))
 			if err != nil {
 				logger.Error("Failed to recognize words in a screenshot content", "err", err)
 
 				return fmt.Errorf("screenshot words recognition: %w", err)
 			}
 			w := textproc.NewWordsTextFileWriter(txtFile)
-			if err := textproc.WriteWords(words, w); err != nil {
+			if err := textproc.Write([]byte(result.String()), w); err != nil {
 				logger.Error("Failed to write words to a txt file", "err", err)
 
 				return fmt.Errorf("writing words: %w", err)
