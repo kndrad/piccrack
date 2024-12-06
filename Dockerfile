@@ -2,7 +2,7 @@
 
 
 # Building Go binary stage
-FROM golang:1.23.2-alpine3.20 AS build-stage
+FROM golang:1.23.4-alpine3.20 AS build-stage
 LABEL maintainer="Konrad Nowara"
 WORKDIR /
 
@@ -16,7 +16,8 @@ RUN apk add --no-cache \
     leptonica-dev \
     tesseract-ocr \
     tesseract-ocr-dev \
-    tesseract-ocr-data-eng
+    tesseract-ocr-data-eng \
+    tesseract-ocr-data-pol
 
 # Build Go binary in /app
 WORKDIR /app
