@@ -1,4 +1,4 @@
-package middleware_test
+package middleware
 
 import (
 	"context"
@@ -8,7 +8,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/kndrad/wcrack/pkg/middleware"
 	"github.com/stretchr/testify/require"
 )
 
@@ -30,16 +29,18 @@ func TestLimitRate(t *testing.T) {
 		{
 			desc: "intervals_between_handler_calls_equals_duration",
 
-			duration: time.Second * 1,
+			duration: time.Microsecond * 10,
 			total:    3,
 		},
 	}
 	for _, tC := range testCases {
 		t.Run(tC.desc, func(t *testing.T) {
-			ctx := context.WithValue(context.TODO(), "REQUEST_ID", "12345")
+			t.Parallel()
+
+			ctx := context.WithValue(context.Background(), idKey, "12345")
 
 			// Wrap handler
-			h := middleware.LimitRate(handler, tC.duration)
+			wrapped := LimitRate(handler, tC.duration)
 
 			rr := httptest.NewRecorder()
 			req := httptest.NewRequestWithContext(ctx, http.MethodGet, "/", nil)
@@ -47,7 +48,7 @@ func TestLimitRate(t *testing.T) {
 			var calls []time.Time
 
 			for range tC.total {
-				h(rr, req)
+				wrapped(rr, req)
 				now := time.Now()
 				calls = append(calls, now)
 			}

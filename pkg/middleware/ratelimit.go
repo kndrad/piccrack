@@ -6,6 +6,8 @@ import (
 	"time"
 )
 
+const idKey = key("ID")
+
 func LimitRate(h http.HandlerFunc, d time.Duration) http.HandlerFunc {
 	var (
 		tick  = time.Tick(d)
@@ -14,7 +16,7 @@ func LimitRate(h http.HandlerFunc, d time.Duration) http.HandlerFunc {
 	)
 
 	return func(w http.ResponseWriter, r *http.Request) {
-		id, ok := r.Context().Value("REQUEST_ID").(string)
+		id, ok := r.Context().Value(idKey).(string)
 		if !ok {
 			panic("Failed to retrieve request id value from context")
 		}
