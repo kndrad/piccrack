@@ -43,7 +43,16 @@ WHERE deleted_at IS NULL
 ORDER BY created_at ASC
 LIMIT $1 OFFSET $2;
 
--- name: CreateWordBatch :one
-INSERT INTO word_batches (name, created_at)
-VALUES ($1, CURRENT_TIMESTAMP)
-RETURNING id, name;
+-- name: CreateWordsBatch :one
+WITH new_batch AS (
+    INSERT INTO word_batches (name)
+    VALUES ($1)
+    RETURNING id
+)
+
+INSERT INTO words (value, batch_id)
+SELECT
+    word_value,
+    (SELECT id FROM new_batch)
+FROM UNNEST($2::text []) AS word_value
+RETURNING id, value, batch_id;

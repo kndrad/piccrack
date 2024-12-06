@@ -10,7 +10,7 @@ import (
 
 type Querier interface {
 	CreateWord(ctx context.Context, value string) (CreateWordRow, error)
-	CreateWordBatch(ctx context.Context, name string) (CreateWordBatchRow, error)
+	CreateWordsBatch(ctx context.Context, arg CreateWordsBatchParams) (CreateWordsBatchRow, error)
 	ListWordBatches(ctx context.Context, arg ListWordBatchesParams) ([]ListWordBatchesRow, error)
 	ListWordFrequencies(ctx context.Context, arg ListWordFrequenciesParams) ([]ListWordFrequenciesRow, error)
 	ListWordRankings(ctx context.Context, arg ListWordRankingsParams) ([]ListWordRankingsRow, error)

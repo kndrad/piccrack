@@ -206,16 +206,14 @@ func (q *wordQueriesMock) CreateWord(ctx context.Context, value string) (databas
 	return row, nil
 }
 
-// TODO
-func (q *wordQueriesMock) CreateWordBatch(ctx context.Context, name string) (database.CreateWordBatchRow, error) {
-	return database.CreateWordBatchRow{}, nil
+func (q *wordQueriesMock) CreateWordsBatch(ctx context.Context, arg database.CreateWordsBatchParams) (database.CreateWordsBatchRow, error) {
+	return database.CreateWordsBatchRow{}, nil
 }
 
 func (q *wordQueriesMock) ListWords(ctx context.Context, arg database.ListWordsParams) ([]database.ListWordsRow, error) {
 	return q.wordsRows, nil
 }
 
-// TODO
 func (q *wordQueriesMock) ListWordBatches(ctx context.Context, arg database.ListWordBatchesParams) ([]database.ListWordBatchesRow, error) {
 	return []database.ListWordBatchesRow{}, nil
 }

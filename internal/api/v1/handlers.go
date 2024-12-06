@@ -10,7 +10,6 @@ import (
 	"net/http"
 	"net/url"
 	"strconv"
-	"strings"
 
 	"github.com/kndrad/wcrack/internal/textproc/database"
 	"github.com/kndrad/wcrack/pkg/ocr"
@@ -251,16 +250,23 @@ func uploadImageWordsHandler(svc WordService, logger *slog.Logger) http.HandlerF
 			)
 		}
 
-		var builder strings.Builder
+		var words []string
+
 		for w := range result.Words() {
-			builder.WriteString(w.String() + " ")
+			words = append(words, w.String())
 		}
-		if _, err := w.Write([]byte(builder.String())); err != nil {
-			writeJSONErr(w,
-				"Failed to write ",
-				err,
-				http.StatusInternalServerError,
-			)
+
+		row, err := svc.CreateWordsBatch(r.Context(), fh.Filename, words)
+		if err != nil {
+			writeJSONErr(w, "Failed to insert words batch", err, http.StatusInternalServerError)
+		}
+		response := struct {
+			Row database.CreateWordsBatchRow `json:"row"`
+		}{
+			Row: row,
+		}
+		if err := encode(w, r, http.StatusOK, response); err != nil {
+			writeJSONErr(w, "Failed to encode response", err, http.StatusInternalServerError)
 		}
 	}
 }

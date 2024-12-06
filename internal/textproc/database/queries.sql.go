@@ -30,21 +30,36 @@ func (q *Queries) CreateWord(ctx context.Context, value string) (CreateWordRow, 
 	return i, err
 }
 
-const createWordBatch = `-- name: CreateWordBatch :one
-INSERT INTO word_batches (name, created_at)
-VALUES ($1, CURRENT_TIMESTAMP)
-RETURNING id, name
+const createWordsBatch = `-- name: CreateWordsBatch :one
+WITH new_batch AS (
+    INSERT INTO word_batches (name)
+    VALUES ($1)
+    RETURNING id
+)
+
+INSERT INTO words (value, batch_id)
+SELECT
+    word_value,
+    (SELECT id FROM new_batch)
+FROM UNNEST($2::text []) AS word_value
+RETURNING id, value, batch_id
 `
 
-type CreateWordBatchRow struct {
-	ID   int64  `json:"id"`
-	Name string `json:"name"`
+type CreateWordsBatchParams struct {
+	Name    string   `json:"name"`
+	Column2 []string `json:"column_2"`
 }
 
-func (q *Queries) CreateWordBatch(ctx context.Context, name string) (CreateWordBatchRow, error) {
-	row := q.db.QueryRow(ctx, createWordBatch, name)
-	var i CreateWordBatchRow
-	err := row.Scan(&i.ID, &i.Name)
+type CreateWordsBatchRow struct {
+	ID      int64       `json:"id"`
+	Value   string      `json:"value"`
+	BatchID pgtype.Int8 `json:"batch_id"`
+}
+
+func (q *Queries) CreateWordsBatch(ctx context.Context, arg CreateWordsBatchParams) (CreateWordsBatchRow, error) {
+	row := q.db.QueryRow(ctx, createWordsBatch, arg.Name, arg.Column2)
+	var i CreateWordsBatchRow
+	err := row.Scan(&i.ID, &i.Value, &i.BatchID)
 	return i, err
 }
 
