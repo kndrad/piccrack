@@ -1,6 +1,6 @@
 # In progress
 
-go version go1.23.2
+go version go1.23.4
 
 ## ABOUT
 
