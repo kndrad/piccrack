@@ -26,7 +26,7 @@ import (
 	"fmt"
 
 	"github.com/kndrad/wcrack/config"
-	v1 "github.com/kndrad/wcrack/internal/api/v1"
+	apiv1 "github.com/kndrad/wcrack/internal/api/v1"
 	"github.com/kndrad/wcrack/internal/textproc"
 	"github.com/kndrad/wcrack/internal/textproc/database"
 	"github.com/kndrad/wcrack/pkg/retry"
@@ -74,10 +74,10 @@ var apiStartCmd = &cobra.Command{
 		defer db.Close(ctx)
 
 		q := database.New(db)
-		wordsService := v1.NewWordService(q, logger)
+		wordsService := apiv1.NewWordService(q, logger)
 
 		// Create server instance
-		srv, err := v1.NewServer(
+		srv, err := apiv1.NewServer(
 			cfg.HTTP,
 			wordsService,
 			logger,

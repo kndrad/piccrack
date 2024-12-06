@@ -36,7 +36,7 @@ func Test_wordsTextFileWriter(t *testing.T) {
 	words := []byte(
 		"role senior golang developer crossfunctional development team engineering experiences tomorrow work",
 	)
-	if err := textproc.WriteWords(words, textproc.NewWordsTextFileWriter(tmpFile)); err != nil {
+	if err := textproc.Write(words, textproc.NewWordsTextFileWriter(tmpFile)); err != nil {
 		require.NoError(t, err)
 	}
 
@@ -63,7 +63,7 @@ func Test_WriteWords(t *testing.T) {
 	words := []byte(
 		"role senior golang developer crossfunctional development team engineering experiences tomorrow work",
 	)
-	if err := textproc.WriteWords(words, tmpFile); err != nil {
+	if err := textproc.Write(words, tmpFile); err != nil {
 		require.NoError(t, err)
 	}
 

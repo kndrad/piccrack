@@ -10,8 +10,10 @@ import (
 	"net/http"
 	"net/url"
 	"strconv"
+	"strings"
 
-	"github.com/kndrad/wcrack/internal/textproc"
+	"github.com/kndrad/wcrack/internal/textproc/database"
+	"github.com/kndrad/wcrack/pkg/ocr"
 )
 
 func healthCheckHandler(logger *slog.Logger) http.HandlerFunc {
@@ -183,10 +185,6 @@ func uploadWordsHandler(svc WordService, logger *slog.Logger) http.HandlerFunc {
 func uploadImageWordsHandler(svc WordService, logger *slog.Logger) http.HandlerFunc {
 	var maxSize int64 = 1024 * 1024 * 50 // 50 MB
 
-	type Response struct {
-		Words []string `json:"words"`
-	}
-
 	return func(w http.ResponseWriter, r *http.Request) {
 		r.Body = http.MaxBytesReader(w, r.Body, maxSize)
 
@@ -228,15 +226,23 @@ func uploadImageWordsHandler(svc WordService, logger *slog.Logger) http.HandlerF
 		logger.Info("Received form", slog.String("header_filename", fh.Filename))
 
 		// Get OCR result from uploaded image
-		img := make([]byte, textproc.MaxImageSize)
-		if _, err := f.Read(img); err != nil {
+		content := make([]byte, ocr.MaxImageSize)
+		if _, err := f.Read(content); err != nil {
 			writeJSONErr(w,
 				"Failed to read file content for image words recognition.",
 				err,
 				http.StatusInternalServerError,
 			)
 		}
-		result, err := textproc.OCR(img)
+		c, err := ocr.NewClient()
+		if err != nil {
+			writeJSONErr(w,
+				"Failed to init tesseract client",
+				err,
+				http.StatusInternalServerError,
+			)
+		}
+		result, err := ocr.Run(c, ocr.NewImage(content))
 		if err != nil {
 			writeJSONErr(w,
 				"Failed to recognize words from an image",
@@ -244,16 +250,48 @@ func uploadImageWordsHandler(svc WordService, logger *slog.Logger) http.HandlerF
 				http.StatusInternalServerError,
 			)
 		}
-		// Insert as batch with current date as a mark (?)
 
-		// Write status
-		w.WriteHeader(http.StatusOK)
-		if _, err := w.Write(result); err != nil {
+		var builder strings.Builder
+		for w := range result.Words() {
+			builder.WriteString(w.String() + " ")
+		}
+		if _, err := w.Write([]byte(builder.String())); err != nil {
 			writeJSONErr(w,
 				"Failed to write ",
 				err,
 				http.StatusInternalServerError,
 			)
+		}
+	}
+}
+
+func listWordBatchesHandler(svc WordService, logger *slog.Logger) http.HandlerFunc {
+	type response struct {
+		Results []database.ListWordBatchesRow `json:"word_batches"`
+	}
+
+	return func(w http.ResponseWriter, r *http.Request) {
+		limit, err := limitValue(r.URL.Query())
+		if err != nil {
+			writeJSONErr(w, "Failed to get limit query value", err, http.StatusBadRequest)
+		}
+		offset, err := offsetValue(r.URL.Query())
+		if err != nil {
+			writeJSONErr(w, "Failed to get offset query value", err, http.StatusBadRequest)
+		}
+
+		rows, err := svc.ListWordBatches(r.Context(), limit, offset)
+		if err != nil {
+			writeJSONErr(w, "Failed to list word batches via word service", err, http.StatusInternalServerError)
+		}
+
+		resp := response{
+			Results: rows,
+		}
+		logger.Info("Got word batches", "total", len(rows))
+
+		if err := encode(w, r, http.StatusOK, resp); err != nil {
+			writeJSONErr(w, "Failed to serve response", err, http.StatusInternalServerError)
 		}
 	}
 }

@@ -12,9 +12,8 @@ type WordsWriter interface {
 	Write(words []byte) (int, error)
 }
 
-func WriteWords(words []byte, w WordsWriter) error {
-	// Write words
-	if _, err := w.Write(words); err != nil {
+func Write(data []byte, w WordsWriter) error {
+	if _, err := w.Write(data); err != nil {
 		return fmt.Errorf("failed to write words: %w", err)
 	}
 

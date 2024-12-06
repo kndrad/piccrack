@@ -11,6 +11,7 @@ import (
 type WordService interface {
 	ListWords(ctx context.Context, limit, offset int32) ([]database.ListWordsRow, error)
 	CreateWord(ctx context.Context, value string) (database.CreateWordRow, error)
+	ListWordBatches(ctx context.Context, limit, offset int32) ([]database.ListWordBatchesRow, error)
 }
 
 type wordService struct {
@@ -49,4 +50,16 @@ func (svc *wordService) CreateWord(ctx context.Context, value string) (database.
 	}
 
 	return row, nil
+}
+
+func (svc *wordService) ListWordBatches(ctx context.Context, limit, offset int32) ([]database.ListWordBatchesRow, error) {
+	rows, err := svc.q.ListWordBatches(ctx, database.ListWordBatchesParams{
+		Limit:  limit,
+		Offset: offset,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("list word batches: %w", err)
+	}
+
+	return rows, nil
 }
