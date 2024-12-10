@@ -3,26 +3,27 @@ package ocr
 import (
 	"errors"
 	"fmt"
+	"os"
+	"path/filepath"
 	"strings"
 	"sync"
 
 	"github.com/bbalet/stopwords"
 	"github.com/kndrad/wcrack/pkg/imgsniff"
+	"github.com/kndrad/wcrack/pkg/pproc"
 	"github.com/otiai10/gosseract/v2"
 	"github.com/pemistahl/lingua-go"
 )
 
 var MaxImageSize int = 10 * 1024 * 1024 // 10MB
 
-func NewClient() (*gosseract.Client, error) {
+func NewClient() *gosseract.Client {
 	client := gosseract.NewClient()
 	client.Trim = true
-	if err := client.SetWhitelist(
+	client.SetWhitelist(
 		"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789 \n",
-	); err != nil {
-		return nil, fmt.Errorf("decode: %w", err)
-	}
-	return client, nil
+	)
+	return client
 }
 
 type Word struct {
@@ -49,22 +50,17 @@ func (w *Word) String() string {
 	return w.value
 }
 
-type image struct {
-	content []byte
-}
-
-func NewImage(content []byte) *image {
-	if content == nil {
-		return &image{content: []byte{}}
-	}
-	return &image{content: content}
-}
-
 type Result struct {
-	text string
+	path    string
+	content []byte
+	text    string
 }
 
 func (res *Result) String() string {
+	return res.Text()
+}
+
+func (res *Result) Text() string {
 	if res == nil {
 		return ""
 	}
@@ -72,9 +68,9 @@ func (res *Result) String() string {
 }
 
 func (res *Result) Words() <-chan *Word {
-	words := make(chan *Word)
-
 	var wg sync.WaitGroup
+
+	out := make(chan *Word)
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
@@ -86,42 +82,48 @@ func (res *Result) Words() <-chan *Word {
 				defer wg.Done()
 
 				lang := detectLanguage(v)
-				words <- &Word{value: strings.ToLower(v), lang: lang}
+				out <- &Word{value: strings.ToLower(v), lang: lang}
 			}()
 		}
 	}()
 	go func() {
 		wg.Wait()
-		close(words)
+		close(out)
 	}()
 
-	return words
+	return out
 }
 
 var ErrNotAnImage = errors.New("not an image")
 
-func Run(c *gosseract.Client, img *image) (*Result, error) {
-	if c == nil {
+func Do(tc *gosseract.Client, path string) (*Result, error) {
+	if tc == nil {
 		panic("tesseract client can't be nil")
 	}
-	if img == nil {
-		panic("image can't be nil")
+	if path == "" {
+		panic("path can't be empty")
 	}
 
-	if !validate(img.content) {
+	path = filepath.Clean(path)
+	content, err := os.ReadFile(path)
+	if err != nil {
+		return nil, fmt.Errorf("read file: %w", err)
+	}
+
+	if !IsImage(content) {
 		return nil, ErrNotAnImage
 	}
 
-	if err := c.SetImageFromBytes(img.content); err != nil {
+	if err := tc.SetImageFromBytes(content); err != nil {
 		return nil, fmt.Errorf("set image: %w", err)
 	}
 
-	text, err := c.Text()
+	text, err := tc.Text()
 	if err != nil {
 		return nil, fmt.Errorf("text: %w", err)
 	}
 
-	return &Result{text: text}, nil
+	return &Result{path: path, content: content, text: text}, nil
 }
 
 func detectLanguage(value string) lingua.Language {
@@ -141,7 +143,7 @@ func detectLanguage(value string) lingua.Language {
 	return lang
 }
 
-func validate(content []byte) bool {
+func IsImage(content []byte) bool {
 	return imgsniff.IsJPG(content) || imgsniff.IsPNG(content)
 }
 
@@ -150,4 +152,29 @@ func availableLanguages() []lingua.Language {
 		lingua.English,
 		lingua.Polish,
 	}
+}
+
+// OCR's images within a directory. Returns results.
+func Dir(tc *gosseract.Client, root string) ([]*Result, error) {
+	images := make([]*pproc.Entry, 0)
+
+	entries, err := pproc.Walk(root, IsImage)
+	if err != nil {
+		return nil, fmt.Errorf("error during walk: %w", err)
+	}
+	for entry := range entries {
+		images = append(images, entry)
+	}
+
+	// Drain entries and run ocr
+	results := make([]*Result, 0)
+	for _, img := range images {
+		res, err := Do(tc, img.Path())
+		if err != nil {
+			return nil, fmt.Errorf("do: %w", err)
+		}
+		results = append(results, res)
+	}
+
+	return results, nil
 }

@@ -10,20 +10,15 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestValidateContent(t *testing.T) {
+func TestIsImage(t *testing.T) {
 	t.Parallel()
 
 	tmpNoImg, err := os.CreateTemp("testdata", "*.txt")
 	require.NoError(t, err)
 
 	defer func() {
-		var err error
-
-		err = tmpNoImg.Close()
-		require.NoError(t, err)
-
-		err = os.RemoveAll(tmpNoImg.Name())
-		require.NoError(t, err)
+		defer tmpNoImg.Close()
+		defer os.RemoveAll(tmpNoImg.Name())
 	}()
 
 	testCases := []struct {
@@ -56,44 +51,42 @@ func TestValidateContent(t *testing.T) {
 			data, err := os.ReadFile(tC.entry)
 			require.NoError(t, err)
 
-			ok := validate(data)
+			ok := IsImage(data)
 
 			require.Equal(t, tC.want, ok)
 		})
 	}
 }
 
-func TestRunTesseractClientOnImage(t *testing.T) {
+func TestDo(t *testing.T) {
 	t.Parallel()
 
 	testCases := []struct {
 		desc string
 
-		entry string
+		path string
 	}{
 		{
 			desc: "returns_text",
 
-			entry: filepath.Join("testdata", "jpg_offer.jpg"),
+			path: filepath.Join("testdata", "jpg_offer.jpg"),
 		},
 	}
 	for _, tC := range testCases {
 		t.Run(tC.desc, func(t *testing.T) {
-			c, err := NewClient()
-			require.NoError(t, err)
+			tc := NewClient()
+			defer tc.Close()
 
-			data, err := os.ReadFile(tC.entry)
+			result, err := Do(tc, tC.path)
 			require.NoError(t, err)
-
-			result, err := Run(c, &image{content: data})
 
 			require.NotNil(t, result)
-			require.NotEmpty(t, result.text)
+			require.NotEmpty(t, result.String())
 		})
 	}
 }
 
-func TestResultWordStream(t *testing.T) {
+func TestResultWords(t *testing.T) {
 	t.Parallel()
 
 	testCases := []struct {
@@ -121,8 +114,21 @@ func TestResultWordStream(t *testing.T) {
 			for w := range words {
 				require.NotEmpty(t, w.value)
 				require.NotEqual(t, w.lang, lingua.Unknown)
-				fmt.Printf("WORD: %s\n", w.value)
 			}
 		})
+	}
+}
+
+func TestDir(t *testing.T) {
+	t.Parallel()
+
+	tc := NewClient()
+	defer tc.Close()
+
+	results, err := Dir(tc, "testdata")
+	require.NoError(t, err)
+
+	for _, res := range results {
+		fmt.Printf("got result: len of text: %d\n", len(res.Text()))
 	}
 }
