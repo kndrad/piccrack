@@ -8,11 +8,11 @@ import (
 	"sync"
 )
 
-type WordsWriter interface {
-	Write(words []byte) (int, error)
+type Writer interface {
+	Write(content []byte) (int, error)
 }
 
-func Write(data []byte, w WordsWriter) error {
+func Write(w Writer, data []byte) error {
 	if _, err := w.Write(data); err != nil {
 		return fmt.Errorf("failed to write words: %w", err)
 	}
@@ -20,21 +20,21 @@ func Write(data []byte, w WordsWriter) error {
 	return nil
 }
 
-type wordsTextFileWriter struct {
+type FileWriter struct {
 	mu sync.Mutex
 	f  *os.File
 }
 
-func NewWordsTextFileWriter(f *os.File) *wordsTextFileWriter {
-	return &wordsTextFileWriter{
+func NewFileWriter(f *os.File) *FileWriter {
+	return &FileWriter{
 		f: f,
 	}
 }
 
-func (w *wordsTextFileWriter) Write(words []byte) (int, error) {
+func (w *FileWriter) Write(data []byte) (int, error) {
 	builder := new(strings.Builder)
 
-	builder.Write(words)
+	builder.Write(data)
 	builder.WriteString("\n")
 	n := builder.Len()
 
@@ -42,7 +42,7 @@ func (w *wordsTextFileWriter) Write(words []byte) (int, error) {
 	defer w.mu.Unlock()
 
 	if _, err := io.WriteString(w.f, builder.String()); err != nil {
-		return 0, fmt.Errorf("screenshot: failed to write: %w", err)
+		return 0, fmt.Errorf("failed to write: %w", err)
 	}
 
 	return n, nil

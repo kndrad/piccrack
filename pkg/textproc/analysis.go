@@ -13,15 +13,15 @@ import (
 
 var ErrEmptyWords = errors.New("words is empty")
 
-func AnalyzeFrequency(words []string) (*TextAnalysis, error) {
-	if words == nil {
+func AnalyzeWordsFrequency(data []string) (*TextAnalysis, error) {
+	if data == nil {
 		return nil, ErrEmptyWords
 	}
 	analysis, err := NewTextAnalysis()
 	if err != nil {
 		return nil, fmt.Errorf("AnalyzeWordFrequency: %w", err)
 	}
-	for _, word := range words {
+	for _, word := range data {
 		analysis.IncWordCount(word)
 	}
 

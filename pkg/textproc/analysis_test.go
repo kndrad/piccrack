@@ -7,7 +7,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/kndrad/wcrack/internal/textproc"
+	"github.com/kndrad/wcrack/pkg/textproc"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -80,7 +80,7 @@ func TestWordsFrequencyAnalysis(t *testing.T) {
 	}
 	for _, tc := range testCases {
 		t.Run(tc.desc, func(t *testing.T) {
-			analysis, err := textproc.AnalyzeFrequency(tc.words)
+			analysis, err := textproc.AnalyzeWordsFrequency(tc.words)
 
 			if tc.mustFail {
 				require.Error(t, err, "wanted failure but got: %w", err)
