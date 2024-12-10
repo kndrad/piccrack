@@ -6,7 +6,7 @@ import (
 	"sync"
 )
 
-func ScanLines(text string) <-chan string {
+func doScan(text string) <-chan string {
 	out := make(chan string)
 
 	// Scan and wait for scan to complete
@@ -24,16 +24,14 @@ func ScanLines(text string) <-chan string {
 	return out
 }
 
-func ManyScanLines(texts []string) []string {
-	out := make([]string, 0)
-
+func ScanLines(texts ...string) <-chan string {
 	lines := make(chan string)
 
 	var wg sync.WaitGroup
 	for _, text := range texts {
 		wg.Add(1)
 		go func() {
-			for line := range ScanLines(text) {
+			for line := range doScan(text) {
 				lines <- line
 			}
 			wg.Done()
@@ -44,9 +42,5 @@ func ManyScanLines(texts []string) []string {
 		close(lines)
 	}()
 
-	for line := range lines {
-		out = append(out, line)
-	}
-
-	return out
+	return lines
 }

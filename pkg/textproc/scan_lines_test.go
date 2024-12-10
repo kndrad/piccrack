@@ -19,16 +19,16 @@ func TestScanLines(t *testing.T) {
     Possess experience with Observability, Performance Analytics and Security tools like Prometheus, CloudWatch, ELK, Sumologic and DataDog
     Have experience with massive data platforms (Hadoop, Spark, Kafka, etc) and design principles (Data Modeling, Streaming vs Batch processing, Distributed Messaging, etc)`
 
-	sentences := ScanLines(text)
+	lines := doScan(text)
 
 	total := 0
-	for range sentences {
+	for range lines {
 		total++
 	}
 	require.Equal(t, 8, total)
 }
 
-func TestManyScanLines(t *testing.T) {
+func TestScanLinesManyTexts(t *testing.T) {
 	texts := []string{
 		`
     2-3+ years of hands-on/production experience.
@@ -112,9 +112,9 @@ Technical Expertise:
 `,
 	}
 
-	lines := ManyScanLines(texts)
+	lines := ScanLines(texts...)
 
-	for _, line := range lines {
+	for line := range lines {
 		fmt.Println(line)
 	}
 }
