@@ -11,7 +11,7 @@ import (
 	"net/url"
 	"strconv"
 
-	"github.com/kndrad/wcrack/internal/textproc/database"
+	"github.com/kndrad/wcrack/internal/database"
 	"github.com/kndrad/wcrack/pkg/ocr"
 )
 
@@ -190,7 +190,7 @@ func uploadImageWordsHandler(svc WordService, logger *slog.Logger) http.HandlerF
 		if err := r.ParseMultipartForm(maxSize); err != nil {
 			writeJSONErr(w, "Image file too big", err, http.StatusBadRequest)
 		}
-		f, fh, err := r.FormFile("image")
+		f, header, err := r.FormFile("image")
 		if err != nil {
 			writeJSONErr(w, "Failed to get image file", err, http.StatusBadRequest)
 		}
@@ -222,9 +222,8 @@ func uploadImageWordsHandler(svc WordService, logger *slog.Logger) http.HandlerF
 				http.StatusBadRequest,
 			)
 		}
-		logger.Info("Received form", slog.String("header_filename", fh.Filename))
+		logger.Info("Received form", slog.String("header_filename", header.Filename))
 
-		// Get OCR result from uploaded image
 		content := make([]byte, ocr.MaxImageSize)
 		if _, err := f.Read(content); err != nil {
 			writeJSONErr(w,
@@ -233,15 +232,10 @@ func uploadImageWordsHandler(svc WordService, logger *slog.Logger) http.HandlerF
 				http.StatusInternalServerError,
 			)
 		}
-		c, err := ocr.NewClient()
-		if err != nil {
-			writeJSONErr(w,
-				"Failed to init tesseract client",
-				err,
-				http.StatusInternalServerError,
-			)
-		}
-		result, err := ocr.Run(c, ocr.NewImage(content))
+		c := ocr.NewClient()
+		defer c.Close()
+
+		result, err := ocr.Do(c, header.Filename)
 		if err != nil {
 			writeJSONErr(w,
 				"Failed to recognize words from an image",
@@ -251,15 +245,15 @@ func uploadImageWordsHandler(svc WordService, logger *slog.Logger) http.HandlerF
 		}
 
 		var words []string
-
 		for w := range result.Words() {
 			words = append(words, w.String())
 		}
 
-		row, err := svc.CreateWordsBatch(r.Context(), fh.Filename, words)
+		row, err := svc.CreateWordsBatch(r.Context(), header.Filename, words)
 		if err != nil {
 			writeJSONErr(w, "Failed to insert words batch", err, http.StatusInternalServerError)
 		}
+
 		response := struct {
 			Row database.CreateWordsBatchRow `json:"row"`
 		}{
