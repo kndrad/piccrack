@@ -1,24 +1,3 @@
-/*
-Copyright © 2024 Konrad Nowara
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in
-all copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-THE SOFTWARE.
-*/
 package cmd
 
 import (
@@ -28,9 +7,10 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/kndrad/wcrack/internal/textproc"
+	"github.com/kndrad/wcrack/cmd/logger"
 	"github.com/kndrad/wcrack/pkg/ocr"
 	"github.com/kndrad/wcrack/pkg/openf"
+	"github.com/kndrad/wcrack/pkg/textproc"
 	"github.com/spf13/cobra"
 )
 
@@ -43,11 +23,11 @@ var textCmd = &cobra.Command{
 	},
 	Example: "itcrack text --path <path/to/file.png> -o <path/to/out/dir>",
 	RunE: func(cmd *cobra.Command, args []string) error {
-		logger := DefaultLogger(Verbose)
+		l := logger.New(Verbose)
 
 		path, err := cmd.Flags().GetString("path")
 		if err != nil {
-			logger.Error("Failed to get path string flag value", "err", err)
+			l.Error("Failed to get path string flag value", "err", err)
 
 			return fmt.Errorf("get string: %w", err)
 		}
@@ -55,7 +35,7 @@ var textCmd = &cobra.Command{
 
 		stat, err := os.Stat(path)
 		if err != nil {
-			logger.Error("getting stat of screenshot", "err", err)
+			l.Error("getting stat of screenshot", "err", err)
 
 			return fmt.Errorf("stat: %w", err)
 		}
@@ -67,13 +47,13 @@ var textCmd = &cobra.Command{
 		if stat.IsDir() {
 			addDirSuffix = true
 
-			logger.Info("Processing directory",
+			l.Info("Processing directory",
 				slog.String("input_path", path),
 			)
 
 			entries, err := os.ReadDir(path)
 			if err != nil {
-				logger.Error("reading dir", "err", err)
+				l.Error("reading dir", "err", err)
 
 				return fmt.Errorf("reading dir: %w", err)
 			}
@@ -83,7 +63,7 @@ var textCmd = &cobra.Command{
 					filePaths = append(filePaths, filepath.Join(path, "/", e.Name()))
 				}
 			}
-			logger.Info(
+			l.Info(
 				"Number of image files in a directory",
 				slog.String("input_path", path),
 				slog.Int("files_total", len(filePaths)),
@@ -98,7 +78,7 @@ var textCmd = &cobra.Command{
 			suffix := "dir"
 			id, err := textproc.NewAnalysisIDWithSuffix(suffix)
 			if err != nil {
-				logger.Error("Failed to add suffix to an out path",
+				l.Error("Failed to add suffix to an out path",
 					slog.String("suffix", suffix),
 					slog.String("id", id),
 				)
@@ -108,7 +88,7 @@ var textCmd = &cobra.Command{
 		outPath := filepath.Clean(OutPath)
 		ppath, err := openf.PreparePath(outPath, time.Now())
 		if err != nil {
-			logger.Error("Failed to prepare out path",
+			l.Error("Failed to prepare out path",
 				slog.String("outPath", outPath),
 				slog.String("err", err.Error()),
 			)
@@ -116,47 +96,43 @@ var textCmd = &cobra.Command{
 			return fmt.Errorf("open file cleaned: %w", err)
 		}
 
-		txtFile, err := openf.Open(
+		txtF, err := openf.Open(
 			ppath.String(),
 			os.O_APPEND|openf.DefaultFlags,
 			openf.DefaultFileMode,
 		)
 		if err != nil {
-			logger.Error("Failed to open cleaned file", "err", err)
+			l.Error("Failed to open cleaned file", "err", err)
 
 			return fmt.Errorf("open file cleaned: %w", err)
 		}
 
-		c, err := ocr.NewClient()
+		c := ocr.NewClient()
+		defer c.Close()
+
 		if err != nil {
-			logger.Error("Failed to init tesseract client", "err", err)
+			l.Error("Failed to init tesseract client", "err", err)
 
 			return fmt.Errorf("new client: %w", err)
 		}
 
 		// Process each screenshot and write output to .txt file.
 		for _, path := range filePaths {
-			content, err := os.ReadFile(path)
+			result, err := ocr.Do(c, path)
 			if err != nil {
-				logger.Error("reading file", "err", err)
-
-				return fmt.Errorf("reading file: %w", err)
-			}
-			result, err := ocr.Run(c, ocr.NewImage(content))
-			if err != nil {
-				logger.Error("Failed to recognize words in a screenshot content", "err", err)
+				l.Error("Failed to recognize words in a screenshot content", "err", err)
 
 				return fmt.Errorf("screenshot words recognition: %w", err)
 			}
-			w := textproc.NewWordsTextFileWriter(txtFile)
-			if err := textproc.Write([]byte(result.String()), w); err != nil {
-				logger.Error("Failed to write words to a txt file", "err", err)
+			w := textproc.NewFileWriter(txtF)
+			if err := textproc.Write(w, []byte(result.String())); err != nil {
+				l.Error("Failed to write words to a txt file", "err", err)
 
 				return fmt.Errorf("writing words: %w", err)
 			}
 		}
 
-		logger.Info("Program completed successfully.")
+		l.Info("Program completed successfully.")
 
 		return nil
 	},
