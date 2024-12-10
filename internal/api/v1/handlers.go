@@ -246,7 +246,7 @@ func uploadImageWordsHandler(svc WordService, logger *slog.Logger) http.HandlerF
 
 		var words []string
 		for w := range result.Words() {
-			words = append(words, w.String())
+			words = append(words, w)
 		}
 
 		row, err := svc.CreateWordsBatch(r.Context(), header.Filename, words)

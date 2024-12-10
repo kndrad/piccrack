@@ -8,11 +8,9 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/bbalet/stopwords"
 	"github.com/kndrad/wcrack/pkg/imgsniff"
 	"github.com/kndrad/wcrack/pkg/pproc"
 	"github.com/otiai10/gosseract/v2"
-	"github.com/pemistahl/lingua-go"
 )
 
 var MaxImageSize int = 10 * 1024 * 1024 // 10MB
@@ -24,74 +22,6 @@ func NewClient() *gosseract.Client {
 		"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789 \n",
 	)
 	return client
-}
-
-type Word struct {
-	value string
-	lang  lingua.Language
-}
-
-func (w *Word) IsStop() bool {
-	if w == nil {
-		return true
-	}
-	if w.value == "" {
-		return true
-	}
-
-	result := stopwords.CleanString(w.value, w.lang.IsoCode639_1().String(), false)
-	return result == ""
-}
-
-func (w *Word) String() string {
-	if w == nil {
-		return ""
-	}
-	return w.value
-}
-
-type Result struct {
-	path    string
-	content []byte
-	text    string
-}
-
-func (res *Result) String() string {
-	return res.Text()
-}
-
-func (res *Result) Text() string {
-	if res == nil {
-		return ""
-	}
-	return res.text
-}
-
-func (res *Result) Words() <-chan *Word {
-	var wg sync.WaitGroup
-
-	out := make(chan *Word)
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
-
-		for _, v := range strings.Fields(res.text) {
-			wg.Add(1)
-
-			go func() {
-				defer wg.Done()
-
-				lang := detectLanguage(v)
-				out <- &Word{value: strings.ToLower(v), lang: lang}
-			}()
-		}
-	}()
-	go func() {
-		wg.Wait()
-		close(out)
-	}()
-
-	return out
 }
 
 var ErrNotAnImage = errors.New("not an image")
@@ -126,32 +56,51 @@ func Do(tc *gosseract.Client, path string) (*Result, error) {
 	return &Result{path: path, content: content, text: text}, nil
 }
 
-func detectLanguage(value string) lingua.Language {
-	if value == "" {
-		return lingua.Unknown
+type Result struct {
+	path    string
+	content []byte
+	text    string
+}
+
+func (res *Result) String() string {
+	return res.Text()
+}
+
+func (res *Result) Text() string {
+	if res == nil {
+		return ""
 	}
+	return res.text
+}
 
-	detector := lingua.NewLanguageDetectorBuilder().
-		FromLanguages(availableLanguages()...).
-		Build()
+func (res *Result) Words() <-chan string {
+	var wg sync.WaitGroup
 
-	lang, exists := detector.DetectLanguageOf(value)
-	if !exists {
-		return 0
-	}
+	out := make(chan string)
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
 
-	return lang
+		for _, v := range strings.Fields(res.text) {
+			wg.Add(1)
+
+			go func() {
+				defer wg.Done()
+
+				out <- strings.ToLower(v)
+			}()
+		}
+	}()
+	go func() {
+		wg.Wait()
+		close(out)
+	}()
+
+	return out
 }
 
 func IsImage(content []byte) bool {
 	return imgsniff.IsJPG(content) || imgsniff.IsPNG(content)
-}
-
-func availableLanguages() []lingua.Language {
-	return []lingua.Language{
-		lingua.English,
-		lingua.Polish,
-	}
 }
 
 // OCR's images within a directory. Returns results.

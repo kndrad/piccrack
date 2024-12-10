@@ -6,7 +6,6 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/pemistahl/lingua-go"
 	"github.com/stretchr/testify/require"
 )
 
@@ -111,9 +110,10 @@ func TestResultWords(t *testing.T) {
 		t.Run(tC.desc, func(t *testing.T) {
 			words := tC.result.Words()
 
+			fmt.Println(len(words))
+
 			for w := range words {
-				require.NotEmpty(t, w.value)
-				require.NotEqual(t, w.lang, lingua.Unknown)
+				require.NotEmpty(t, w)
 			}
 		})
 	}
