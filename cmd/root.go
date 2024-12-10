@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/kndrad/wcrack/cmd/sentences"
+	"github.com/kndrad/wcrack/cmd/scan"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -48,7 +48,7 @@ func init() {
 
 	rootCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 
-	rootCmd.AddCommand(sentences.RootCmd())
+	rootCmd.AddCommand(scan.RootCmd())
 }
 
 // initConfig reads in config file and ENV variables if set.
