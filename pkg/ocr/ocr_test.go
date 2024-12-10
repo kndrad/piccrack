@@ -94,7 +94,7 @@ func TestResultWords(t *testing.T) {
 		result *Result
 	}{
 		{
-			desc: "each_word_has_lang",
+			desc: "returns_each_word_one_by_one",
 
 			result: &Result{text: `To be successful in this role you will-
     Have relevant experience and a Bachelor's diploma in Computer Science or its equivalent
