@@ -1,10 +1,9 @@
-package cmd
+package words
 
 import (
 	"context"
 	"fmt"
 	"log/slog"
-	"strconv"
 	"time"
 
 	"github.com/kndrad/wcrack/cmd/logger"
@@ -14,10 +13,11 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var wordsFrequencyCmd = &cobra.Command{
-	Use:     "frequency",
-	Short:   "Outputs words frequency from a database",
-	Example: "wcrack words frequency",
+// addWordCmd represents the add command.
+var addWordCmd = &cobra.Command{
+	Use:     "add",
+	Short:   "Add word to a database.",
+	Example: "wcrack words add [WORD]",
 	RunE: func(cmd *cobra.Command, args []string) error {
 		l := logger.New(Verbose)
 
@@ -53,34 +53,20 @@ var wordsFrequencyCmd = &cobra.Command{
 		}
 		defer conn.Close(ctx)
 
-		// Query db to get word frequency count.
 		q := database.New(conn)
 
-		var limit int32 = 30
-		params := database.ListWordFrequenciesParams{Limit: limit}
-
-		if len(args) > 0 {
-			limit, err := strconv.ParseInt(args[0], 10, 32)
-			if err != nil {
-				l.Error("Failed to strconv", "err", err.Error())
-			}
-			params.Limit = int32(limit)
-		}
-		rows, err := q.ListWordFrequencies(ctx, params)
+		value := args[0]
+		word, err := q.CreateWord(ctx, value)
 		if err != nil {
-			l.Error("Failed to analyze word frequency count", "err", err.Error())
+			l.Error("Inserting word failed", "err", err.Error())
 
-			return fmt.Errorf("getting word frequency count: %w", err)
+			return fmt.Errorf("word insert: %w", err)
 		}
-		l.Info("Got word frequency count rows",
-			slog.Int("len", len(rows)),
+		l.Info("Inserted word",
+			slog.Int64("word", word.ID),
+			slog.String("value", word.Value),
+			slog.Time("created_at_time", word.CreatedAt.Time),
 		)
-
-		if Verbose {
-			for i, row := range rows {
-				fmt.Printf("%v: ROW: [%v, %v] \n", i, row.Value, row.Total)
-			}
-		}
 
 		l.Info("Program completed successfully.")
 
@@ -89,5 +75,5 @@ var wordsFrequencyCmd = &cobra.Command{
 }
 
 func init() {
-	wordsCmd.AddCommand(wordsFrequencyCmd)
+	rootCmd.AddCommand(addWordCmd)
 }

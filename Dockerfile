@@ -24,7 +24,7 @@ WORKDIR /app
 COPY go.mod go.sum ./
 RUN go mod download && go mod verify && go mod tidy
 COPY . .
-RUN go test ./... && go build -o main ./
+RUN go test ./... -failfast && go build -o main ./
 
 # Run Go binary
 FROM alpine:3.20.3

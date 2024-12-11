@@ -1,8 +1,9 @@
-package cmd
+package api
 
 import (
 	"context"
 	"fmt"
+	"os"
 
 	"github.com/kndrad/wcrack/config"
 	apiv1 "github.com/kndrad/wcrack/internal/api/v1"
@@ -13,7 +14,7 @@ import (
 	"github.com/kndrad/wcrack/cmd/logger"
 )
 
-var apiStartCmd = &cobra.Command{
+var startCmd = &cobra.Command{
 	Use:   "start",
 	Short: "Starts http API server.",
 	RunE: func(cmd *cobra.Command, args []string) error {
@@ -22,7 +23,8 @@ var apiStartCmd = &cobra.Command{
 		ctx, cancel := context.WithCancel(context.Background())
 		defer cancel()
 
-		cfg, err := config.Load("config/development.yaml")
+		
+		cfg, err := config.Load(os.Getenv("CONFIG_PATH"))
 		if err != nil {
 			l.Error("Loading database config", "err", err.Error())
 
@@ -80,5 +82,5 @@ var apiStartCmd = &cobra.Command{
 }
 
 func init() {
-	apiCmd.AddCommand(apiStartCmd)
+	rootCmd.AddCommand(startCmd)
 }

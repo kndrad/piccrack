@@ -1,4 +1,4 @@
-package cmd
+package words
 
 import (
 	"bufio"
@@ -56,9 +56,12 @@ var wordsFrequencyAnalyzeCmd = &cobra.Command{
 			return fmt.Errorf("frequency analysis: %w", err)
 		}
 
-		outPath := filepath.Clean(OutPath)
+		out, err := cmd.Flags().GetString("out")
+		if err != nil {
+			l.Error("Failed to get out string flag", "err", err)
+		}
 		// Join outPath, id and json extension to create new out file path with an extension.
-		jsonPath := openf.Join(outPath, analysis.ID, "json")
+		jsonPath := openf.Join(out, analysis.ID, "json")
 		l.Info("Opening file",
 			slog.String("json_path", jsonPath),
 		)
@@ -98,5 +101,5 @@ func init() {
 
 	wordsFrequencyAnalyzeCmd.Flags().String("path", "", "Path of txt input file")
 	wordsFrequencyAnalyzeCmd.MarkFlagRequired("path")
-	wordsFrequencyAnalyzeCmd.Flags().StringVarP(&OutPath, "out", "o", ".", "JSON file output path")
+	wordsFrequencyAnalyzeCmd.Flags().String("out", ".", "JSON file output path")
 }

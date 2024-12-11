@@ -1,4 +1,4 @@
-package cmd
+package words
 
 import (
 	"context"
@@ -14,8 +14,9 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// wordsCmd represents the words command.
-var wordsCmd = &cobra.Command{
+var Verbose bool
+
+var rootCmd = &cobra.Command{
 	Use:     "words",
 	Short:   "Lists words from a database",
 	Example: "wcrack words [OPTIONAL args: limit[int32]]",
@@ -90,6 +91,6 @@ var wordsCmd = &cobra.Command{
 	},
 }
 
-func init() {
-	rootCmd.AddCommand(wordsCmd)
+func RootCmd() *cobra.Command {
+	return rootCmd
 }

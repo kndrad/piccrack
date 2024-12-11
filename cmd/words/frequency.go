@@ -1,8 +1,9 @@
-package cmd
+package words
 
 import (
 	"context"
 	"fmt"
+	"log/slog"
 	"strconv"
 	"time"
 
@@ -13,9 +14,10 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var rankCmd = &cobra.Command{
-	Use:   "rank",
-	Short: "Displays ranking of words from a database.",
+var wordsFrequencyCmd = &cobra.Command{
+	Use:     "frequency",
+	Short:   "Outputs words frequency from a database",
+	Example: "wcrack words frequency",
 	RunE: func(cmd *cobra.Command, args []string) error {
 		l := logger.New(Verbose)
 
@@ -23,7 +25,7 @@ var rankCmd = &cobra.Command{
 		if err != nil {
 			l.Error("Loading database config", "err", err.Error())
 
-			return fmt.Errorf("loading config: %w", err)
+			return fmt.Errorf("config load: %w", err)
 		}
 
 		ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
@@ -51,12 +53,11 @@ var rankCmd = &cobra.Command{
 		}
 		defer conn.Close(ctx)
 
+		// Query db to get word frequency count.
 		q := database.New(conn)
 
 		var limit int32 = 30
-		params := database.ListWordRankingsParams{
-			Limit: limit,
-		}
+		params := database.ListWordFrequenciesParams{Limit: limit}
 
 		if len(args) > 0 {
 			limit, err := strconv.ParseInt(args[0], 10, 32)
@@ -65,16 +66,20 @@ var rankCmd = &cobra.Command{
 			}
 			params.Limit = int32(limit)
 		}
-
-		rows, err := q.ListWordRankings(ctx, params)
+		rows, err := q.ListWordFrequencies(ctx, params)
 		if err != nil {
-			l.Error("Failed to get words rank", "err", err.Error())
+			l.Error("Failed to analyze word frequency count", "err", err.Error())
 
-			return fmt.Errorf("words rank err: %w", err)
+			return fmt.Errorf("getting word frequency count: %w", err)
 		}
+		l.Info("Got word frequency count rows",
+			slog.Int("len", len(rows)),
+		)
 
-		for _, row := range rows {
-			fmt.Printf("WORD: %s | RANK: %d\n", row.Value, row.Ranking)
+		if Verbose {
+			for i, row := range rows {
+				fmt.Printf("%v: ROW: [%v, %v] \n", i, row.Value, row.Total)
+			}
 		}
 
 		l.Info("Program completed successfully.")
@@ -84,5 +89,5 @@ var rankCmd = &cobra.Command{
 }
 
 func init() {
-	wordsCmd.AddCommand(rankCmd)
+	rootCmd.AddCommand(wordsFrequencyCmd)
 }

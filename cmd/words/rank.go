@@ -1,9 +1,9 @@
-package cmd
+package words
 
 import (
 	"context"
 	"fmt"
-	"log/slog"
+	"strconv"
 	"time"
 
 	"github.com/kndrad/wcrack/cmd/logger"
@@ -13,11 +13,9 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// addWordCmd represents the add command.
-var addWordCmd = &cobra.Command{
-	Use:     "add",
-	Short:   "Add word to a database.",
-	Example: "wcrack words add [WORD]",
+var rankCmd = &cobra.Command{
+	Use:   "rank",
+	Short: "Displays ranking of words from a database.",
 	RunE: func(cmd *cobra.Command, args []string) error {
 		l := logger.New(Verbose)
 
@@ -25,7 +23,7 @@ var addWordCmd = &cobra.Command{
 		if err != nil {
 			l.Error("Loading database config", "err", err.Error())
 
-			return fmt.Errorf("config load: %w", err)
+			return fmt.Errorf("loading config: %w", err)
 		}
 
 		ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
@@ -55,18 +53,29 @@ var addWordCmd = &cobra.Command{
 
 		q := database.New(conn)
 
-		value := args[0]
-		word, err := q.CreateWord(ctx, value)
-		if err != nil {
-			l.Error("Inserting word failed", "err", err.Error())
-
-			return fmt.Errorf("word insert: %w", err)
+		var limit int32 = 30
+		params := database.ListWordRankingsParams{
+			Limit: limit,
 		}
-		l.Info("Inserted word",
-			slog.Int64("word", word.ID),
-			slog.String("value", word.Value),
-			slog.Time("created_at_time", word.CreatedAt.Time),
-		)
+
+		if len(args) > 0 {
+			limit, err := strconv.ParseInt(args[0], 10, 32)
+			if err != nil {
+				l.Error("Failed to strconv", "err", err.Error())
+			}
+			params.Limit = int32(limit)
+		}
+
+		rows, err := q.ListWordRankings(ctx, params)
+		if err != nil {
+			l.Error("Failed to get words rank", "err", err.Error())
+
+			return fmt.Errorf("words rank err: %w", err)
+		}
+
+		for _, row := range rows {
+			fmt.Printf("WORD: %s | RANK: %d\n", row.Value, row.Ranking)
+		}
 
 		l.Info("Program completed successfully.")
 
@@ -75,5 +84,5 @@ var addWordCmd = &cobra.Command{
 }
 
 func init() {
-	wordsCmd.AddCommand(addWordCmd)
+	rootCmd.AddCommand(rankCmd)
 }

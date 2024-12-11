@@ -4,7 +4,9 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/kndrad/wcrack/cmd/api"
 	"github.com/kndrad/wcrack/cmd/scan"
+	"github.com/kndrad/wcrack/cmd/words"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -48,7 +50,9 @@ func init() {
 
 	rootCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 
+	rootCmd.AddCommand(api.RootCmd())
 	rootCmd.AddCommand(scan.RootCmd())
+	rootCmd.AddCommand(words.RootCmd())
 }
 
 // initConfig reads in config file and ENV variables if set.
@@ -61,10 +65,9 @@ func initConfig() {
 		home, err := os.UserHomeDir()
 		cobra.CheckErr(err)
 
-		// Search config in home directory with name ".itcrack" (without extension).
 		viper.AddConfigPath(home)
 		viper.SetConfigType("yaml")
-		viper.SetConfigName(".itcrack")
+		viper.SetConfigName(".wcrack")
 
 		// Search .env file in project dir
 		wd, err := os.Getwd()

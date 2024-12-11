@@ -1,4 +1,4 @@
-package cmd
+package api
 
 import (
 	"bytes"
@@ -7,26 +7,28 @@ import (
 	"log/slog"
 	"net"
 	"net/http"
-	"os"
+	"time"
 
 	"github.com/kndrad/wcrack/cmd/logger"
 	"github.com/kndrad/wcrack/config"
+	"github.com/kndrad/wcrack/internal/database"
+	"github.com/kndrad/wcrack/pkg/retry"
 	"github.com/spf13/cobra"
 )
 
-var apiHealthzCmd = &cobra.Command{
+var healthzCmd = &cobra.Command{
 	Use:   "healthz",
-	Short: "Checks health http API server",
+	Short: "Checks health of http API server",
 	RunE: func(cmd *cobra.Command, args []string) error {
 		l := logger.New(Verbose)
 
-		cfg, err := config.Load(os.Getenv("CONFIG_PATH"))
+		cfg, err := config.Load(cfgFile)
 		if err != nil {
 			l.Error("Failed to load config", "err", err)
 
 			return fmt.Errorf("loading config err: %w", err)
 		}
-		url := net.JoinHostPort(cfg.HTTP.Host, cfg.HTTP.Port) + "/api/v1/healthz"
+		url := "http://" + net.JoinHostPort(cfg.HTTP.Host, cfg.HTTP.Port) + "/api/v1/healthz"
 		buf := new(bytes.Buffer)
 		req, err := http.NewRequestWithContext(
 			context.TODO(),
@@ -46,6 +48,7 @@ var apiHealthzCmd = &cobra.Command{
 		c := &http.Client{}
 		defer c.CloseIdleConnections()
 
+		// Ping http server
 		resp, err := c.Do(req)
 		if err != nil {
 			l.Error("Failed to do request with a client", "err", err)
@@ -65,6 +68,34 @@ var apiHealthzCmd = &cobra.Command{
 			l.Info("Received response", "statusCode", resp.StatusCode)
 		}
 
+		ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
+		defer cancel()
+
+		// Ping db as well
+		pool, err := database.Pool(ctx, cfg.Database)
+		if err != nil {
+			l.Error("Failed to get db pool", "err", err.Error())
+
+			return fmt.Errorf("db pool: %w", err)
+		}
+		defer pool.Close()
+
+		l.Info("Pinging database...")
+		if err := retry.Ping(ctx, pool, retry.MaxRetries); err != nil {
+			l.Error("Pinging db pool failed", "err", err.Error())
+
+			return fmt.Errorf("db pool: %w", err)
+		}
+		l.Info("Pinging db success.")
+
+		conn, err := database.Connect(ctx, pool)
+		if err != nil {
+			l.Error("Failed to connect to a database", "err", err.Error())
+
+			return fmt.Errorf("db connection: %w", err)
+		}
+		defer conn.Close(ctx)
+
 		l.Info("Program completed successfully.")
 
 		return nil
@@ -72,5 +103,5 @@ var apiHealthzCmd = &cobra.Command{
 }
 
 func init() {
-	apiCmd.AddCommand(apiHealthzCmd)
+	rootCmd.AddCommand(healthzCmd)
 }
