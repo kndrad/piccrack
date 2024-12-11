@@ -15,6 +15,8 @@ type Config struct {
 
 func Load(path string) (*Config, error) {
 	v := viper.New()
+
+	v.SetConfigType("yaml")
 	v.SetConfigFile(filepath.Clean(path))
 
 	v.SetDefault("Database.Pool.MaxConns", 25)
