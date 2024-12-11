@@ -1,5 +1,4 @@
 #!/bin/sh
-set -ex  # Add -x for debugging
 
 DB_USER=$(cat /run/secrets/postgres_user)
 DB_PASS=$(cat /run/secrets/postgres_pswd)

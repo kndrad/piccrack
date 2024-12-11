@@ -55,14 +55,10 @@ var startCmd = &cobra.Command{
 		defer db.Close(ctx)
 
 		q := database.New(db)
-		wordsService := apiv1.NewWordService(q, l)
+		svc := apiv1.NewService(q, l)
 
 		// Create server instance
-		srv, err := apiv1.NewServer(
-			cfg.HTTP,
-			wordsService,
-			l,
-		)
+		srv, err := apiv1.NewServer(cfg.HTTP, svc, l)
 		if err != nil {
 			l.Error("Failed to init new http server", "err", err)
 

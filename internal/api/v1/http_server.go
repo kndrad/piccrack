@@ -23,7 +23,7 @@ type server struct {
 	l   *slog.Logger
 }
 
-func NewServer(cfg config.HTTPConfig, wordService WordService, logger *slog.Logger) (*server, error) {
+func NewServer(cfg config.HTTPConfig, svc Service, logger *slog.Logger) (*server, error) {
 	if logger == nil {
 		panic("logger cannot be nil")
 	}
@@ -31,11 +31,12 @@ func NewServer(cfg config.HTTPConfig, wordService WordService, logger *slog.Logg
 	mux := http.NewServeMux()
 	const prefix = "/api/" + Version
 	mux.Handle("GET "+prefix+"/healthz", healthCheckHandler(logger))
-	mux.Handle("GET "+prefix+"/words", listWordsHandler(wordService, logger))
-	mux.Handle("POST "+prefix+"/words", createWordHandler(wordService, logger))
-	mux.Handle("POST "+prefix+"/words/file", uploadWordsHandler(wordService, logger))
-	mux.Handle("POST "+prefix+"/words/image", uploadImageWordsHandler(wordService, logger))
-	mux.Handle("GET "+prefix+"/words/batches", middleware.LogTime(listWordsByBatchNameHandler(wordService, logger), logger))
+	mux.Handle("GET "+prefix+"/words", listWordsHandler(svc, logger))
+	mux.Handle("POST "+prefix+"/words", createWordHandler(svc, logger))
+	mux.Handle("POST "+prefix+"/words/file", uploadWordsHandler(svc, logger))
+	mux.Handle("POST "+prefix+"/words/image", uploadImageWordsHandler(svc, logger))
+	mux.Handle("GET "+prefix+"/words/batches", middleware.LogTime(listWordsByBatchNameHandler(svc, logger), logger))
+	mux.Handle("POST "+prefix+"/sentences", middleware.LogTime(uploadImageSentencesBatchHandler(svc, logger), logger))
 
 	var handler http.Handler = mux
 

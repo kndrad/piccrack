@@ -155,8 +155,8 @@ func TestAllWordsHandler(t *testing.T) {
 
 	for _, tC := range testCases {
 		t.Run(tC.desc, func(t *testing.T) {
-			svc := &wordService{
-				q: NewWordQueriesMock(NewWordsMock()...),
+			svc := &service{
+				q: NewQueriesMock(NewWordsMock()...),
 			}
 			handler := listWordsHandler(svc, mockLogger())
 
@@ -202,8 +202,8 @@ func TestInsertWordHandler(t *testing.T) {
 
 	for _, tC := range testCases {
 		t.Run(tC.desc, func(t *testing.T) {
-			svc := &wordService{
-				q: NewWordQueriesMock(NewWordsMock()...),
+			svc := &service{
+				q: NewQueriesMock(NewWordsMock()...),
 			}
 			handler := createWordHandler(svc, mockLogger())
 
@@ -345,14 +345,14 @@ func TestUploadWordsHandler(t *testing.T) {
 	testCases := []struct {
 		desc string
 
-		svc *wordService
+		svc *service
 	}{
 		{
 			desc: "should_file_from_request_form_and_insert_them",
 
 			// Underlying db of this service does not contain any words
-			svc: &wordService{
-				q:      NewWordQueriesMock(),
+			svc: &service{
+				q:      NewQueriesMock(),
 				logger: mockLogger(),
 			},
 		},

@@ -34,7 +34,7 @@ func healthCheckHandler(logger *slog.Logger) http.HandlerFunc {
 	}
 }
 
-func listWordsHandler(svc WordService, logger *slog.Logger) http.HandlerFunc {
+func listWordsHandler(svc Service, logger *slog.Logger) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		logger.Info("Received request",
 			slog.String("url", r.URL.String()),
@@ -65,7 +65,7 @@ func listWordsHandler(svc WordService, logger *slog.Logger) http.HandlerFunc {
 	}
 }
 
-func createWordHandler(svc WordService, logger *slog.Logger) http.HandlerFunc {
+func createWordHandler(svc Service, logger *slog.Logger) http.HandlerFunc {
 	type Request struct {
 		Value string `json:"value"`
 	}
@@ -99,7 +99,7 @@ func createWordHandler(svc WordService, logger *slog.Logger) http.HandlerFunc {
 	}
 }
 
-func uploadWordsHandler(svc WordService, logger *slog.Logger) http.HandlerFunc {
+func uploadWordsHandler(svc Service, logger *slog.Logger) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		logger.Info("Received request",
 			slog.String("url", r.URL.String()),
@@ -181,7 +181,7 @@ func uploadWordsHandler(svc WordService, logger *slog.Logger) http.HandlerFunc {
 	}
 }
 
-func uploadImageWordsHandler(svc WordService, logger *slog.Logger) http.HandlerFunc {
+func uploadImageWordsHandler(svc Service, logger *slog.Logger) http.HandlerFunc {
 	var maxSize int64 = 1024 * 1024 * 50 // 50 MB
 
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -265,7 +265,7 @@ func uploadImageWordsHandler(svc WordService, logger *slog.Logger) http.HandlerF
 	}
 }
 
-func listWordBatchesHandler(svc WordService, logger *slog.Logger) http.HandlerFunc {
+func listWordBatchesHandler(svc Service, logger *slog.Logger) http.HandlerFunc {
 	type response struct {
 		Results []database.ListWordBatchesRow `json:"word_batches"`
 	}
@@ -296,7 +296,7 @@ func listWordBatchesHandler(svc WordService, logger *slog.Logger) http.HandlerFu
 	}
 }
 
-func listWordsByBatchNameHandler(svc WordService, logger *slog.Logger) http.HandlerFunc {
+func listWordsByBatchNameHandler(svc Service, logger *slog.Logger) http.HandlerFunc {
 	type response struct {
 		Rows []database.ListWordsByBatchNameRow `json:"rows"`
 	}
@@ -316,6 +316,36 @@ func listWordsByBatchNameHandler(svc WordService, logger *slog.Logger) http.Hand
 		if err := encode(w, r, http.StatusOK, resp); err != nil {
 			writeJSONErr(w, "Failed to serve response", err, http.StatusInternalServerError)
 		}
+	}
+}
+
+func uploadImageSentencesBatchHandler(svc Service, logger *slog.Logger) http.HandlerFunc {
+	var maxSize int64 = 1024 * 1024 * 50 // 50 MB
+
+	return func(w http.ResponseWriter, r *http.Request) {
+		r.Body = http.MaxBytesReader(w, r.Body, maxSize)
+
+		if err := r.ParseMultipartForm(maxSize); err != nil {
+			writeJSONErr(w, "File too big", err, http.StatusBadRequest)
+		}
+		ff, header, err := r.FormFile("path")
+		if err != nil {
+			writeJSONErr(w, "Failed to get image file", err, http.StatusBadRequest)
+		}
+		defer ff.Close()
+
+		logger.Info("Received form", slog.String("header_filename", header.Filename))
+
+		f, err := header.Open()
+		if err != nil {
+			writeJSONErr(w,
+				"Failed to os stat",
+				err,
+				http.StatusInternalServerError,
+			)
+		}
+		defer f.Close()
+		logger.Info("File opened")
 	}
 }
 

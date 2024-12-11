@@ -9,6 +9,7 @@ import (
 )
 
 type Querier interface {
+	CreateSentencesBatch(ctx context.Context, arg CreateSentencesBatchParams) (CreateSentencesBatchRow, error)
 	CreateWord(ctx context.Context, value string) (CreateWordRow, error)
 	CreateWordsBatch(ctx context.Context, arg CreateWordsBatchParams) (CreateWordsBatchRow, error)
 	ListWordBatches(ctx context.Context, arg ListWordBatchesParams) ([]ListWordBatchesRow, error)

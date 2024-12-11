@@ -170,13 +170,13 @@ func mockWordsRankRows(wordMocks []WordMock) []database.ListWordRankingsRow {
 	return rows
 }
 
-type wordQueriesMock struct {
+type QueriesMock struct {
 	wordsRows            []database.ListWordsRow
 	wordsFrequenciesRows []database.ListWordFrequenciesRow
 	wordsRankRows        []database.ListWordRankingsRow
 }
 
-func NewWordQueriesMock(words ...WordMock) *wordQueriesMock {
+func NewQueriesMock(words ...WordMock) *QueriesMock {
 	if words == nil {
 		words = NewWordsMock()
 	}
@@ -184,14 +184,18 @@ func NewWordQueriesMock(words ...WordMock) *wordQueriesMock {
 	wordsFrequenciesRows := mockWordsFrequenciesRows(words)
 	wordsRankRows := mockWordsRankRows(words)
 
-	return &wordQueriesMock{
+	return &QueriesMock{
 		wordsRows:            wordsRows,
 		wordsFrequenciesRows: wordsFrequenciesRows,
 		wordsRankRows:        wordsRankRows,
 	}
 }
 
-func (q *wordQueriesMock) CreateWord(ctx context.Context, value string) (database.CreateWordRow, error) {
+func (q *QueriesMock) CreateSentencesBatch(ctx context.Context, arg database.CreateSentencesBatchParams) (database.CreateSentencesBatchRow, error) {
+	return database.CreateSentencesBatchRow{}, nil
+}
+
+func (q *QueriesMock) CreateWord(ctx context.Context, value string) (database.CreateWordRow, error) {
 	wm := &WordMock{
 		id:        int64(len(q.wordsRows)) + 1,
 		value:     value,
@@ -206,27 +210,27 @@ func (q *wordQueriesMock) CreateWord(ctx context.Context, value string) (databas
 	return row, nil
 }
 
-func (q *wordQueriesMock) CreateWordsBatch(ctx context.Context, arg database.CreateWordsBatchParams) (database.CreateWordsBatchRow, error) {
+func (q *QueriesMock) CreateWordsBatch(ctx context.Context, arg database.CreateWordsBatchParams) (database.CreateWordsBatchRow, error) {
 	return database.CreateWordsBatchRow{}, nil
 }
 
-func (q *wordQueriesMock) ListWords(ctx context.Context, arg database.ListWordsParams) ([]database.ListWordsRow, error) {
+func (q *QueriesMock) ListWords(ctx context.Context, arg database.ListWordsParams) ([]database.ListWordsRow, error) {
 	return q.wordsRows, nil
 }
 
-func (q *wordQueriesMock) ListWordBatches(ctx context.Context, arg database.ListWordBatchesParams) ([]database.ListWordBatchesRow, error) {
+func (q *QueriesMock) ListWordBatches(ctx context.Context, arg database.ListWordBatchesParams) ([]database.ListWordBatchesRow, error) {
 	return []database.ListWordBatchesRow{}, nil
 }
 
-func (q *wordQueriesMock) ListWordFrequencies(ctx context.Context, arg database.ListWordFrequenciesParams) ([]database.ListWordFrequenciesRow, error) {
+func (q *QueriesMock) ListWordFrequencies(ctx context.Context, arg database.ListWordFrequenciesParams) ([]database.ListWordFrequenciesRow, error) {
 	return q.wordsFrequenciesRows, nil
 }
 
-func (q *wordQueriesMock) ListWordRankings(ctx context.Context, arg database.ListWordRankingsParams) ([]database.ListWordRankingsRow, error) {
+func (q *QueriesMock) ListWordRankings(ctx context.Context, arg database.ListWordRankingsParams) ([]database.ListWordRankingsRow, error) {
 	return q.wordsRankRows, nil
 }
 
-func (q *wordQueriesMock) ListWordsByBatchName(ctx context.Context, name string) ([]database.ListWordsByBatchNameRow, error) {
+func (q *QueriesMock) ListWordsByBatchName(ctx context.Context, name string) ([]database.ListWordsByBatchNameRow, error) {
 	return []database.ListWordsByBatchNameRow{}, nil
 }
 

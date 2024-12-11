@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/kndrad/wcrack/cmd/logger"
 	"github.com/kndrad/wcrack/pkg/ocr"
 	"github.com/kndrad/wcrack/pkg/picscan"
 	"github.com/spf13/cobra"
@@ -14,6 +15,8 @@ var imageCmd = &cobra.Command{
 	Use: "image",
 
 	RunE: func(cmd *cobra.Command, args []string) error {
+		l := logger.New(true)
+
 		path, err := cmd.Flags().GetString("path")
 		if err != nil {
 			return fmt.Errorf("image path: %w", err)
@@ -50,9 +53,8 @@ var imageCmd = &cobra.Command{
 			}
 		}
 
-		for _, s := range sentences {
-			fmt.Println(s)
-		}
+		l.Info("Scanned sentences", "total", len(sentences))
+		l.Info("Program completed successfully")
 
 		return nil
 	},

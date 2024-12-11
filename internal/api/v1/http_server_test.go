@@ -43,8 +43,8 @@ func TestServerStart(t *testing.T) {
 			// Create server instance
 			srv, err := NewServer(
 				mockConfig(),
-				&wordService{
-					q:      NewWordQueriesMock(NewWordsMock()...),
+				&service{
+					q:      NewQueriesMock(NewWordsMock()...),
 					logger: mockLogger(),
 				},
 				mockLogger(),
