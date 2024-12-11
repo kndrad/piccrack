@@ -13,8 +13,8 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// addWordCmd represents the add command.
-var addWordCmd = &cobra.Command{
+// addCmd represents the add command.
+var addCmd = &cobra.Command{
 	Use:     "add",
 	Short:   "Add word to a database.",
 	Example: "wcrack words add [WORD]",
@@ -75,5 +75,5 @@ var addWordCmd = &cobra.Command{
 }
 
 func init() {
-	rootCmd.AddCommand(addWordCmd)
+	rootCmd.AddCommand(addCmd)
 }

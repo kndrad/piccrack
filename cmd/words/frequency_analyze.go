@@ -15,7 +15,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var wordsFrequencyAnalyzeCmd = &cobra.Command{
+var frequencyAnalyzeCmd = &cobra.Command{
 	Use:     "analyze",
 	Short:   "Analyze words frequency in .txt and write output to .json",
 	Example: "wcrack words frequency analyze --path=./testdata/words.txt --out=./output",
@@ -97,9 +97,9 @@ var wordsFrequencyAnalyzeCmd = &cobra.Command{
 }
 
 func init() {
-	wordsFrequencyCmd.AddCommand(wordsFrequencyAnalyzeCmd)
+	frequencyCmd.AddCommand(frequencyAnalyzeCmd)
 
-	wordsFrequencyAnalyzeCmd.Flags().String("path", "", "Path of txt input file")
-	wordsFrequencyAnalyzeCmd.MarkFlagRequired("path")
-	wordsFrequencyAnalyzeCmd.Flags().String("out", ".", "JSON file output path")
+	frequencyAnalyzeCmd.Flags().String("path", "", "Path of txt input file")
+	frequencyAnalyzeCmd.MarkFlagRequired("path")
+	frequencyAnalyzeCmd.Flags().String("out", ".", "JSON file output path")
 }

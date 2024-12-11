@@ -23,7 +23,6 @@ var startCmd = &cobra.Command{
 		ctx, cancel := context.WithCancel(context.Background())
 		defer cancel()
 
-		
 		cfg, err := config.Load(os.Getenv("CONFIG_PATH"))
 		if err != nil {
 			l.Error("Loading database config", "err", err.Error())

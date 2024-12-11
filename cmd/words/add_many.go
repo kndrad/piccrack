@@ -21,7 +21,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var addManyWordsCmd = &cobra.Command{
+var addManyCmd = &cobra.Command{
 	Use:     "many",
 	Short:   "Adds many words to a database.",
 	Example: "wcrack words add many [FILE PATH <name>.txt | <name>.json]",
@@ -129,7 +129,7 @@ var addManyWordsCmd = &cobra.Command{
 }
 
 func init() {
-	addWordCmd.AddCommand(addManyWordsCmd)
+	addCmd.AddCommand(addManyCmd)
 }
 
 func printWords(analysis *textproc.TextAnalysis) {

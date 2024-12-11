@@ -14,7 +14,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var wordsFrequencyCmd = &cobra.Command{
+var frequencyCmd = &cobra.Command{
 	Use:     "frequency",
 	Short:   "Outputs words frequency from a database",
 	Example: "wcrack words frequency",
@@ -89,5 +89,5 @@ var wordsFrequencyCmd = &cobra.Command{
 }
 
 func init() {
-	rootCmd.AddCommand(wordsFrequencyCmd)
+	rootCmd.AddCommand(frequencyCmd)
 }
