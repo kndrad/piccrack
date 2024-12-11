@@ -13,13 +13,9 @@ import (
 func TestIsImage(t *testing.T) {
 	t.Parallel()
 
-	tmpNoImg, err := os.CreateTemp("testdata", "*.txt")
+	tmpf, err := os.CreateTemp("testdata", "*.txt")
 	require.NoError(t, err)
-
-	defer func() {
-		defer tmpNoImg.Close()
-		defer os.RemoveAll(tmpNoImg.Name())
-	}()
+	defer tmpf.Close()
 
 	testCases := []struct {
 		desc string
@@ -42,7 +38,7 @@ func TestIsImage(t *testing.T) {
 		{
 			desc: "invalid_file_err",
 
-			entry: tmpNoImg.Name(),
+			entry: tmpf.Name(),
 			want:  false,
 		},
 	}
@@ -55,6 +51,10 @@ func TestIsImage(t *testing.T) {
 
 			require.Equal(t, tC.want, ok)
 		})
+	}
+
+	if err := os.RemoveAll(tmpf.Name()); err != nil {
+		t.Fatalf("Remove all faled: %v", err)
 	}
 }
 

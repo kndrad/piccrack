@@ -27,9 +27,7 @@ func NewClient() *gosseract.Client {
 
 var ErrNotAnImage = errors.New("not an image")
 
-// Performs OCR on a image.
-//
-// Path points to an image. Image validation is performed.
+// Performs OCR on a image. Path points to an image. Image content validation is performed before.
 //
 // Returns Result.
 func Do(tc *gosseract.Client, path string) (*Result, error) {
