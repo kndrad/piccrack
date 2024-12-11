@@ -51,51 +51,6 @@ var imageCmd = &cobra.Command{
 			fmt.Println(s)
 		}
 
-		// switch info.IsDir() {
-		// case false:
-		// 	res, err := ocr.Do(tc, path)
-		// 	if err != nil {
-		// 		return fmt.Errorf("single ocr: %w", err)
-		// 	}
-		// 	lines := textproc.ScanLines(res.Text())
-		// 	i := 0
-		// 	for line := range lines {
-		// 		fmt.Println(i, line)
-		// 		i++
-		// 	}
-		// case true:
-		// 	lines := make(chan string)
-
-		// 	results, err := ocr.Dir(tc, path)
-		// 	if err != nil {
-		// 		return fmt.Errorf("ocr dir: %w", err)
-		// 	}
-
-		// 	var wg sync.WaitGroup
-		// 	for _, res := range results {
-		// 		wg.Add(1)
-
-		// 		go func() {
-		// 			for line := range textproc.ScanLines(res.Text()) {
-		// 				lines <- line
-		// 			}
-		// 			wg.Done()
-		// 		}()
-		// 	}
-
-		// 	go func() {
-		// 		wg.Wait()
-		// 		close(lines)
-		// 	}()
-
-		// 	i := 0
-		// 	for line := range lines {
-		// 		fmt.Println(i, line)
-		// 		i++
-		// 	}
-
-		// }
-
 		return nil
 	},
 }
