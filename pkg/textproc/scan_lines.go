@@ -24,6 +24,7 @@ func doScan(text string) <-chan string {
 	return out
 }
 
+// ScanLines processes multiple texts and returns a channel that receives lines of the texts.
 func ScanLines(texts ...string) <-chan string {
 	lines := make(chan string)
 

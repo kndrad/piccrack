@@ -1,6 +1,7 @@
 package scan
 
 import (
+	"context"
 	"fmt"
 	"os"
 
@@ -26,11 +27,13 @@ var imageCmd = &cobra.Command{
 		tc := ocr.NewClient()
 		defer tc.Close()
 
+		ctx := context.Background()
+
 		sentences := make([]*picscan.Sentence, 0)
 
 		switch info.IsDir() {
 		case false:
-			values, err := picscan.ScanImage(path)
+			values, err := picscan.ScanImage(ctx, path)
 			if err != nil {
 				return fmt.Errorf("scan image: %w", err)
 			}
@@ -38,7 +41,7 @@ var imageCmd = &cobra.Command{
 				sentences = append(sentences, v)
 			}
 		case true:
-			values, err := picscan.ScanImages(path)
+			values, err := picscan.ScanImages(ctx, path)
 			if err != nil {
 				return fmt.Errorf("scan images: %w", err)
 			}

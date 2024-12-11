@@ -1,6 +1,7 @@
 package ocr
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"os"
@@ -26,6 +27,11 @@ func NewClient() *gosseract.Client {
 
 var ErrNotAnImage = errors.New("not an image")
 
+// Performs OCR on a image.
+//
+// Path points to an image. Image validation is performed.
+//
+// Returns Result.
 func Do(tc *gosseract.Client, path string) (*Result, error) {
 	if tc == nil {
 		panic("tesseract client can't be nil")
@@ -99,15 +105,18 @@ func (res *Result) Words() <-chan string {
 	return out
 }
 
+// IsImage checks content (sniffs) if it's jpg or png.
 func IsImage(content []byte) bool {
 	return imgsniff.IsJPG(content) || imgsniff.IsPNG(content)
 }
 
-// OCR's images within a directory. Returns results.
-func Dir(tc *gosseract.Client, root string) ([]*Result, error) {
+// Dir is like Do but performs ocr on every image found in a directory.
+//
+// Returns Result slice.
+func Dir(ctx context.Context, tc *gosseract.Client, root string) ([]*Result, error) {
 	images := make([]*pproc.Entry, 0)
 
-	entries, err := pproc.Walk(root, IsImage)
+	entries, err := pproc.Walk(ctx, root, IsImage)
 	if err != nil {
 		return nil, fmt.Errorf("error during walk: %w", err)
 	}

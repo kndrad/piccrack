@@ -1,6 +1,7 @@
 package ocr
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -125,7 +126,7 @@ func TestDir(t *testing.T) {
 	tc := NewClient()
 	defer tc.Close()
 
-	results, err := Dir(tc, "testdata")
+	results, err := Dir(context.Background(), tc, "testdata")
 	require.NoError(t, err)
 
 	for _, res := range results {

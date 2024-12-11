@@ -1,6 +1,7 @@
 package picscan
 
 import (
+	"context"
 	"path/filepath"
 	"testing"
 
@@ -10,7 +11,7 @@ import (
 func TestScanImage(t *testing.T) {
 	path := filepath.Join("testdata", "0.png")
 
-	sentences, err := ScanImage(path)
+	sentences, err := ScanImage(context.Background(), path)
 	require.NoError(t, err)
 
 	i := 0
@@ -24,7 +25,7 @@ func TestScanImage(t *testing.T) {
 func TestScanImages(t *testing.T) {
 	path := "testdata"
 
-	sentences, err := ScanImages(path)
+	sentences, err := ScanImages(context.Background(), path)
 	require.NoError(t, err)
 
 	i := 0

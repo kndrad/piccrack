@@ -1,6 +1,7 @@
 package picscan
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"os"
@@ -22,7 +23,8 @@ func (s *Sentence) String() string {
 	return s.value
 }
 
-func ScanImage(path string) (<-chan *Sentence, error) {
+// ScanImage uses ocr client to scan for sentences found in image located at path.
+func ScanImage(ctx context.Context, path string) (<-chan *Sentence, error) {
 	tc := ocr.NewClient()
 	defer tc.Close()
 
@@ -37,7 +39,10 @@ func ScanImage(path string) (<-chan *Sentence, error) {
 	for line := range textproc.ScanLines(res.Text()) {
 		wg.Add(1)
 		go func() {
-			sentences <- &Sentence{line}
+			select {
+			case sentences <- &Sentence{line}:
+			case <-ctx.Done():
+			}
 			wg.Done()
 		}()
 	}
@@ -49,7 +54,8 @@ func ScanImage(path string) (<-chan *Sentence, error) {
 	return sentences, nil
 }
 
-func ScanImages(path string) (<-chan *Sentence, error) {
+// ScanImages performs OCR on all images found in path.
+func ScanImages(ctx context.Context, path string) (<-chan *Sentence, error) {
 	path = filepath.Clean(path)
 
 	info, err := os.Stat(path)
@@ -65,7 +71,7 @@ func ScanImages(path string) (<-chan *Sentence, error) {
 
 	texts := make([]string, 0)
 
-	results, err := ocr.Dir(tc, path)
+	results, err := ocr.Dir(ctx, tc, path)
 	if err != nil {
 		return nil, fmt.Errorf("ocr dir: %w", err)
 	}

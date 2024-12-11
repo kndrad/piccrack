@@ -1,6 +1,7 @@
 package pproc_test
 
 import (
+	"context"
 	"testing"
 
 	"github.com/kndrad/wcrack/pkg/ocr"
@@ -13,7 +14,7 @@ func TestWalkWithNoFilter(t *testing.T) {
 
 	root := "testdata"
 
-	entries, err := pproc.Walk(root, pproc.NoFilter)
+	entries, err := pproc.Walk(context.Background(), root, pproc.NoFilter)
 	require.NoError(t, err)
 
 	total := 0
@@ -28,7 +29,7 @@ func TestWalkWithImageFilter(t *testing.T) {
 
 	root := "testdata"
 
-	entries, err := pproc.Walk(root, ocr.IsImage)
+	entries, err := pproc.Walk(context.Background(), root, ocr.IsImage)
 	require.NoError(t, err)
 
 	for e := range entries {
