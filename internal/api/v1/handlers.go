@@ -353,17 +353,20 @@ func listWordBatchesHandler(svc Service, logger *slog.Logger) http.HandlerFunc {
 		limit, err := limitValue(r.URL.Query())
 		if err != nil {
 			respondJSON(w, "Failed to get limit query value", err, http.StatusBadRequest)
+
 			return
 		}
 		offset, err := offsetValue(r.URL.Query())
 		if err != nil {
 			respondJSON(w, "Failed to get offset query value", err, http.StatusBadRequest)
+
 			return
 		}
 
 		rows, err := svc.ListWordBatches(r.Context(), limit, offset)
 		if err != nil {
 			respondJSON(w, "Failed to list word batches via word service", err, http.StatusInternalServerError)
+
 			return
 		}
 
@@ -374,6 +377,7 @@ func listWordBatchesHandler(svc Service, logger *slog.Logger) http.HandlerFunc {
 
 		if err := encode(w, r, http.StatusOK, resp); err != nil {
 			respondJSON(w, "Failed to serve response", err, http.StatusInternalServerError)
+
 			return
 		}
 	}
@@ -392,6 +396,7 @@ func listWordsByBatchNameHandler(svc Service, l *slog.Logger) http.HandlerFunc {
 		rows, err := svc.ListWordsByBatchName(r.Context(), name)
 		if err != nil {
 			respondJSON(w, "Failed to list words by batch name with word service", err, http.StatusInternalServerError)
+
 			return
 		}
 		resp := response{
@@ -399,6 +404,7 @@ func listWordsByBatchNameHandler(svc Service, l *slog.Logger) http.HandlerFunc {
 		}
 		if err := encode(w, r, http.StatusOK, resp); err != nil {
 			respondJSON(w, "Failed to serve response", err, http.StatusInternalServerError)
+
 			return
 		}
 	}
@@ -412,12 +418,14 @@ func uploadImagePhrasesHandler(svc Service, l *slog.Logger) http.HandlerFunc {
 
 		if err := r.ParseMultipartForm(maxSize); err != nil {
 			respondJSON(w, "File too big", err, http.StatusBadRequest)
+
 			return
 		}
 
 		f, fh, err := r.FormFile("image")
 		if err != nil {
 			respondJSON(w, "Failed to get image file", err, http.StatusBadRequest)
+
 			return
 		}
 		defer f.Close()
@@ -427,6 +435,7 @@ func uploadImagePhrasesHandler(svc Service, l *slog.Logger) http.HandlerFunc {
 		img, err := fh.Open()
 		if err != nil {
 			respondJSON(w, "Failed to ocr", err, http.StatusInternalServerError)
+
 			return
 		}
 
@@ -436,6 +445,7 @@ func uploadImagePhrasesHandler(svc Service, l *slog.Logger) http.HandlerFunc {
 		phrases, err := picphrase.ScanReader(r.Context(), img)
 		if err != nil {
 			respondJSON(w, "Failed to ocr", err, http.StatusInternalServerError)
+
 			return
 		}
 
@@ -452,6 +462,7 @@ func uploadImagePhrasesHandler(svc Service, l *slog.Logger) http.HandlerFunc {
 		row, err := svc.CreatePhrasesBatch(r.Context(), name, values)
 		if err != nil {
 			respondJSON(w, "Failed to create phrases batch", err, http.StatusInternalServerError)
+
 			return
 		}
 
@@ -466,6 +477,7 @@ func uploadImagePhrasesHandler(svc Service, l *slog.Logger) http.HandlerFunc {
 		}
 		if err := encode(w, r, http.StatusOK, response); err != nil {
 			respondJSON(w, "Failed to encode response", err, http.StatusInternalServerError)
+
 			return
 		}
 	}

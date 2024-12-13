@@ -23,6 +23,7 @@ func NewClient() *gosseract.Client {
 	client.SetWhitelist(
 		"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789 \n",
 	)
+
 	return client
 }
 
@@ -91,6 +92,7 @@ func (res *Result) Text() string {
 	if res == nil {
 		return ""
 	}
+
 	return res.text
 }
 

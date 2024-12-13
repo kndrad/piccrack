@@ -21,6 +21,7 @@ func (ph *Phrase) String() string {
 	if ph == nil {
 		return ""
 	}
+
 	return ph.value
 }
 

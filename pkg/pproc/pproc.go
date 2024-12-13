@@ -19,6 +19,7 @@ func (e *Entry) Path() string {
 	if e == nil {
 		return ""
 	}
+
 	return e.path
 }
 
@@ -27,6 +28,7 @@ func (e *Entry) Content() []byte {
 	if e == nil {
 		return nil
 	}
+
 	return e.content
 }
 
@@ -69,6 +71,7 @@ func Walk(ctx context.Context, root string, f FilterFunc) (<-chan *Entry, error)
 				data, err := os.ReadFile(path)
 				if err != nil {
 					errc <- fmt.Errorf("read %s: %w", path, err)
+
 					return
 				}
 				if f(data) {
@@ -76,10 +79,12 @@ func Walk(ctx context.Context, root string, f FilterFunc) (<-chan *Entry, error)
 					case c <- &Entry{path, data}:
 					case <-ctx.Done():
 						errc <- ctx.Err()
+
 						return
 					}
 				}
 			}()
+
 			return nil
 		})
 
