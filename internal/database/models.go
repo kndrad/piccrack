@@ -8,7 +8,7 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
-type Sentence struct {
+type Phrase struct {
 	ID        int64              `json:"id"`
 	Value     string             `json:"value"`
 	BatchID   pgtype.Int8        `json:"batch_id"`
@@ -16,7 +16,7 @@ type Sentence struct {
 	DeletedAt pgtype.Timestamptz `json:"deleted_at"`
 }
 
-type SentenceBatch struct {
+type PhraseBatch struct {
 	ID        int64              `json:"id"`
 	Name      string             `json:"name"`
 	CreatedAt pgtype.Timestamptz `json:"created_at"`
