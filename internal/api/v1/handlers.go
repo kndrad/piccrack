@@ -13,7 +13,86 @@ import (
 
 	"github.com/kndrad/wcrack/internal/database"
 	"github.com/kndrad/wcrack/pkg/ocr"
+	"github.com/kndrad/wcrack/pkg/picphrase"
 )
+
+func limitValue(values url.Values) (int32, error) {
+	var v string
+	const defaultLimit = "1000"
+
+	v = values.Get("limit")
+	if v == "" {
+		v = defaultLimit
+	}
+	n, err := strconv.ParseUint(v, 10, 32)
+	if err != nil {
+		return 0, fmt.Errorf("parse uint: %w", err)
+	}
+	if n > math.MaxInt32 {
+		n = 1000
+	}
+
+	return int32(n), nil
+}
+
+func offsetValue(values url.Values) (int32, error) {
+	var v string
+	const defaultOffset = "0"
+
+	v = values.Get("offset")
+	if v == "" {
+		v = defaultOffset
+	}
+	n, err := strconv.ParseUint(v, 10, 32)
+	if err != nil {
+		return 0, fmt.Errorf("parse uint: %w", err)
+	}
+	if n > math.MaxInt32 {
+		n = 0
+	}
+
+	return int32(n), nil
+}
+
+func encode[T any](w http.ResponseWriter, _ *http.Request, status int, v T) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(status)
+
+	if err := json.NewEncoder(w).Encode(v); err != nil {
+		return fmt.Errorf("encode json: %w", err)
+	}
+
+	return nil
+}
+
+func decode[T any](r *http.Request) (T, error) {
+	var v T
+
+	if err := json.NewDecoder(r.Body).Decode(&v); err != nil {
+		return v, fmt.Errorf("decode json: %w", err)
+	}
+
+	return v, nil
+}
+
+func respondJSON(w http.ResponseWriter, msg string, err error, code int) {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(code)
+
+	response := struct {
+		Message string `json:"message"`
+		Error   string `json:"error,omitempty"`
+	}{
+		Message: msg,
+	}
+	if err != nil {
+		response.Error = err.Error()
+	}
+
+	if err := json.NewEncoder(w).Encode(response); err != nil {
+		fmt.Fprintf(w, "Internal Server Error: failed to marshal error response")
+	}
+}
 
 func healthCheckHandler(logger *slog.Logger) http.HandlerFunc {
 	type Response struct {
@@ -29,7 +108,7 @@ func healthCheckHandler(logger *slog.Logger) http.HandlerFunc {
 			Status: http.StatusOK,
 		}
 		if err := encode(w, r, http.StatusOK, &resp); err != nil {
-			writeJSONErr(w, "Failed to check health", err, http.StatusInternalServerError)
+			respondJSON(w, "Failed to check health", err, http.StatusInternalServerError)
 		}
 	}
 }
@@ -110,18 +189,18 @@ func uploadWordsHandler(svc Service, logger *slog.Logger) http.HandlerFunc {
 		r.Body = http.MaxBytesReader(w, r.Body, MaxSize)
 
 		if err := r.ParseMultipartForm(MaxSize); err != nil {
-			writeJSONErr(w, "File too big", err, http.StatusBadRequest)
+			respondJSON(w, "File too big", err, http.StatusBadRequest)
 		}
 		f, fheader, err := r.FormFile("file")
 		if err != nil {
-			writeJSONErr(w, "Failed to get file", err, http.StatusBadRequest)
+			respondJSON(w, "Failed to get file", err, http.StatusBadRequest)
 		}
 		defer f.Close()
 
 		// Detect content type of file and check if it's a text
 		data := make([]byte, 512)
 		if _, err := f.Read(data); err != nil {
-			writeJSONErr(w, "Failed to read file into buffer", err, http.StatusInternalServerError)
+			respondJSON(w, "Failed to read file into buffer", err, http.StatusInternalServerError)
 		}
 		contentType := http.DetectContentType(data)
 		allowed := func() bool {
@@ -135,7 +214,7 @@ func uploadWordsHandler(svc Service, logger *slog.Logger) http.HandlerFunc {
 			return types[contentType]
 		}
 		if !allowed() {
-			writeJSONErr(w,
+			respondJSON(w,
 				fmt.Sprintf("Content type %s not allowed. Upload text file", contentType),
 				nil,
 				http.StatusBadRequest,
@@ -143,7 +222,7 @@ func uploadWordsHandler(svc Service, logger *slog.Logger) http.HandlerFunc {
 		}
 		// Return pointer back to the start of the file after content type detection
 		if _, err := f.Seek(0, io.SeekStart); err != nil {
-			writeJSONErr(w, "Failed to seek to start of the file", err, http.StatusInternalServerError)
+			respondJSON(w, "Failed to seek to start of the file", err, http.StatusInternalServerError)
 		}
 		logger.Info("Received form",
 			slog.String("filename", fheader.Filename),
@@ -158,13 +237,13 @@ func uploadWordsHandler(svc Service, logger *slog.Logger) http.HandlerFunc {
 			words = append(words, scanner.Text())
 		}
 		if err := scanner.Err(); err != nil {
-			writeJSONErr(w, "Scanner returned an error", err, http.StatusInternalServerError)
+			respondJSON(w, "Scanner returned an error", err, http.StatusInternalServerError)
 		}
 		count := 0
 		for _, word := range words {
 			_, err := svc.CreateWord(r.Context(), word)
 			if err != nil {
-				writeJSONErr(w, "Failed to insert row", err, http.StatusInternalServerError)
+				respondJSON(w, "Failed to insert row", err, http.StatusInternalServerError)
 			}
 			count++
 		}
@@ -175,7 +254,7 @@ func uploadWordsHandler(svc Service, logger *slog.Logger) http.HandlerFunc {
 			Count: count,
 		}
 		if err := encode(w, r, http.StatusOK, resp); err != nil {
-			writeJSONErr(w, "Failed to insert row", err, http.StatusInternalServerError)
+			respondJSON(w, "Failed to insert row", err, http.StatusInternalServerError)
 		}
 		logger.Info("Inserted words", slog.Int("count", count))
 	}
@@ -188,18 +267,18 @@ func uploadImageWordsHandler(svc Service, logger *slog.Logger) http.HandlerFunc 
 		r.Body = http.MaxBytesReader(w, r.Body, maxSize)
 
 		if err := r.ParseMultipartForm(maxSize); err != nil {
-			writeJSONErr(w, "Image file too big", err, http.StatusBadRequest)
+			respondJSON(w, "Image file too big", err, http.StatusBadRequest)
 		}
 		f, header, err := r.FormFile("image")
 		if err != nil {
-			writeJSONErr(w, "Failed to get image file", err, http.StatusBadRequest)
+			respondJSON(w, "Failed to get image file", err, http.StatusBadRequest)
 		}
 		defer f.Close()
 
 		// Detect content type of file and check if it's a text
 		data := make([]byte, 512)
 		if _, err := f.Read(data); err != nil {
-			writeJSONErr(w, "Failed to read image file into buffer", err, http.StatusInternalServerError)
+			respondJSON(w, "Failed to read image file into buffer", err, http.StatusInternalServerError)
 		}
 		contentType := http.DetectContentType(data)
 
@@ -213,10 +292,10 @@ func uploadImageWordsHandler(svc Service, logger *slog.Logger) http.HandlerFunc 
 		}
 		// Return pointer back to the start of the file after content type detection
 		if _, err := f.Seek(0, io.SeekStart); err != nil {
-			writeJSONErr(w, "Failed to seek to start of the file", err, http.StatusInternalServerError)
+			respondJSON(w, "Failed to seek to start of the file", err, http.StatusInternalServerError)
 		}
 		if !allowed {
-			writeJSONErr(w,
+			respondJSON(w,
 				fmt.Sprintf("Content type %s not allowed. Upload text file", contentType),
 				nil,
 				http.StatusBadRequest,
@@ -226,7 +305,7 @@ func uploadImageWordsHandler(svc Service, logger *slog.Logger) http.HandlerFunc 
 
 		content := make([]byte, ocr.MaxImageSize)
 		if _, err := f.Read(content); err != nil {
-			writeJSONErr(w,
+			respondJSON(w,
 				"Failed to read file content for image words recognition.",
 				err,
 				http.StatusInternalServerError,
@@ -235,9 +314,9 @@ func uploadImageWordsHandler(svc Service, logger *slog.Logger) http.HandlerFunc 
 		c := ocr.NewClient()
 		defer c.Close()
 
-		result, err := ocr.Do(c, header.Filename)
+		result, err := ocr.ScanFile(c, header.Filename)
 		if err != nil {
-			writeJSONErr(w,
+			respondJSON(w,
 				"Failed to recognize words from an image",
 				err,
 				http.StatusInternalServerError,
@@ -251,7 +330,7 @@ func uploadImageWordsHandler(svc Service, logger *slog.Logger) http.HandlerFunc 
 
 		row, err := svc.CreateWordsBatch(r.Context(), header.Filename, words)
 		if err != nil {
-			writeJSONErr(w, "Failed to insert words batch", err, http.StatusInternalServerError)
+			respondJSON(w, "Failed to insert words batch", err, http.StatusInternalServerError)
 		}
 
 		response := struct {
@@ -260,7 +339,7 @@ func uploadImageWordsHandler(svc Service, logger *slog.Logger) http.HandlerFunc 
 			Row: row,
 		}
 		if err := encode(w, r, http.StatusOK, response); err != nil {
-			writeJSONErr(w, "Failed to encode response", err, http.StatusInternalServerError)
+			respondJSON(w, "Failed to encode response", err, http.StatusInternalServerError)
 		}
 	}
 }
@@ -273,16 +352,19 @@ func listWordBatchesHandler(svc Service, logger *slog.Logger) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		limit, err := limitValue(r.URL.Query())
 		if err != nil {
-			writeJSONErr(w, "Failed to get limit query value", err, http.StatusBadRequest)
+			respondJSON(w, "Failed to get limit query value", err, http.StatusBadRequest)
+			return
 		}
 		offset, err := offsetValue(r.URL.Query())
 		if err != nil {
-			writeJSONErr(w, "Failed to get offset query value", err, http.StatusBadRequest)
+			respondJSON(w, "Failed to get offset query value", err, http.StatusBadRequest)
+			return
 		}
 
 		rows, err := svc.ListWordBatches(r.Context(), limit, offset)
 		if err != nil {
-			writeJSONErr(w, "Failed to list word batches via word service", err, http.StatusInternalServerError)
+			respondJSON(w, "Failed to list word batches via word service", err, http.StatusInternalServerError)
+			return
 		}
 
 		resp := response{
@@ -291,12 +373,13 @@ func listWordBatchesHandler(svc Service, logger *slog.Logger) http.HandlerFunc {
 		logger.Info("Got word batches", "total", len(rows))
 
 		if err := encode(w, r, http.StatusOK, resp); err != nil {
-			writeJSONErr(w, "Failed to serve response", err, http.StatusInternalServerError)
+			respondJSON(w, "Failed to serve response", err, http.StatusInternalServerError)
+			return
 		}
 	}
 }
 
-func listWordsByBatchNameHandler(svc Service, logger *slog.Logger) http.HandlerFunc {
+func listWordsByBatchNameHandler(svc Service, l *slog.Logger) http.HandlerFunc {
 	type response struct {
 		Rows []database.ListWordsByBatchNameRow `json:"rows"`
 	}
@@ -304,125 +387,86 @@ func listWordsByBatchNameHandler(svc Service, logger *slog.Logger) http.HandlerF
 	return func(w http.ResponseWriter, r *http.Request) {
 		name := r.URL.Query().Get("name")
 
-		logger.Info("Searching words batch", "name", name)
+		l.Info("Searching words batch", "name", name)
 
 		rows, err := svc.ListWordsByBatchName(r.Context(), name)
 		if err != nil {
-			writeJSONErr(w, "Failed to list words by batch name with word service", err, http.StatusInternalServerError)
+			respondJSON(w, "Failed to list words by batch name with word service", err, http.StatusInternalServerError)
+			return
 		}
 		resp := response{
 			Rows: rows,
 		}
 		if err := encode(w, r, http.StatusOK, resp); err != nil {
-			writeJSONErr(w, "Failed to serve response", err, http.StatusInternalServerError)
+			respondJSON(w, "Failed to serve response", err, http.StatusInternalServerError)
+			return
 		}
 	}
 }
 
-func uploadImageSentencesBatchHandler(svc Service, logger *slog.Logger) http.HandlerFunc {
-	var maxSize int64 = 1024 * 1024 * 50 // 50 MB
+func uploadImagePhrasesHandler(svc Service, l *slog.Logger) http.HandlerFunc {
+	const maxSize int64 = 1024 * 1024 * 50 // 50 MB
 
 	return func(w http.ResponseWriter, r *http.Request) {
 		r.Body = http.MaxBytesReader(w, r.Body, maxSize)
 
 		if err := r.ParseMultipartForm(maxSize); err != nil {
-			writeJSONErr(w, "File too big", err, http.StatusBadRequest)
+			respondJSON(w, "File too big", err, http.StatusBadRequest)
+			return
 		}
-		ff, header, err := r.FormFile("path")
-		if err != nil {
-			writeJSONErr(w, "Failed to get image file", err, http.StatusBadRequest)
-		}
-		defer ff.Close()
 
-		logger.Info("Received form", slog.String("header_filename", header.Filename))
-
-		f, err := header.Open()
+		f, fh, err := r.FormFile("image")
 		if err != nil {
-			writeJSONErr(w,
-				"Failed to os stat",
-				err,
-				http.StatusInternalServerError,
-			)
+			respondJSON(w, "Failed to get image file", err, http.StatusBadRequest)
+			return
 		}
 		defer f.Close()
-		logger.Info("File opened")
-	}
-}
 
-func limitValue(values url.Values) (int32, error) {
-	var param string
-	const defaultLimitParam = "1000"
+		l.Info("Received form", slog.String("header_filename", fh.Filename))
 
-	param = values.Get("limit")
-	if param == "" {
-		param = defaultLimitParam
-	}
-	limit, err := strconv.ParseUint(param, 10, 32)
-	if err != nil {
-		return 0, fmt.Errorf("parse uint: %w", err)
-	}
-	if limit > math.MaxInt32 {
-		limit = 1000
-	}
+		img, err := fh.Open()
+		if err != nil {
+			respondJSON(w, "Failed to ocr", err, http.StatusInternalServerError)
+			return
+		}
 
-	return int32(limit), nil
-}
+		tc := ocr.NewClient()
+		defer tc.Close()
 
-func offsetValue(values url.Values) (int32, error) {
-	var param string
-	const defaultOffsetParam = "0"
+		phrases, err := picphrase.ScanReader(r.Context(), img)
+		if err != nil {
+			respondJSON(w, "Failed to ocr", err, http.StatusInternalServerError)
+			return
+		}
 
-	param = values.Get("offset")
-	if param == "" {
-		param = defaultOffsetParam
-	}
-	offset, err := strconv.ParseUint(param, 10, 32)
-	if err != nil {
-		return 0, fmt.Errorf("parse uint: %w", err)
-	}
-	if offset > math.MaxInt32 {
-		offset = 0
-	}
+		values := make([]string, 0)
+		for phrase := range phrases {
+			values = append(values, phrase.String())
+		}
 
-	return int32(offset), nil
-}
+		name := r.URL.Query().Get("name")
+		if name == "" {
+			name = fh.Filename
+		}
 
-func encode[T any](w http.ResponseWriter, _ *http.Request, status int, v T) error {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(status)
+		row, err := svc.CreatePhrasesBatch(r.Context(), name, values)
+		if err != nil {
+			respondJSON(w, "Failed to create phrases batch", err, http.StatusInternalServerError)
+			return
+		}
 
-	if err := json.NewEncoder(w).Encode(v); err != nil {
-		return fmt.Errorf("encode json: %w", err)
-	}
-
-	return nil
-}
-
-func decode[T any](r *http.Request) (T, error) {
-	var v T
-
-	if err := json.NewDecoder(r.Body).Decode(&v); err != nil {
-		return v, fmt.Errorf("decode json: %w", err)
-	}
-
-	return v, nil
-}
-
-func writeJSONErr(w http.ResponseWriter, msg string, err error, code int) {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(code)
-
-	response := struct {
-		Message string `json:"message"`
-		Error   string `json:"error,omitempty"`
-	}{
-		Message: msg,
-	}
-	if err != nil {
-		response.Error = err.Error()
-	}
-
-	if err := json.NewEncoder(w).Encode(response); err != nil {
-		fmt.Fprintf(w, "Internal Server Error: failed to marshal error response")
+		response := struct {
+			Name    string                         `json:"batch_name"`
+			Message string                         `json:"message"`
+			Row     database.CreatePhrasesBatchRow `json:"row"`
+		}{
+			Name:    name,
+			Message: "Created phrases batch",
+			Row:     row,
+		}
+		if err := encode(w, r, http.StatusOK, response); err != nil {
+			respondJSON(w, "Failed to encode response", err, http.StatusInternalServerError)
+			return
+		}
 	}
 }

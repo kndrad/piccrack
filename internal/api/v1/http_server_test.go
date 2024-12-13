@@ -45,9 +45,9 @@ func TestServerStart(t *testing.T) {
 				mockConfig(),
 				&service{
 					q:      NewQueriesMock(NewWordsMock()...),
-					logger: mockLogger(),
+					logger: testLogger(),
 				},
-				mockLogger(),
+				testLogger(),
 			)
 			require.NoError(t, err)
 
@@ -96,7 +96,7 @@ func TestWriteJSONErr(t *testing.T) {
 			rr := httptest.NewRecorder()
 
 			// Write
-			writeJSONErr(rr, tC.msg, tC.err, tC.code)
+			respondJSON(rr, tC.msg, tC.err, tC.code)
 
 			// Get result
 			resp := rr.Result()

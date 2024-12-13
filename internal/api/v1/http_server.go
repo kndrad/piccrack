@@ -36,7 +36,7 @@ func NewServer(cfg config.HTTPConfig, svc Service, logger *slog.Logger) (*server
 	mux.Handle("POST "+prefix+"/words/file", uploadWordsHandler(svc, logger))
 	mux.Handle("POST "+prefix+"/words/image", uploadImageWordsHandler(svc, logger))
 	mux.Handle("GET "+prefix+"/words/batches", middleware.LogTime(listWordsByBatchNameHandler(svc, logger), logger))
-	mux.Handle("POST "+prefix+"/sentences", middleware.LogTime(uploadImageSentencesBatchHandler(svc, logger), logger))
+	mux.Handle("POST "+prefix+"/phrases", middleware.LogTime(uploadImagePhrasesHandler(svc, logger), logger))
 
 	var handler http.Handler = mux
 

@@ -13,7 +13,7 @@ import (
 	"golang.org/x/exp/rand"
 )
 
-func mockLogger() *slog.Logger {
+func testLogger() *slog.Logger {
 	return slog.New(slog.NewTextHandler(os.Stdout, nil))
 }
 
@@ -191,8 +191,8 @@ func NewQueriesMock(words ...WordMock) *QueriesMock {
 	}
 }
 
-func (q *QueriesMock) CreateSentencesBatch(ctx context.Context, arg database.CreateSentencesBatchParams) (database.CreateSentencesBatchRow, error) {
-	return database.CreateSentencesBatchRow{}, nil
+func (q *QueriesMock) CreatePhrasesBatch(ctx context.Context, arg database.CreatePhrasesBatchParams) (database.CreatePhrasesBatchRow, error) {
+	return database.CreatePhrasesBatchRow{}, nil
 }
 
 func (q *QueriesMock) CreateWord(ctx context.Context, value string) (database.CreateWordRow, error) {

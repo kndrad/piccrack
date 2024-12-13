@@ -13,6 +13,7 @@ import (
 	"net/http/httptest"
 	"net/url"
 	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 
@@ -123,7 +124,7 @@ func TestHealthCheckHandler(t *testing.T) {
 	for _, tC := range testCases {
 		t.Run(tC.desc, func(t *testing.T) {
 			// Init server
-			handler := http.Handler(healthCheckHandler(mockLogger()))
+			handler := http.Handler(healthCheckHandler(testLogger()))
 			ts := httptest.NewServer(handler)
 			defer ts.Close()
 
@@ -158,7 +159,7 @@ func TestAllWordsHandler(t *testing.T) {
 			svc := &service{
 				q: NewQueriesMock(NewWordsMock()...),
 			}
-			handler := listWordsHandler(svc, mockLogger())
+			handler := listWordsHandler(svc, testLogger())
 
 			ctx := context.Background()
 			url := "/" + tC.query
@@ -170,7 +171,6 @@ func TestAllWordsHandler(t *testing.T) {
 			)
 
 			w := httptest.NewRecorder()
-			t.Logf("Testing request, url: %s", url)
 			handler(w, req)
 			resp := w.Result()
 
@@ -182,7 +182,6 @@ func TestAllWordsHandler(t *testing.T) {
 			if err := json.Unmarshal(data, &rows); err != nil {
 				t.Fatalf("unmarshal json err: %v", err)
 			}
-			t.Logf("Got rows: %v", rows)
 		})
 	}
 }
@@ -205,7 +204,7 @@ func TestInsertWordHandler(t *testing.T) {
 			svc := &service{
 				q: NewQueriesMock(NewWordsMock()...),
 			}
-			handler := createWordHandler(svc, mockLogger())
+			handler := createWordHandler(svc, testLogger())
 
 			ctx := context.Background()
 
@@ -218,11 +217,10 @@ func TestInsertWordHandler(t *testing.T) {
 				body,
 			)
 
-			w := httptest.NewRecorder()
-			t.Logf("Testing request, url: %s", url)
-			handler(w, req)
-			resp := w.Result()
+			rr := httptest.NewRecorder()
+			handler(rr, req)
 
+			resp := rr.Result()
 			data, err := io.ReadAll(resp.Body)
 			require.NoError(t, err)
 			resp.Body.Close()
@@ -297,27 +295,12 @@ func TestGetOffsetFromQuery(t *testing.T) {
 			require.NoError(t, err)
 			t.Logf("parsed query: %v", values)
 
-			ofsset, err := offsetValue(values)
+			offset, err := offsetValue(values)
 
 			require.NoError(t, err)
-			require.Equal(t, tC.wantOffset, ofsset)
+			require.Equal(t, tC.wantOffset, offset)
 		})
 	}
-}
-
-func writeWords(w io.Writer, total int) error {
-	r := rand.New(rand.NewPCG(0, 100))
-
-	// Write values to writer
-	for i := 0; i < total; i++ {
-		ri := r.Int() // Random int
-
-		if _, err := w.Write([]byte(fmt.Sprintf("testword%d\n", ri))); err != nil {
-			return fmt.Errorf("write: %w", err)
-		}
-	}
-
-	return nil
 }
 
 func TestUploadWordsHandler(t *testing.T) {
@@ -338,7 +321,7 @@ func TestUploadWordsHandler(t *testing.T) {
 
 	// Write n words
 	n := 20
-	if err := writeWords(tmpf, n); err != nil {
+	if err := writeTestWords(tmpf, n); err != nil {
 		t.Fatalf("failed to write words: %v", err)
 	}
 
@@ -353,7 +336,7 @@ func TestUploadWordsHandler(t *testing.T) {
 			// Underlying db of this service does not contain any words
 			svc: &service{
 				q:      NewQueriesMock(),
-				logger: mockLogger(),
+				logger: testLogger(),
 			},
 		},
 	}
@@ -364,25 +347,20 @@ func TestUploadWordsHandler(t *testing.T) {
 			body := new(bytes.Buffer)
 			w := multipart.NewWriter(body)
 
-			// Open tmpf
 			f, err := os.Open(tmpf.Name())
 			require.NoError(t, err)
 			defer f.Close()
 
-			// Create the form part
 			part, err := w.CreateFormFile("file", f.Name())
 			require.NoError(t, err)
 
-			// Cp content to form file field
 			if _, err := io.Copy(part, f); err != nil {
 				t.Fatalf("Failed to copy file content to form part: %v", err)
 			}
-			// Close multipart writer
 			if err := w.Close(); err != nil {
 				t.Fatalf("Failed to close multipart writer: %v", err)
 			}
 
-			// Create request with buffer (multipart form) as body
 			ctx := context.Background()
 			req := httptest.NewRequestWithContext(
 				ctx,
@@ -394,7 +372,7 @@ func TestUploadWordsHandler(t *testing.T) {
 
 			// Record request using handler
 			rr := httptest.NewRecorder()
-			handler := uploadWordsHandler(tC.svc, mockLogger())
+			handler := uploadWordsHandler(tC.svc, testLogger())
 			handler(rr, req)
 			resp := rr.Result()
 
@@ -405,4 +383,131 @@ func TestUploadWordsHandler(t *testing.T) {
 			t.Logf("Got data: %s", string(data))
 		})
 	}
+}
+
+func TestUploadImagePhrasesHandler(t *testing.T) {
+	t.Parallel()
+
+	l := testLogger()
+
+	testCases := []struct {
+		desc string
+
+		path string
+		svc  Service
+	}{
+		{
+			desc: "uploads_phrases_from_an_image",
+			path: filepath.Join("testdata", "0.png"),
+
+			svc: NewService(NewQueriesMock(NewWordsMock()...), l),
+		},
+	}
+	for _, tC := range testCases {
+		t.Run(tC.desc, func(t *testing.T) {
+			buf := new(bytes.Buffer)
+			w := multipart.NewWriter(buf)
+
+			f, err := w.CreateFormFile("image", tC.path)
+			require.NoError(t, err)
+
+			img, err := os.Open(tC.path)
+			require.NoError(t, err)
+
+			if _, err := io.Copy(f, img); err != nil {
+				t.Fatalf("Failed to copy img to form file: %v", err)
+			}
+			if err := img.Close(); err != nil {
+				t.Fatalf("Failed to close img file: %v", err)
+			}
+			if err := w.Close(); err != nil {
+				t.Fatalf("Failed to close multipart writer: %v", err)
+			}
+
+			ctx := context.Background()
+			req := httptest.NewRequestWithContext(
+				ctx,
+				http.MethodPost,
+				"/?name=testbatch",
+				buf,
+			)
+			req.Header.Set("Content-Type", w.FormDataContentType())
+
+			handler := uploadImagePhrasesHandler(tC.svc, l)
+
+			rr := httptest.NewRecorder()
+			handler(rr, req)
+
+			res := rr.Result()
+			data, err := io.ReadAll(res.Body)
+
+			require.NoError(t, err)
+			require.NotEmpty(t, data)
+		})
+	}
+}
+
+func Humanize(b int) string {
+	const unit = 1024
+
+	if b < unit {
+		return fmt.Sprintf("%d B", b)
+	}
+
+	div, exp := unit, 0
+	for n := b / unit; n >= unit; n /= unit {
+		div *= unit
+		exp++
+	}
+
+	result := float64(b) / float64(div)
+
+	return fmt.Sprintf("%.1f %cB", result, "KMGTPE"[exp])
+}
+
+func TestHumanize(t *testing.T) {
+	testCases := []struct {
+		desc string
+
+		in   int
+		want string
+	}{
+		{
+			desc: "1024_returns_1.0_KB",
+			in:   1024,
+			want: "1.0 KB",
+		},
+		{
+			desc: "1048576_returns_1.0_MB",
+			in:   1048576,
+			want: "1.0 MB",
+		},
+		{
+			desc: "5242880_returns_5.0_MB",
+			in:   5242880,
+			want: "5.0 MB",
+		},
+	}
+	for _, tC := range testCases {
+		t.Run(tC.desc, func(t *testing.T) {
+			s := Humanize(tC.in)
+			t.Logf("result: %s\n", s)
+			require.Equal(t, tC.want, s)
+		})
+	}
+}
+
+func writeTestWords(w io.Writer, total int) error {
+	r := rand.New(rand.NewPCG(0, 100))
+
+	// Write values to writer
+	for i := 0; i < total; i++ {
+		ri := r.Int() // Random int
+
+		if _, err := w.Write([]byte(fmt.Sprintf("testword%d\n", ri))); err != nil {
+			return fmt.Errorf("write: %w", err)
+		}
+	}
+
+	return nil
 }

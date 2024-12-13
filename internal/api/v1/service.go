@@ -14,7 +14,7 @@ type Service interface {
 	ListWordBatches(ctx context.Context, limit, offset int32) ([]database.ListWordBatchesRow, error)
 	CreateWordsBatch(ctx context.Context, name string, values []string) (database.CreateWordsBatchRow, error)
 	ListWordsByBatchName(ctx context.Context, name string) ([]database.ListWordsByBatchNameRow, error)
-	CreateSentencesBatch(ctx context.Context, name string, values []string) (database.CreateSentencesBatchRow, error)
+	CreatePhrasesBatch(ctx context.Context, name string, values []string) (database.CreatePhrasesBatchRow, error)
 }
 
 type service struct {
@@ -88,8 +88,8 @@ func (svc *service) ListWordsByBatchName(ctx context.Context, name string) ([]da
 	return rows, nil
 }
 
-func (svc *service) CreateSentencesBatch(ctx context.Context, name string, values []string) (database.CreateSentencesBatchRow, error) {
-	row, err := svc.q.CreateSentencesBatch(ctx, database.CreateSentencesBatchParams{
+func (svc *service) CreatePhrasesBatch(ctx context.Context, name string, values []string) (database.CreatePhrasesBatchRow, error) {
+	row, err := svc.q.CreatePhrasesBatch(ctx, database.CreatePhrasesBatchParams{
 		Name:    name,
 		Column2: values,
 	})
