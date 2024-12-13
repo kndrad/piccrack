@@ -72,7 +72,7 @@ func ScanDir(ctx context.Context, dir string) (<-chan *Phrase, error) {
 
 	texts := make([]string, 0)
 
-	results, err := ocr.Dir(ctx, tc, dir)
+	results, err := ocr.ScanDir(ctx, tc, dir)
 	if err != nil {
 		return nil, fmt.Errorf("ocr dir: %w", err)
 	}

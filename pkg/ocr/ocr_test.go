@@ -1,6 +1,7 @@
 package ocr
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"os"
@@ -49,7 +50,7 @@ func TestIsImage(t *testing.T) {
 	}
 }
 
-func TestDo(t *testing.T) {
+func TestScanFile(t *testing.T) {
 	t.Parallel()
 
 	testCases := []struct {
@@ -68,7 +69,7 @@ func TestDo(t *testing.T) {
 			tc := NewClient()
 			defer tc.Close()
 
-			result, err := Do(tc, tC.path)
+			result, err := ScanFile(tc, tC.path)
 			require.NoError(t, err)
 
 			require.NotNil(t, result)
@@ -111,16 +112,90 @@ func TestResultWords(t *testing.T) {
 	}
 }
 
-func TestDir(t *testing.T) {
+func TestScanDir(t *testing.T) {
 	t.Parallel()
 
 	tc := NewClient()
 	defer tc.Close()
 
-	results, err := Dir(context.Background(), tc, "testdata")
+	results, err := ScanDir(context.Background(), tc, "testdata")
 	require.NoError(t, err)
 
 	for _, res := range results {
 		fmt.Printf("got result: len of text: %d\n", len(res.Text()))
 	}
 }
+
+func TestScanFrom(t *testing.T) {
+	t.Parallel()
+
+	tc := NewClient()
+	defer tc.Close()
+
+	testCases := []struct {
+		desc string
+
+		path string
+	}{
+		{
+			desc: "returns_result_by_scanning_from_file",
+			path: filepath.Join("testdata", "job0.png"),
+		},
+	}
+	for _, tC := range testCases {
+		t.Run(tC.desc, func(t *testing.T) {
+			f, err := os.Open(tC.path)
+			require.NoError(t, err)
+			defer f.Close()
+
+			tc := NewClient()
+			defer tc.Close()
+
+			res, err := ScanFrom(tc, f)
+			require.NoError(t, err)
+
+			fmt.Printf("RESULT: %#v\n", res)
+		})
+	}
+}
+
+func TestReadFull(t *testing.T) {
+	t.Parallel()
+
+	testCases := []struct {
+		desc string
+
+		data    []byte
+		wantBuf []byte
+		wantLen int
+	}{
+		{
+			desc: "small_image",
+
+			data:    make([]byte, 1024*5000), // 5000 KB
+			wantLen: 1024 * 5000,
+		},
+		{
+			desc: "huge_image",
+
+			data:    make([]byte, 10*1024*1024+1), // More than 10MB
+			wantLen: 10*1024*1024 + 1,
+		},
+	}
+	for _, tC := range testCases {
+		t.Run(tC.desc, func(t *testing.T) {
+			for i := 0; i < len(tC.data); i++ {
+				tC.data[i] = 1
+			}
+
+			r := bytes.NewBuffer(tC.data)
+
+			buf, err := readFull(r)
+			require.NoError(t, err)
+
+			t.Logf("Len: %d\n", len(buf))
+		})
+	}
+}
+
+// TODO: ScanFrom tests
