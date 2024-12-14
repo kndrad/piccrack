@@ -14,8 +14,6 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-
-
 func TestUploadImagePhrasesHandler(t *testing.T) {
 	t.Parallel()
 

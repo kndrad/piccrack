@@ -10,8 +10,8 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/kndrad/wcrack/pkg/imgsniff"
-	"github.com/kndrad/wcrack/pkg/pproc"
+	"github.com/kndrad/piccrack/pkg/imgsniff"
+	"github.com/kndrad/piccrack/pkg/pproc"
 	"github.com/otiai10/gosseract/v2"
 )
 

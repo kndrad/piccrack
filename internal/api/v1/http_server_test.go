@@ -9,7 +9,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/kndrad/wcrack/config"
+	"github.com/kndrad/piccrack/config"
 	"github.com/stretchr/testify/require"
 )
 

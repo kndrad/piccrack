@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/kndrad/wcrack/pkg/openf"
+	"github.com/kndrad/piccrack/pkg/openf"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )

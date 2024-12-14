@@ -13,18 +13,18 @@ import (
 	"strings"
 	"time"
 
-	"github.com/kndrad/wcrack/cmd/logger"
-	"github.com/kndrad/wcrack/config"
-	"github.com/kndrad/wcrack/internal/database"
-	"github.com/kndrad/wcrack/pkg/retry"
-	"github.com/kndrad/wcrack/pkg/textproc"
+	"github.com/kndrad/piccrack/cmd/logger"
+	"github.com/kndrad/piccrack/config"
+	"github.com/kndrad/piccrack/internal/database"
+	"github.com/kndrad/piccrack/pkg/retry"
+	"github.com/kndrad/piccrack/pkg/textproc"
 	"github.com/spf13/cobra"
 )
 
 var addManyCmd = &cobra.Command{
 	Use:     "many",
 	Short:   "Adds many words to a database.",
-	Example: "wcrack words add many [FILE PATH <name>.txt | <name>.json]",
+	Example: "piccrack words add many [FILE PATH <name>.txt | <name>.json]",
 	RunE: func(cmd *cobra.Command, args []string) error {
 		l := logger.New(Verbose)
 

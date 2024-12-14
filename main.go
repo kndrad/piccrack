@@ -1,6 +1,6 @@
 package main
 
-import "github.com/kndrad/wcrack/cmd"
+import "github.com/kndrad/piccrack/cmd"
 
 func main() {
 	cmd.Execute()

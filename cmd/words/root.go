@@ -7,10 +7,10 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/kndrad/wcrack/cmd/logger"
-	"github.com/kndrad/wcrack/config"
-	"github.com/kndrad/wcrack/internal/database"
-	"github.com/kndrad/wcrack/pkg/retry"
+	"github.com/kndrad/piccrack/cmd/logger"
+	"github.com/kndrad/piccrack/config"
+	"github.com/kndrad/piccrack/internal/database"
+	"github.com/kndrad/piccrack/pkg/retry"
 	"github.com/spf13/cobra"
 )
 
@@ -19,7 +19,7 @@ var Verbose bool
 var rootCmd = &cobra.Command{
 	Use:     "words",
 	Short:   "Lists words from a database",
-	Example: "wcrack words [OPTIONAL args: limit[int32]]",
+	Example: "piccrack words [OPTIONAL args: limit[int32]]",
 	RunE: func(cmd *cobra.Command, args []string) error {
 		l := logger.New(Verbose)
 

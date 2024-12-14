@@ -11,8 +11,8 @@ import (
 	"net/url"
 	"strconv"
 
-	"github.com/kndrad/wcrack/internal/database"
-	"github.com/kndrad/wcrack/pkg/ocr"
+	"github.com/kndrad/piccrack/internal/database"
+	"github.com/kndrad/piccrack/pkg/ocr"
 )
 
 func limitValue(values url.Values) (int32, error) {

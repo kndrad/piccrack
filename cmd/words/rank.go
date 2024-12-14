@@ -6,10 +6,10 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/kndrad/wcrack/cmd/logger"
-	"github.com/kndrad/wcrack/config"
-	"github.com/kndrad/wcrack/internal/database"
-	"github.com/kndrad/wcrack/pkg/retry"
+	"github.com/kndrad/piccrack/cmd/logger"
+	"github.com/kndrad/piccrack/config"
+	"github.com/kndrad/piccrack/internal/database"
+	"github.com/kndrad/piccrack/pkg/retry"
 	"github.com/spf13/cobra"
 )
 

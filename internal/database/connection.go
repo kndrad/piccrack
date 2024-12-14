@@ -8,7 +8,7 @@ import (
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
-	"github.com/kndrad/wcrack/config"
+	"github.com/kndrad/piccrack/config"
 	"github.com/pkg/errors"
 )
 

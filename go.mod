@@ -1,4 +1,4 @@
-module github.com/kndrad/wcrack
+module github.com/kndrad/piccrack
 
 go 1.23.4
 

@@ -12,7 +12,7 @@ database:
   password: 20112015
   host: db
   port: 5432
-  name: wcrack
+  name: piccrack
   pool:
     max_conns: 25
     min_conns: 5

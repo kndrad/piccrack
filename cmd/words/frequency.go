@@ -7,17 +7,17 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/kndrad/wcrack/cmd/logger"
-	"github.com/kndrad/wcrack/config"
-	"github.com/kndrad/wcrack/internal/database"
-	"github.com/kndrad/wcrack/pkg/retry"
+	"github.com/kndrad/piccrack/cmd/logger"
+	"github.com/kndrad/piccrack/config"
+	"github.com/kndrad/piccrack/internal/database"
+	"github.com/kndrad/piccrack/pkg/retry"
 	"github.com/spf13/cobra"
 )
 
 var frequencyCmd = &cobra.Command{
 	Use:     "frequency",
 	Short:   "Outputs words frequency from a database",
-	Example: "wcrack words frequency",
+	Example: "piccrack words frequency",
 	RunE: func(cmd *cobra.Command, args []string) error {
 		l := logger.New(Verbose)
 

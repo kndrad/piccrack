@@ -7,7 +7,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/kndrad/wcrack/pkg/textproc"
+	"github.com/kndrad/piccrack/pkg/textproc"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )

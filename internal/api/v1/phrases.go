@@ -4,9 +4,9 @@ import (
 	"log/slog"
 	"net/http"
 
-	"github.com/kndrad/wcrack/internal/database"
-	"github.com/kndrad/wcrack/pkg/ocr"
-	"github.com/kndrad/wcrack/pkg/picphrase"
+	"github.com/kndrad/piccrack/internal/database"
+	"github.com/kndrad/piccrack/pkg/ocr"
+	"github.com/kndrad/piccrack/pkg/picphrase"
 )
 
 func uploadImagePhrasesHandler(svc Service, l *slog.Logger) http.HandlerFunc {

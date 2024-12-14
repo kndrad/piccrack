@@ -8,8 +8,10 @@ services:
       db:
         condition: service_healthy
         restart: true
-      db-migrate:
+      migrate:
         condition: service_completed_successfully
+      prometheus:
+        condition: service_healthy
     networks:
       postgres_network:
     ports:
@@ -48,7 +50,7 @@ services:
       - postgres_pswd
       - postgres_db
 
-  db-migrate:
+  migrate:
     image: migrate/migrate
     depends_on:
       db:
@@ -64,6 +66,13 @@ services:
       - postgres_user
       - postgres_pswd
       - postgres_db
+
+  prometheus:
+    image: prom/prometheus
+    volumes:
+      - ./config/prometheus.yml:/etc/prometheus/prometheus.yml
+    ports:
+      - 9090:9090
 
 volumes:
   postgres_data:

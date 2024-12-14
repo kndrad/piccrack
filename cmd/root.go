@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/kndrad/wcrack/cmd/api"
-	"github.com/kndrad/wcrack/cmd/scan"
-	"github.com/kndrad/wcrack/cmd/words"
+	"github.com/kndrad/piccrack/cmd/api"
+	"github.com/kndrad/piccrack/cmd/scan"
+	"github.com/kndrad/piccrack/cmd/words"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -24,7 +24,7 @@ var (
 var cfgFile string
 
 var rootCmd = &cobra.Command{
-	Use:   "wcrack",
+	Use:   "piccrack",
 	Short: "Analyze text from screenshots and performing word frequency analysis.",
 	RunE: func(cmd *cobra.Command, args []string) error {
 		if err := cmd.Help(); err != nil {
@@ -45,7 +45,7 @@ func Execute() {
 func init() {
 	cobra.OnInitialize(initConfig)
 
-	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.wcrack.yaml)")
+	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.piccrack.yaml)")
 	rootCmd.PersistentFlags().BoolVarP(&Verbose, "verbose", "v", false, "print verbose actions")
 
 	rootCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
@@ -67,7 +67,7 @@ func initConfig() {
 
 		viper.AddConfigPath(home)
 		viper.SetConfigType("yaml")
-		viper.SetConfigName(".wcrack")
+		viper.SetConfigName(".piccrack")
 
 		// Search .env file in project dir
 		wd, err := os.Getwd()

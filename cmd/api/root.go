@@ -48,7 +48,7 @@ func initConfig() {
 
 		viper.AddConfigPath(home)
 		viper.SetConfigType("yaml")
-		viper.SetConfigName(".wcrack")
+		viper.SetConfigName(".piccrack")
 
 		// Search .env file in project dir
 		wd, err := os.Getwd()

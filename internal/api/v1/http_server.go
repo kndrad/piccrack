@@ -11,8 +11,8 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/kndrad/wcrack/config"
-	"github.com/kndrad/wcrack/pkg/middleware"
+	"github.com/kndrad/piccrack/config"
+	"github.com/kndrad/piccrack/pkg/middleware"
 )
 
 const Version = "v1"

@@ -5,7 +5,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/kndrad/wcrack/config"
+	"github.com/kndrad/piccrack/config"
 	"github.com/stretchr/testify/require"
 )
 
@@ -29,7 +29,7 @@ database:
   password: testpassword
   host: localhost
   port: 5433
-  name: wcrack
+  name: piccrack
   pool:
     max_conns: 25
     min_conns: 5
@@ -58,7 +58,7 @@ database:
 	require.Equal(t, "testpassword", cfg.Database.Password)
 	require.Equal(t, "localhost", cfg.Database.Host)
 	require.Equal(t, "5433", cfg.Database.Port)
-	require.Equal(t, "wcrack", cfg.Database.Name)
+	require.Equal(t, "piccrack", cfg.Database.Name)
 
 	require.Equal(t, 25, cfg.Database.Pool.MaxConns)
 	require.Equal(t, 5, cfg.Database.Pool.MinConns)

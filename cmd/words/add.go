@@ -6,10 +6,10 @@ import (
 	"log/slog"
 	"time"
 
-	"github.com/kndrad/wcrack/cmd/logger"
-	"github.com/kndrad/wcrack/config"
-	"github.com/kndrad/wcrack/internal/database"
-	"github.com/kndrad/wcrack/pkg/retry"
+	"github.com/kndrad/piccrack/cmd/logger"
+	"github.com/kndrad/piccrack/config"
+	"github.com/kndrad/piccrack/internal/database"
+	"github.com/kndrad/piccrack/pkg/retry"
 	"github.com/spf13/cobra"
 )
 
@@ -17,7 +17,7 @@ import (
 var addCmd = &cobra.Command{
 	Use:     "add",
 	Short:   "Add word to a database.",
-	Example: "wcrack words add [WORD]",
+	Example: "piccrack words add [WORD]",
 	RunE: func(cmd *cobra.Command, args []string) error {
 		l := logger.New(Verbose)
 

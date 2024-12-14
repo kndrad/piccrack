@@ -1,5 +1,5 @@
-BINARY_NAME=wcrack
-DOCKER_IMAGE=wcrack:latest
+BINARY_NAME=piccrack
+DOCKER_IMAGE=piccrack:latest
 DOCKER_COMPOSE_IMAGE=w-app:latest
 DOCKER_IMAGE_PATH=.
 

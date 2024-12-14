@@ -9,8 +9,8 @@ import (
 	"path/filepath"
 	"sync"
 
-	"github.com/kndrad/wcrack/pkg/ocr"
-	"github.com/kndrad/wcrack/pkg/textproc"
+	"github.com/kndrad/piccrack/pkg/ocr"
+	"github.com/kndrad/piccrack/pkg/textproc"
 )
 
 type Phrase struct {

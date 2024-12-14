@@ -5,13 +5,13 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/kndrad/wcrack/config"
-	apiv1 "github.com/kndrad/wcrack/internal/api/v1"
-	"github.com/kndrad/wcrack/internal/database"
-	"github.com/kndrad/wcrack/pkg/retry"
+	"github.com/kndrad/piccrack/config"
+	apiv1 "github.com/kndrad/piccrack/internal/api/v1"
+	"github.com/kndrad/piccrack/internal/database"
+	"github.com/kndrad/piccrack/pkg/retry"
 	"github.com/spf13/cobra"
 
-	"github.com/kndrad/wcrack/cmd/logger"
+	"github.com/kndrad/piccrack/cmd/logger"
 )
 
 var startCmd = &cobra.Command{

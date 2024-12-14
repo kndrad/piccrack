@@ -9,16 +9,16 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/kndrad/wcrack/cmd/logger"
-	"github.com/kndrad/wcrack/pkg/openf"
-	"github.com/kndrad/wcrack/pkg/textproc"
+	"github.com/kndrad/piccrack/cmd/logger"
+	"github.com/kndrad/piccrack/pkg/openf"
+	"github.com/kndrad/piccrack/pkg/textproc"
 	"github.com/spf13/cobra"
 )
 
 var frequencyAnalyzeCmd = &cobra.Command{
 	Use:     "analyze",
 	Short:   "Analyze words frequency in .txt and write output to .json",
-	Example: "wcrack words frequency analyze --path=./testdata/words.txt --out=./output",
+	Example: "piccrack words frequency analyze --path=./testdata/words.txt --out=./output",
 	RunE: func(cmd *cobra.Command, args []string) error {
 		l := logger.New(Verbose)
 

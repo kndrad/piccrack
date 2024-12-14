@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"github.com/jackc/pgx/v5/pgtype"
-	"github.com/kndrad/wcrack/internal/database"
+	"github.com/kndrad/piccrack/internal/database"
 	"golang.org/x/exp/rand"
 )
 

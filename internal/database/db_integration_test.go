@@ -18,7 +18,7 @@ import (
 	_ "github.com/golang-migrate/migrate/v4/database/postgres"
 	_ "github.com/golang-migrate/migrate/v4/source/file"
 	"github.com/jackc/pgx/v5"
-	"github.com/kndrad/wcrack/config"
+	"github.com/kndrad/piccrack/config"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
@@ -291,7 +291,7 @@ database:
   password: testpassword
   host: localhost
   port: 5433
-  name: wcrack
+  name: piccrack
   pool:
     max_conns: 25
     min_conns: 5

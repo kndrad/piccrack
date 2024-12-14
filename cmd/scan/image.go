@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/kndrad/wcrack/cmd/logger"
-	"github.com/kndrad/wcrack/pkg/ocr"
-	"github.com/kndrad/wcrack/pkg/picphrase"
+	"github.com/kndrad/piccrack/cmd/logger"
+	"github.com/kndrad/piccrack/pkg/ocr"
+	"github.com/kndrad/piccrack/pkg/picphrase"
 	"github.com/spf13/cobra"
 )
 

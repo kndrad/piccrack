@@ -4,8 +4,8 @@ import (
 	"context"
 	"testing"
 
-	"github.com/kndrad/wcrack/pkg/ocr"
-	"github.com/kndrad/wcrack/pkg/pproc"
+	"github.com/kndrad/piccrack/pkg/ocr"
+	"github.com/kndrad/piccrack/pkg/pproc"
 	"github.com/stretchr/testify/require"
 )
 

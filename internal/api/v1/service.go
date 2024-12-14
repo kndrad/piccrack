@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"log/slog"
 
-	"github.com/kndrad/wcrack/internal/database"
+	"github.com/kndrad/piccrack/internal/database"
 )
 
 type Service interface {
