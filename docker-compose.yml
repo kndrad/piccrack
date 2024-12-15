@@ -11,9 +11,10 @@ services:
       migrate:
         condition: service_completed_successfully
       prometheus:
-        condition: service_healthy
+        condition: service_started
     networks:
       postgres_network:
+      prom_network:
     ports:
       - 8080:8080
     volumes:
@@ -71,15 +72,20 @@ services:
     image: prom/prometheus
     volumes:
       - ./config/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prom_data:/prometheus
     ports:
       - 9090:9090
+    networks:
+      - prom_network
 
 volumes:
   postgres_data:
+  prom_data:
 
 
 networks:
   postgres_network:
+  prom_network:
 
 
 secrets:

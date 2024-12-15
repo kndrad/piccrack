@@ -13,6 +13,8 @@ import (
 
 	"github.com/kndrad/piccrack/config"
 	"github.com/kndrad/piccrack/pkg/middleware"
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
 const Version = "v1"
@@ -27,16 +29,27 @@ func NewServer(cfg config.HTTPConfig, svc Service, logger *slog.Logger) (*server
 	if logger == nil {
 		panic("logger cannot be nil")
 	}
+	const prefix = "/api/" + Version
 
 	mux := http.NewServeMux()
-	const prefix = "/api/" + Version
-	mux.Handle("GET "+prefix+"/healthz", healthCheckHandler(logger))
+
+	reg := prometheus.NewRegistry()
+	m := NewMetrics(reg)
+
+	mux.Handle("/metrics", promhttp.HandlerFor(reg, promhttp.HandlerOpts{Registry: reg}))
+	mux.Handle("GET "+prefix+"/healthz", m.WrapHandlerFunc(healthzHandler(logger)))
+	mux.Handle("POST "+prefix+"/phrases",
+		middleware.LogTime(
+			m.WrapHandlerFunc(uploadImagePhrasesHandler(svc, logger)),
+			logger,
+		),
+	)
+
 	mux.Handle("GET "+prefix+"/words", listWordsHandler(svc, logger))
 	mux.Handle("POST "+prefix+"/words", createWordHandler(svc, logger))
 	mux.Handle("POST "+prefix+"/words/file", uploadWordsHandler(svc, logger))
 	mux.Handle("POST "+prefix+"/words/image", uploadImageWordsHandler(svc, logger))
 	mux.Handle("GET "+prefix+"/words/batches", middleware.LogTime(listWordsByBatchNameHandler(svc, logger), logger))
-	mux.Handle("POST "+prefix+"/phrases", middleware.LogTime(uploadImagePhrasesHandler(svc, logger), logger))
 
 	var handler http.Handler = mux
 

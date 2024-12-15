@@ -123,7 +123,7 @@ func TestHealthCheckHandler(t *testing.T) {
 	for _, tC := range testCases {
 		t.Run(tC.desc, func(t *testing.T) {
 			// Init server
-			handler := http.Handler(healthCheckHandler(testLogger()))
+			handler := http.Handler(healthzHandler(testLogger()))
 			ts := httptest.NewServer(handler)
 			defer ts.Close()
 

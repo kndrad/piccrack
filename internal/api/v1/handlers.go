@@ -93,7 +93,7 @@ func respondJSON(w http.ResponseWriter, msg string, err error, code int) {
 	}
 }
 
-func healthCheckHandler(logger *slog.Logger) http.HandlerFunc {
+func healthzHandler(logger *slog.Logger) http.HandlerFunc {
 	type Response struct {
 		Status int `json:"status"`
 	}
