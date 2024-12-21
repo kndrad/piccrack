@@ -28,7 +28,7 @@ RETURNING id, value, batch_id
 
 type CreatePhrasesBatchParams struct {
 	Name    string   `json:"name"`
-	Column2 []string `json:"column_2"`
+	Phrases []string `json:"phrases"`
 }
 
 type CreatePhrasesBatchRow struct {
@@ -38,7 +38,7 @@ type CreatePhrasesBatchRow struct {
 }
 
 func (q *Queries) CreatePhrasesBatch(ctx context.Context, arg CreatePhrasesBatchParams) (CreatePhrasesBatchRow, error) {
-	row := q.db.QueryRow(ctx, createPhrasesBatch, arg.Name, arg.Column2)
+	row := q.db.QueryRow(ctx, createPhrasesBatch, arg.Name, arg.Phrases)
 	var i CreatePhrasesBatchRow
 	err := row.Scan(&i.ID, &i.Value, &i.BatchID)
 	return i, err

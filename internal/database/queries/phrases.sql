@@ -9,5 +9,5 @@ INSERT INTO phrases (value, batch_id)
 SELECT
     phrase_value,
     (SELECT id FROM batch)
-FROM UNNEST($2::text []) AS phrase_value
+FROM UNNEST(sqlc.arg(phrases)::text []) AS phrase_value
 RETURNING id, value, batch_id;

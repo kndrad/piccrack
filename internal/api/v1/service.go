@@ -91,7 +91,7 @@ func (svc *service) ListWordsByBatchName(ctx context.Context, name string) ([]da
 func (svc *service) CreatePhrasesBatch(ctx context.Context, name string, values []string) (database.CreatePhrasesBatchRow, error) {
 	row, err := svc.q.CreatePhrasesBatch(ctx, database.CreatePhrasesBatchParams{
 		Name:    name,
-		Column2: values,
+		Phrases: values,
 	})
 	if err != nil {
 		return row, fmt.Errorf("create word batch: %w", err)
