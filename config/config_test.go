@@ -1,7 +1,6 @@
 package config_test
 
 import (
-	"fmt"
 	"os"
 	"testing"
 
@@ -45,8 +44,6 @@ database:
 	// Load config
 	cfg, err := config.Load(tmf.Name())
 	require.NoError(t, err)
-	fmt.Printf("Config: %#v", cfg)
-
 	// Checks
 	require.Equal(t, "testing", cfg.App.Environment)
 
