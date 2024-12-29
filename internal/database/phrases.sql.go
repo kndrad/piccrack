@@ -23,7 +23,7 @@ SELECT
     phrase_value,
     (SELECT id FROM batch)
 FROM UNNEST($2::text []) AS phrase_value
-RETURNING id, value, batch_id
+RETURNING id, batch_id
 `
 
 type CreatePhrasesBatchParams struct {
@@ -33,13 +33,12 @@ type CreatePhrasesBatchParams struct {
 
 type CreatePhrasesBatchRow struct {
 	ID      int64       `json:"id"`
-	Value   string      `json:"value"`
 	BatchID pgtype.Int8 `json:"batch_id"`
 }
 
 func (q *Queries) CreatePhrasesBatch(ctx context.Context, arg CreatePhrasesBatchParams) (CreatePhrasesBatchRow, error) {
 	row := q.db.QueryRow(ctx, createPhrasesBatch, arg.Name, arg.Phrases)
 	var i CreatePhrasesBatchRow
-	err := row.Scan(&i.ID, &i.Value, &i.BatchID)
+	err := row.Scan(&i.ID, &i.BatchID)
 	return i, err
 }

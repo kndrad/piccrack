@@ -10,4 +10,4 @@ SELECT
     phrase_value,
     (SELECT id FROM batch)
 FROM UNNEST(sqlc.arg(phrases)::text []) AS phrase_value
-RETURNING id, value, batch_id;
+RETURNING id, batch_id;
