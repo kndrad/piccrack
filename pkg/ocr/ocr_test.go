@@ -103,8 +103,6 @@ func TestResultWords(t *testing.T) {
 		t.Run(tC.desc, func(t *testing.T) {
 			words := tC.result.Words()
 
-			fmt.Println(len(words))
-
 			for w := range words {
 				require.NotEmpty(t, w)
 			}
@@ -153,8 +151,7 @@ func TestScanFrom(t *testing.T) {
 
 			res, err := ScanFrom(tc, f)
 			require.NoError(t, err)
-
-			fmt.Printf("RESULT: %#v\n", res)
+			require.NotNil(t, res)
 		})
 	}
 }
@@ -192,8 +189,7 @@ func TestReadFull(t *testing.T) {
 
 			buf, err := readFull(r)
 			require.NoError(t, err)
-
-			t.Logf("Len: %d\n", len(buf))
+			require.NotEmpty(t, buf)
 		})
 	}
 }
