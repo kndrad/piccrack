@@ -1,0 +1,7 @@
+llm*
+tmp/
+llminput/
+.vscode/
+.air.toml
+coverage.html
+coverage.out
