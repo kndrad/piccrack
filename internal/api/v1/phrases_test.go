@@ -14,7 +14,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestUploadImagePhrasesHandler(t *testing.T) {
+func TestUploadPhrasesHandler(t *testing.T) {
 	t.Parallel()
 
 	l := testLogger()
