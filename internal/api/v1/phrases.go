@@ -1,11 +1,12 @@
 package v1
 
 import (
+	"fmt"
 	"log/slog"
 	"net/http"
+	"strings"
+	"time"
 
-	"github.com/kndrad/piccrack/internal/database"
-	"github.com/kndrad/piccrack/pkg/ocr"
 	"github.com/kndrad/piccrack/pkg/picphrase"
 )
 
@@ -21,25 +22,22 @@ func uploadImagePhrasesHandler(svc Service, l *slog.Logger) http.HandlerFunc {
 			return
 		}
 
-		f, fh, err := r.FormFile("image")
+		file, header, err := r.FormFile("image")
 		if err != nil {
 			respondJSON(w, "Failed to get image file", err, http.StatusBadRequest)
 
 			return
 		}
-		defer f.Close()
+		defer file.Close()
 
-		l.Info("Received form", slog.String("header_filename", fh.Filename))
+		l.Info("Received form", slog.String("header_filename", header.Filename))
 
-		img, err := fh.Open()
+		img, err := header.Open()
 		if err != nil {
 			respondJSON(w, "Failed to ocr", err, http.StatusInternalServerError)
 
 			return
 		}
-
-		tc := ocr.NewClient()
-		defer tc.Close()
 
 		phrases, err := picphrase.ScanReader(r.Context(), img)
 		if err != nil {
@@ -53,11 +51,7 @@ func uploadImagePhrasesHandler(svc Service, l *slog.Logger) http.HandlerFunc {
 			values = append(values, phrase.String())
 		}
 
-		name := r.URL.Query().Get("name")
-		if name == "" {
-			name = fh.Filename
-		}
-
+		name := strings.Split(header.Filename, ".")[0] + "_" + time.Now().Format("20060102_150405")
 		row, err := svc.CreatePhrasesBatch(r.Context(), name, values)
 		if err != nil {
 			respondJSON(w, "Failed to create phrases batch", err, http.StatusInternalServerError)
@@ -66,13 +60,10 @@ func uploadImagePhrasesHandler(svc Service, l *slog.Logger) http.HandlerFunc {
 		}
 
 		response := struct {
-			Name    string                         `json:"batch_name"`
-			Message string                         `json:"message"`
-			Row     database.CreatePhrasesBatchRow `json:"row"`
+			Message string `json:"message"`
 		}{
-			Name:    name,
-			Message: "Created phrases batch",
-			Row:     row,
+			Message: fmt.Sprintf(
+				"Created phrases batch with a name: %s and id: %d\n", name, row.ID),
 		}
 		if err := encode(w, r, http.StatusOK, response); err != nil {
 			respondJSON(w, "Failed to encode response", err, http.StatusInternalServerError)
