@@ -9,7 +9,7 @@ import (
 
 type Config struct {
 	Database DatabaseConfig `mapstructure:"database"`
-	HTTP     HTTPConfig     `mapstructure:"http"`
+	HTTP     API            `mapstructure:"http"`
 	App      AppConfig      `mapstructure:"app"`
 }
 
@@ -66,7 +66,7 @@ type poolConfig struct {
 	DialerKeepAlive string `mapstructure:"dialer_keep_alive"`
 }
 
-type HTTPConfig struct {
+type API struct {
 	Host       string `mapstructure:"host"`
 	Port       string `mapstructure:"port"`
 	TLSEnabled bool   `mapstructure:"tls_enabled"`
