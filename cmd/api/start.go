@@ -58,7 +58,7 @@ var startCmd = &cobra.Command{
 		svc := apiv1.NewService(q, l)
 
 		// Create server instance
-		srv, err := apiv1.NewServer(cfg.HTTP, svc, l)
+		srv, err := apiv1.New(cfg.HTTP, svc, l)
 		if err != nil {
 			l.Error("Failed to init new http server", "err", err)
 
