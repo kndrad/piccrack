@@ -4,6 +4,8 @@ import (
 	"context"
 	"fmt"
 	"log/slog"
+	"slices"
+	"strings"
 
 	"github.com/kndrad/piccrack/internal/database"
 )
@@ -89,6 +91,11 @@ func (svc *service) ListWordsByBatchName(ctx context.Context, name string) ([]da
 }
 
 func (svc *service) CreatePhrasesBatch(ctx context.Context, name string, values []string) (database.CreatePhrasesBatchRow, error) {
+	// filter empty values
+	values = slices.DeleteFunc(values, func(s string) bool {
+		return strings.Trim(s, " ") == ""
+	})
+
 	row, err := svc.q.CreatePhrasesBatch(ctx, database.CreatePhrasesBatchParams{
 		Name:    name,
 		Phrases: values,

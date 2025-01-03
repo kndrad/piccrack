@@ -21,11 +21,11 @@ const Version = "v1"
 
 type server struct {
 	srv *http.Server
-	cfg config.HTTPConfig
+	cfg config.API
 	l   *slog.Logger
 }
 
-func NewServer(cfg config.HTTPConfig, svc Service, logger *slog.Logger) (*server, error) {
+func New(cfg config.API, svc Service, logger *slog.Logger) (*server, error) {
 	if logger == nil {
 		panic("logger cannot be nil")
 	}

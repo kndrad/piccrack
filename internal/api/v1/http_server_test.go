@@ -13,8 +13,8 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func mockConfig() config.HTTPConfig {
-	cfg := config.HTTPConfig{
+func mockConfig() config.API {
+	cfg := config.API{
 		Host:       "localhost",
 		Port:       "8080",
 		TLSEnabled: false,
@@ -41,7 +41,7 @@ func TestServerStart(t *testing.T) {
 			ctx, cancel := context.WithCancel(context.Background())
 
 			// Create server instance
-			srv, err := NewServer(
+			srv, err := New(
 				mockConfig(),
 				&service{
 					q:      NewQueriesMock(NewWordsMock()...),

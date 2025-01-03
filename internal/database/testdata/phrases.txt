@@ -1,0 +1,55 @@
+Bachelor's degree in Computer Science or a related field or equivalent experience
+Minimum 3 years of experience in Go development and object-oriented design with a strong understanding of SOLID, KISS, and DRY principles
+DBs (preferable) or K8s strong experience
+Experience with k8s operators (nice to have)
+Experience with Continuous Integration and Continuous Delivery tools such as Jenkins, CircleCI, and Travis
+Experience with high concurrency threading models, atomics, and locking primitives
+Knowledge of various programming and scripting languages such as BASH, Perl, and Python
+Development experience in DBaaS solutions
+Development expertise in k8s operators
+If you have deep knowledge of any of these DB: MySQL, MongoDB or PostgreSQL
+Experience in Linux systems administration, including suitable expertise with file systems, hardware, and networking
+Administrowanie i utrzymanie systemów operacyjnych Windows oraz Linux
+Automatyzacja procesów przy użyciu języków skryptowych (Python, Bash)
+Tworzenie oraz aktualizacja dokumentacji technicznej dotyczącej utrzymywanych systemów i procesów
+Zarządzanie środowiskami konteneryzacyjnymi z wykorzystaniem Docker oraz LXC
+Podstawowe zarządzanie klastrami Kubernetes
+Monitorowanie oraz analiza stanu systemów z użyciem Grafana i Prometheus stack
+Wdrażanie i utrzymanie rozwiązań wspierających automatyzację konfiguracji z wykorzystaniem narzędzia Ansible
+Rozwiązywanie problemów sieciowych w zakresie podstawowych zagadnień takich jak TCP/IP, VPN czy DNS
+Analiza logów systemowych i diagnozowanie problemów technicznych w utrzymywanych systemach
+Doświadczenie w administrowaniu systemami Windows oraz Linux (warunek konieczny)
+Znajomość co najmniej jednego z języków skryptowych - Python lub Bash (warunek konieczny)
+Podstawowa znajomość Kubernetes (warunek konieczny)
+Znajomość konteneryzacji Docker lub LXC (warunek konieczny)
+Doświadczenie w zakresie wytwarzania niezbędnej dokumentacji dot. utrzymywanych systemów
+Znajomość monitoringu opartego o Grafana + Prometheus stack
+Podstawowa znajomość narzędzi wspierających automatyzację konfiguracji Ansible
+Podstawowa znajomość zagadnień związanych z sieciami (TCP/IP, VPN, DNS)
+Umiejętność analizowania i wyciągania wniosków z logów systemowych
+Expertise in Python
+A strong background in backend development
+Familiarity with common software and system design patterns and infrastructure including APIs, cloud infrastructure tools, storage solutions, data structures etc
+Knowledge about test design and security fundamentals
+Experience with Kubernetes
+Experience with Stripe or other payment processing providers
+Basics about how AI models work
+Email-service: Golang, MongoDB
+Managing email data
+Backend Monolith/Notification Service: Kotlin, MongoDB
+Handles actual email sending and personalization
+Using several external providers to send emails (REST APIs & SMTP)
+Link tracking: Rust, NATS, (Redis)
+Experimental service to create personalized link tracking (very limited scope for now)
+Email Analytics: Golang, NATS, ClickHouse
+Aggregate, store and present analytics data to the users
+Go
+SQL
+English: minimum B2
+Doświadczenie z Golang
+doświadczenie w projektach z architekturą mikrosług
+Znajomość Python
+Znajomość systemu kolejkowego RabbitMQ lub Kafka
+Doświadczenie w pracy z Airflow
+Proaktywne podejście, umiejętność rozwiązywanie problemów i umiejętności analityczne
+Doświadczenie w pracy w środowisku chmurowym, Docker
