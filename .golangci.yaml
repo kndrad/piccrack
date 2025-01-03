@@ -133,7 +133,7 @@ linters:
     - nestif
     - nilerr
     - nilnil
-    - nlreturn
+    #- nlreturn
     #- noctx
     - nolintlint
     - nonamedreturns
@@ -177,111 +177,111 @@ linters:
   # Disable specific linter
   # https://golangci-lint.run/usage/linters/#disabled-by-default
   disable:
-  # - asasalint
-  # - asciicheck
-  # - bidichk
-  # - bodyclose
-  # - canonicalheader
-  # - containedctx
-  # - contextcheck
-  # - copyloopvar
+    # - asasalint
+    # - asciicheck
+    # - bidichk
+    # - bodyclose
+    # - canonicalheader
+    # - containedctx
+    # - contextcheck
+    # - copyloopvar
     - cyclop
-  # - decorder
+    # - decorder
     - depguard
-  # - dogsled
-  # - dupl
-  # - dupword
-  # - durationcheck
+    # - dogsled
+    # - dupl
+    # - dupword
+    # - durationcheck
     - err113
     - errcheck
-  # - errchkjson
-  # - errname
+    # - errchkjson
+    # - errname
     - errorlint
-  # - execinquery
-  # - exhaustive
+    # - execinquery
+    # - exhaustive
     - exhaustruct
-  # - exportloopref
-  # - fatcontext
+    # - exportloopref
+    # - fatcontext
     - forbidigo
-  # - forcetypeassert
+    # - forcetypeassert
     - funlen
     - gci
-  # - ginkgolinter
-  # - gocheckcompilerdirectives
+    # - ginkgolinter
+    # - gocheckcompilerdirectives
     - gochecknoglobals
     - gochecknoinits
-  # - gochecksumtype
-  # - gocognit
-  # - goconst
-  # - gocritic
-  # - gocyclo
-  # - godot
-  # - godox
-  # - gofmt
-  # - gofumpt
-  # - goheader
-  # - goimports
-  # - gomoddirectives
-  # - gomodguard
-  # - goprintffuncname
+    # - gochecksumtype
+    # - gocognit
+    # - goconst
+    # - gocritic
+    # - gocyclo
+    # - godot
+    # - godox
+    # - gofmt
+    # - gofumpt
+    # - goheader
+    # - goimports
+    # - gomoddirectives
+    # - gomodguard
+    # - goprintffuncname
     - gosec
-  # - gosimple
-  # - gosmopolitan
-  # - govet
-  # - grouper
-  # - importas
-  # - inamedparam
-  # - ineffassign
-  # - interfacebloat
-  # - intrange
+    # - gosimple
+    # - gosmopolitan
+    # - govet
+    # - grouper
+    # - importas
+    # - inamedparam
+    # - ineffassign
+    # - interfacebloat
+    # - intrange
     - ireturn
     - lll
-  # - loggercheck
-  # - maintidx
-  # - makezero
-  # - mirror
-  # - misspell
+    # - loggercheck
+    # - maintidx
+    # - makezero
+    # - mirror
+    # - misspell
     - mnd
-  # - musttag
-  # - nakedret
-  # - nestif
-  # - nilerr
-  # - nilnil
-  #- nlreturn
+    # - musttag
+    # - nakedret
+    # - nestif
+    # - nilerr
+    # - nilnil
+    - nlreturn
     - noctx
-  # - nolintlint
-  # - nonamedreturns
-  # - nosprintfhostport
+    # - nolintlint
+    # - nonamedreturns
+    # - nosprintfhostport
     - paralleltest
-  # - perfsprint
-  # - prealloc
-  # - predeclared
-  # - promlinter
-  # - protogetter
-  # - reassign
+    # - perfsprint
+    # - prealloc
+    # - predeclared
+    # - promlinter
+    # - protogetter
+    # - reassign
     - revive
-  # - rowserrcheck
-  # - sloglint
-  # - spancheck
-  # - sqlclosecheck
-  # - staticcheck
-  # - stylecheck
-  # - tagalign
+    # - rowserrcheck
+    # - sloglint
+    # - spancheck
+    # - sqlclosecheck
+    # - staticcheck
+    # - stylecheck
+    # - tagalign
     - tagliatelle
-  # - tenv
-  # - testableexamples
-  # - testifylint
+    # - tenv
+    # - testableexamples
+    # - testifylint
     - testpackage
-  # - thelper
+    # - thelper
     - tparallel
-  # - typecheck
-  # - unconvert
-  # - unparam
+    # - typecheck
+    # - unconvert
+    # - unparam
     - unused
-  # - usestdlibvars
+    # - usestdlibvars
     - varnamelen
-  # - wastedassign
-  # - whitespace
+    # - wastedassign
+    # - whitespace
     - wrapcheck
     - wsl
   # - zerologlint
