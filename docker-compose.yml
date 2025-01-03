@@ -1,5 +1,5 @@
 services:
-  app:
+  api:
     build:
       context: .
     environment:
@@ -24,6 +24,9 @@ services:
       - postgres_user
       - postgres_pswd
       - postgres_db
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://127.0.0.1:8080/api/v1/healthz"]
+      retries: 5
 
   db:
     image: postgres:17
@@ -77,6 +80,7 @@ services:
       - 9090:9090
     networks:
       - prom_network
+
 
 volumes:
   postgres_data:
